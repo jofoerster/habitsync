@@ -1,0 +1,597 @@
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --half-success-color: #b5e4bf;
+    --bg-color: #f8f9fa;
+    --text-color: #343a40;
+    --border-color: #dee2e6;
+    --danger-color: #dc3545;
+    --accent-color: #5742bf;
+    --numeric-color: #efa82b;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+body {
+    background-color: #f0f2f5;
+    color: var(--text-color);
+    padding: 1px;
+    max-width: 100%;
+    width: 100%;
+    overflow-x: hidden;
+    min-height: 100vh;
+    position: relative;
+    padding-bottom: 130px; /* Space for floating button */
+}
+
+/* Header styles */
+header {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-bottom: 16px;
+}
+
+/* This wrapper ensures proper spacing */
+.header-tracker-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Title column takes available space */
+.header-tracker-title {
+    flex: 1;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+/* Date columns with fixed width to match buttons below */
+.header-tracker-dates {
+    display: flex;
+}
+
+.header-tracker-date {
+    width: 44px; /* Must match habit-record width */
+    margin-left: 10px; /* Must match habit-record margin-left */
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent-color);
+}
+
+/* Habit item styles */
+.header-tracker-list {
+    margin-top: 20px;
+    list-style: none;
+    padding-left: 0;
+}
+
+.header-tracker-item {
+    background-color: white;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-tracker-item:active {
+    transform: scale(0.98);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.header-tracker-container {
+    width: 48px;
+    height: 48px;
+    position: relative;
+    margin-right: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.progress-ring {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+.progress-background {
+    fill: none;
+    stroke: #e9ecef;
+    stroke-width: 4;
+}
+
+.progress-bar {
+    fill: none;
+    stroke: var(--accent-color);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    transition: stroke-dashoffset 0.5s ease;
+}
+
+.progress-text {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    position: absolute;
+}
+
+.habit-name {
+    flex: 1;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 1.05rem;
+    color: #333;
+    text-decoration: none;
+}
+
+.habit-records {
+    display: flex;
+}
+
+.habit-record {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-left: 10px;
+    background-color: #f1f3f5;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    color: #adb5bd;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+    position: relative; /* For the larger touch area */
+}
+
+.habit-record.completed {
+    background-color: var(--success-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.habit-record.half-completed {
+    background-color: var(--half-success-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(199, 243, 207, 0.3);
+}
+
+.habit-record.numeric {
+    background-color: var(--numeric-color);
+    color: white;
+    box-shadow: 0 2px 8px rgba(87, 66, 191, 0.3);
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.popup-content {
+    background-color: white;
+    border-radius: 16px;
+    padding: 24px;
+    width: 85%;
+    max-width: 320px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    animation: scaleIn 0.3s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.popup-title {
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.number-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 12px;
+}
+
+.number-btn {
+    width: 100%;
+    background-color: #f8f9fa;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.number-btn:hover, .number-btn:focus {
+    background-color: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 8px rgba(87, 66, 191, 0.3);
+}
+
+.custom-value-input {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    text-align: center;
+}
+
+.popup-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.popup-cancel {
+    background-color: #f1f3f5;
+    color: #495057;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.popup-confirm {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.popup-cancel:hover, .popup-cancel:focus {
+    background-color: #e9ecef;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.popup-confirm:hover, .popup-confirm:focus {
+    background-color: #4935a3;
+    box-shadow: 0 2px 8px rgba(87, 66, 191, 0.4);
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.habit-record:active {
+    animation: pulse 0.3s ease;
+}
+
+.new-habit-btn {
+    position: fixed;
+    bottom: 6rem;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 15px rgba(87, 66, 191, 0.4);
+    border: none;
+    font-size: 28px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 20;
+    text-decoration: none;
+}
+
+.new-habit-btn:hover, .new-habit-btn:focus {
+    transform: scale(1.05);
+    box-shadow: 0 6px 18px rgba(87, 66, 191, 0.5);
+}
+
+.new-habit-btn:active {
+    transform: scale(0.95);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+}
+
+/* Make the touchable area larger but visually the same */
+.habit-record::after {
+    content: '';
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+}
+
+/* Styling for other habits list */
+.other-habits-list {
+    margin-top: 3px;
+}
+
+/* Slightly different styling for other people's habits */
+.other-habit-item {
+    margin-bottom: 5px;
+}
+
+/* Person's name styling */
+.person-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.habit-main-content {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.other-habits-container {
+    background-color: #c7c9ec;
+}
+
+/* For very small screens, reduce padding */
+@media (max-width: 550px) {
+    .habit-record {
+        width: 35px;
+        height: 35px;
+        margin-left: 5px;
+    }
+
+    .header-tracker-date {
+        width: 35px;
+        margin-left: 5px;
+        font-size: 0.75rem;
+    }
+
+    .filter-option {
+        font-size: 0.75rem;
+        margin-right: 3px;
+    }
+
+    .header-tracker-container {
+        width: 35px;
+        height: 35px;
+        margin-right: 8px;
+    }
+
+    body {
+        padding: 6px 6px 130px;
+    }
+}
+
+#challengeHabit {
+    color: #ecc070;
+    font-weight: bold;
+}
+
+.drag-handle {
+    display: none;
+}
+
+/* Drag handle styling */
+.edit-mode .drag-handle {
+    cursor: grab;
+    display: inline-block;
+    margin-right: 10px;
+    color: #888;
+    user-select: none;
+    font-size: 20px;
+    line-height: 1;
+    vertical-align: middle;
+    touch-action: none; /* Prevents default touch behavior */
+    padding: 5px; /* Larger target area for touch */
+    border-radius: 4px;
+}
+
+.drag-handle:hover {
+    color: #555;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Dragging states */
+.header-tracker-item-list.dragging {
+    opacity: 0.8;
+    cursor: grabbing;
+    background-color: #f8f9fa;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+/* Visual indicators for drag targets */
+.header-tracker-item-list.drag-above {
+    border-top: 2px dashed #0d6efd;
+    margin-top: -2px;
+}
+
+.header-tracker-item-list.drag-below {
+    border-bottom: 2px dashed #0d6efd;
+    margin-bottom: -2px;
+}
+
+/* Placeholder styling */
+.header-tracker-item-list.placeholder {
+    background-color: #f8f9fa;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+}
+
+/* Ensure the habit name is aligned properly with the drag handle */
+.habit-name {
+    display: flex;
+    align-items: center;
+}
+
+/* Make sure touch targets are at least 44px for accessibility */
+@media (max-width: 768px) {
+    .drag-handle {
+        font-size: 18px;
+        padding: 2px;
+        margin-right: 5px;
+    }
+}
+
+#challengeIcon {
+    font-size: 18px;
+}
+
+.tracker-filter {
+    display: flex;
+    flex-direction: row;
+    text-decoration: none;
+    color: black;
+}
+
+.shared-habit-title {
+    margin-left: 10px;
+}
+
+.tracker-page-title {
+    display: flex;
+    flex-direction: row;
+    margin-top: 8px;
+}
+
+.btn-edit-mode {
+    text-decoration: none;
+    background-color: darkgrey;
+    border-radius: 20px;
+    margin-left: 20px;
+    font-size: 0.6rem;
+    padding: 10px 6px;
+    color: white;
+    height: fit-content;
+}
+
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.edit-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.number-item {
+    position: relative;
+    display: inline-block;
+}
+
+.remove-number {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    display: none;
+}
+
+.add-number-section {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.new-number-input {
+    width: 70%;
+    padding: 8px;
+}
+
+.add-number-btn {
+    padding: 8px 12px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+}

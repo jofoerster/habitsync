@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login - Habit Tracker</title>
+    <meta charset="UTF-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            padding-top: 40px;
+            padding-bottom: 40px;
+            background-color: #f5f5f5;
+        }
+
+        .form-signin {
+            width: 100%;
+            max-width: 330px;
+            padding: 15px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body class="text-center">
+<main class="form-signin">
+    <form method="post" th:action="@{/login}">
+        <h1 class="h3 mb-3 fw-normal">Habit Tracker</h1>
+        <div class="alert alert-danger" th:if="${param.error}">
+            Invalid username or password.
+        </div>
+        <div class="alert alert-success" th:if="${param.logout}">
+            You have been logged out.
+        </div>
+
+        <div class="form-floating mb-3">
+            <input autofocus class="form-control" id="username" name="username" placeholder="Username" required
+                   type="text">
+            <label for="username">Username</label>
+        </div>
+        <div class="form-floating mb-3">
+            <input class="form-control" id="password" name="password" placeholder="Password" required type="password">
+            <label for="password">Password</label>
+        </div>
+
+        <button class="w-100 btn btn-lg btn-primary" type="submit">Sign in</button>
+        <p class="mt-3 text-muted">Demo login: username "demo" with password "password"</p>
+    </form>
+</main>
+</body>
+</html>

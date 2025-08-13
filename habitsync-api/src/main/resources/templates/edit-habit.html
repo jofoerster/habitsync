@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Edit Habit</title>
+    <style>
+        .hidden-freqcustom {
+            display: none;
+        }
+
+        .freqcustom {
+            display: block;
+        }
+
+        .form-label {
+            margin-top: .5rem;
+            margin-bottom: 0;
+        }
+    </style>
+    <script defer th:src="@{/js/edit-challenge-and-habit.js}"></script>
+</head>
+<body>
+<div layout:fragment="page-title">Habit</div>
+
+<div layout:fragment="content">
+    <form method="post" th:action="@{'/habit/' + ${habitUuid}}" th:object="${habit}">
+        <div class="form-group">
+            <label class="form-label" for="title">Title</label>
+            <input class="form-control" id="title" required th:field="*{name}" type="text">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="dailyGoal">Daily Goal</label>
+            <input class="form-control" data-bs-toggle="tooltip" id="dailyGoal" required
+                   step="any" th:field="*{dailyGoal}"
+                   title="Number that has to be reached for the habit to be completed on one day.
+                   If you just want to track done/not done use 1 as default"
+                   type="number">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="dailyGoalUnit">Daily Goal Unit</label>
+            <input class="form-control" data-bs-toggle="tooltip" id="dailyGoalUnit" th:field="*{dailyGoalUnit}"
+                   title="Unit for your daily goal. For habit: Run 10km a week you can set the unit to km"
+                   type="text">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="dailyGoalExtra">Daily reachable value(see description)</label>
+            <input class="form-control" data-bs-toggle="tooltip" id="dailyGoalExtra" th:field="*{dailyGoalExtra}"
+                   title="Set the maximum daily reachable value. This is usefull if you want to say for example:
+Run 30km per month, but want to be able to freely choose how much to run each day. Choose daily goal 4 and unit km. Set
+daily reachable value to 30. The default value for the daily completion will be 4km. To reach the goal you will need to reach
+30km in sum over the whole month."
+                   type="number">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="targetDays">Target Days</label>
+            <input class="form-control" data-bs-toggle="tooltip" id="targetDays"
+                   required th:field="*{targetDays}"
+                   title="Timeframe for progress computation."
+                   type="number">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="freqType">Frequency Type</label>
+            <select class="form-select" id="freqType" onchange="updateFreqCustomForm()"
+                    required th:field="*{freqType}">
+                <option value="1">Weekly</option>
+                <option value="2">Monthly</option>
+                <option value="3">X times per Y days</option>
+            </select>
+        </div>
+
+        <div class="form-group freqcustom-1-2">
+            <label class="form-label" for="freqCustomSimple">Times per week/month</label>
+            <input class="form-control" id="freqCustomSimple" type="number">
+        </div>
+
+        <div class="form-group hidden-freqcustom freqcustom-3">
+            <div class="form-row">
+                <div>
+                    <label class="form-label" for="freqCustomX">X (times)</label>
+                    <input class="form-control" id="freqCustomX" type="number">
+                </div>
+                <div>
+                    <label class="form-label" for="freqCustomY">Y (days)</label>
+                    <input class="form-control" id="freqCustomY" type="number">
+                </div>
+            </div>
+        </div>
+
+        <input id="freqCustom" th:field="*{freqCustom}" type="hidden">
+
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <a th:href="${'/habit/tracker'}">
+                <button class="btn btn-secondary close-modal-btn" type="button">Back to Tracker</button>
+            </a>
+            <button class="btn btn-primary" type="submit">Save Habit</button>
+            <a th:href="${'/habit/' + habit.uuid + '/delete'}">
+                <button class="btn btn-danger" type="button">Delete Habit</button>
+            </a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

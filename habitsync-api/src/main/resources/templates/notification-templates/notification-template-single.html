@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Shared Habit Update</title>
+    <style type="text/css">
+        /* Reset styles for email clients */
+        body, p, h1, h2, h3, h4, h5, h6, table, td {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+        }
+
+        /* Container styles */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        /* Header styles */
+        .email-header {
+            background-color: #4A89DC;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        /* Alert message styles */
+        .alert-message {
+            background-color: #FFF3CD;
+            border-left: 4px solid #FFC107;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #856404;
+        }
+
+        /* Card styles */
+        .habit-card {
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            padding: 20px;
+            position: relative;
+            border-top: 4px solid #4A89DC;
+        }
+
+        .habit-card[data-color="blue"] {
+            border-top-color: #4A89DC;
+        }
+
+        .habit-card[data-color="green"] {
+            border-top-color: #37BC9B;
+        }
+
+        .habit-card[data-color="red"] {
+            border-top-color: #DA4453;
+        }
+
+        .habit-card[data-color="purple"] {
+            border-top-color: #967ADC;
+        }
+
+        .habit-card[data-color="yellow"] {
+            border-top-color: #F6BB42;
+        }
+
+        /* Card title */
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* Participant badge */
+        .streak-badge {
+            background-color: #f1f3f5;
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 12px;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        /* Progress bar */
+        .habit-progress {
+            background-color: #e9ecef;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .habit-progress-bar {
+            height: 100%;
+            background-color: #4A89DC;
+        }
+
+        /* Meta information styles */
+        .habit-meta {
+            display: table;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #6c757d;
+        }
+
+        .habit-meta-item {
+            display: table-cell;
+            padding: 5px 0;
+        }
+
+        /* Action buttons */
+        .habit-actions {
+            margin-top: 15px;
+            display: table;
+            width: 100%;
+        }
+
+        .action-cell {
+            display: table-cell;
+            width: 50%;
+            padding-right: 5px;
+            box-sizing: border-box;
+        }
+
+        .action-cell:last-child {
+            padding-right: 0;
+            padding-left: 5px;
+        }
+
+        .btn {
+            display: block;
+            padding: 8px 10px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 14px;
+            text-align: center;
+            white-space: normal;
+            word-break: break-word;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: #4A89DC;
+            color: white !important;
+            border: 1px solid #4A89DC;
+        }
+
+        .btn-outline-secondary {
+            background-color: white;
+            color: #6c757d !important;
+            border: 1px solid #6c757d;
+        }
+
+        /* Icons using unicode characters instead of Bootstrap icons */
+        .icon-person:before {
+            content: "👤 ";
+        }
+
+        .icon-calendar:before {
+            content: "📅 ";
+        }
+
+        .icon-target:before {
+            content: "🎯 ";
+        }
+
+        .icon-eye:before {
+            content: "👁️ ";
+        }
+
+        .icon-clipboard:before {
+            content: "📋 ";
+        }
+
+        .icon-users:before {
+            content: "👥 ";
+        }
+
+        /* Footer styles */
+        .email-footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 480px) {
+            .email-container {
+                padding: 10px;
+            }
+
+            .habit-meta-item {
+                display: block;
+                margin-bottom: 5px;
+            }
+
+            .action-cell {
+                display: block;
+                width: 100%;
+                padding: 0 0 10px 0;
+            }
+
+            .action-cell:last-child {
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <!--    <div class="email-header">-->
+    <!--        <h2>Shared Habit Update</h2>-->
+    <!--    </div>-->
+
+    <div style="padding: 20px;">
+        <!-- Shared habits cards -->
+        <div th:each="sharedHabit : ${sharedHabits}">
+            <div class="habit-card" th:attr="data-color=${sharedHabit.getHabits().iterator().next().color}">
+                <!--                <div class="streak-badge">-->
+                <!--                    <span class="icon-users"></span>-->
+                <!--                    <span th:text="${sharedHabit.habits.size() + ' participants'}">0 participants</span>-->
+                <!--                </div>-->
+
+                <h5 class="card-title" th:text="${sharedHabit.title}">Habit Title</h5>
+                <div class="habit-meta"
+                     th:with="intHabit=${sharedHabit.getTemporaryMainNotificationRule(notificationRuleService, null).getInternalHabitForComputationOfGoal()}">
+                    <div class="habit-meta-item">
+                        <span class="icon-target"></span>
+                        <span th:text="${intHabit.getReachableDailyValue() + ' ' + (intHabit.dailyGoalUnit != null ? intHabit.dailyGoalUnit : '')}">5 minutes</span>
+                    </div>
+                    <div class="habit-meta-item">
+                        <span class="icon-calendar"></span>
+                        <span th:if="${intHabit.freqType == 1}"
+                              th:text="${intHabit.parseFrequencyValue() + ' times per week'}">3 times per week</span>
+                        <span th:if="${intHabit.freqType == 2}"
+                              th:text="${intHabit.parseFrequencyValue() + ' times per month'}">10 times per month</span>
+                        <span th:if="${intHabit.freqType == 3 && intHabit.freqCustom == '[1,1]'}" th:text="${'daily'}">daily</span>
+                        <span th:if="${intHabit.freqType == 3 && intHabit.freqCustom != '[1,1]'}"
+                              th:text="${intHabit.parseCustomFrequency()[0] + ' times per ' + intHabit.parseCustomFrequency()[1] + ' days'}">2 times per 3 days</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 15px;" th:each="habit : ${sharedHabit.habits}">
+                    <div class="habit-progress">
+                        <div class="habit-progress-bar"
+                             style="width: 65%;"
+                             th:style="'width: ' + ${sharedHabit.getProgressOfHabit(habit, notificationRuleService, habitRecordSupplier)} + '%'"></div>
+                    </div>
+
+                    <div class="habit-meta">
+                        <div class="habit-meta-item">
+                            <span class="icon-person"></span>
+                            <span th:utext="${habit.account.getAuthenticationId() == receiver.getAuthenticationId() ? '<b>you</b>' : habit.account.getDisplayName()}">John Doe</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="habit-actions">
+                    <div class="action-cell">
+                        <a class="btn btn-primary" th:href="@{${baseUrl} + 'shared/' + ${sharedHabit.shareCode}}">
+                            <span class="icon-eye"></span> View Details
+                        </a>
+                    </div>
+                    <div class="action-cell">
+                        <a class="btn btn-outline-secondary"
+                           th:href="@{${baseUrl} + 'shared/' + ${sharedHabit.shareCode}}">
+                            <span class="icon-clipboard"></span> Share Code: <span
+                                th:text="${sharedHabit.shareCode}">ABC123</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="email-footer">
+        <p>This is an automated notification from habit sync.</p>
+    </div>
+</div>
+</body>
+</html>

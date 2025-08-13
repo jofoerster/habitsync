@@ -1,0 +1,5 @@
+window.APP_CONFIG = {
+  BACKEND_BASE_URL: '${BACKEND_BASE_URL}',
+  UI_BASE_URL: '${UI_BASE_URL}'
+};
+

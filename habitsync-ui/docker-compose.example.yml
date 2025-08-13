@@ -1,0 +1,8 @@
+services:
+  habitsync-ui:
+    build: .
+    ports:
+      - "8082:80"
+    environment:
+      - BACKEND_BASE_URL=https://habits.jntn.de
+      - UI_BASE_URL=https://habits.jntn.de

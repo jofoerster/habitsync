@@ -1,0 +1,31 @@
+services:
+  web:
+    image: docker.io/library/syncserver:0.0.1-SNAPSHOT
+    environment:
+      - BASE_URL=https://your-domain.com/api
+      # optional SHA-512 hash of your secret key, generate with `openssl rand -base64 64`
+      - JWT_SECRET=<your-jwt-secret>
+      - APP_SECURITY_ISSUERS_GOOGLE_URL=https://accounts.google.com
+      - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-ID=<client-id>
+      - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-SECRET=<client-secret>
+      - APP_SECURITY_ISSUERS_AUTHELIA_URL=<issuer-url>
+      - APP_SECURITY_ISSUERS_AUTHELIA_CLIENT-ID=<client-id>
+      - APP_SECURITY_ISSUERS_AUTHELIA_NEEDS-CONFIRMATION=false
+      - SPRING_MAIL_HOST=<mail-host>
+      - SPRING_MAIL_USERNAME=<mail-username>
+      - SPRING_MAIL_PASSWORD=<mail-password>
+      - SPRING_MAIL_PORT=587
+    volumes:
+      - <path-to-database-file-location>:/data
+    user: "998:998" # UID:GID for non-root user, needs access to the data folder
+    ports:
+      - "3832:8080" # Expose the API on port 3832
+      - "9092:9092" # For H2 console, if enabled
+
+  ui:
+    image: habitsync-ui:0.0.1-SNAPSHOT
+    ports:
+      - "3833:80" # Expose the UI on port 3833
+    environment:
+      - BACKEND_BASE_URL=https://your-domain.com/api
+      - UI_BASE_URL=https://your-domain.com

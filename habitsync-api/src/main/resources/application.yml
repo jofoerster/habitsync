@@ -1,0 +1,41 @@
+server:
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: syncserver
+  datasource:
+    url: jdbc:h2:file:/data/habittracker-db
+    driverClassName: org.h2.Driver
+    username: sa
+    password: password
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: CET
+    open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: # Leave empty, handled in code
+  mail:
+    host: <host>
+    port: 587
+    username: <mail-username>
+    password: <mail-password>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true

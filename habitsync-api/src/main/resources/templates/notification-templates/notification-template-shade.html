@@ -1,0 +1,64 @@
+<!-- Alert message with dynamic content -->
+<div class="alert-message" th:if="${sharedHabits != null && !sharedHabits.isEmpty()}" th:text="${subject}">
+    subject
+</div>
+
+<!-- Shared habits cards -->
+<div th:each="sharedHabit : ${sharedHabits}">
+    <div class="habit-card" th:attr="data-color=${sharedHabit.getHabits().iterator().next().color}">
+        <div class="streak-badge">
+            <span class="icon-users"></span>
+            <span th:text="${sharedHabit.habits.size() + ' participants'}">0 participants</span>
+        </div>
+
+        <h5 class="card-title" th:text="${sharedHabit.title}">Habit Title</h5>
+        <div class="habit-meta"
+             th:with="intHabit=${sharedHabit.getTemporaryMainNotificationRule(notificationRuleService, null).getInternalHabitForComputationOfGoal()}">
+            <div class="habit-meta-item">
+                <span class="icon-target"></span>
+                <span th:text="${intHabit.getReachableDailyValue() + ' ' + intHabit.dailyGoalUnit != null ? intHabit.dailyGoalUnit : ''}">5 minutes</span>
+            </div>
+            <div class="habit-meta-item">
+                <span class="icon-calendar"></span>
+                <span th:if="${intHabit.freqType == 1}"
+                      th:text="${intHabit.parseFrequencyValue() + ' times per week'}">3 times per week</span>
+                <span th:if="${intHabit.freqType == 2}"
+                      th:text="${intHabit.parseFrequencyValue() + ' times per month'}">10 times per month</span>
+                <span th:if="${intHabit.freqType == 3 && intHabit.freqCustom == '[1,1]'}"
+                      th:text="${'daily'}">daily</span>
+                <span th:if="${intHabit.freqType == 3 && intHabit.freqCustom != '[1,1]'}"
+                      th:text="${intHabit.parseCustomFrequency()[0] + ' times per ' + intHabit.parseCustomFrequency()[1] + ' days'}">2 times per 3 days</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;" th:each="habit : ${sharedHabit.habits}">
+            <div class="habit-progress">
+                <div class="habit-progress-bar"
+                     style="width: 65%;"
+                     th:style="'width: ' + ${sharedHabit.getProgressOfHabit(habit, notificationRuleService, habitRecordSupplier)} + '%'"></div>
+            </div>
+
+            <div class="habit-meta">
+                <div class="habit-meta-item">
+                    <span class="icon-person"></span>
+                    <span th:utext="${habit.account.getAuthenticationId() == receiver.getAuthenticationId() ? '<b>you</b>' : habit.account.getDisplayName()}">John Doe</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="habit-actions">
+            <div class="action-cell">
+                <a class="btn btn-primary" th:href="@{${baseUrl} + 'shared/' + ${sharedHabit.shareCode}}">
+                    <span class="icon-eye"></span> View Details
+                </a>
+            </div>
+            <div class="action-cell">
+                <a class="btn btn-outline-secondary" th:href="@{${baseUrl} + 'shared/' + ${sharedHabit.shareCode}}">
+                    <span class="icon-clipboard"></span> Share Code: <span
+                        th:text="${sharedHabit.shareCode}">ABC123</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+</div>

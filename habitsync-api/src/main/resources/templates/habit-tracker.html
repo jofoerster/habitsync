@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Habit Tracker</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+    <link rel="stylesheet" th:href="@{/css/habit-tracker.css}">
+    <script defer th:src="@{/js/habit-tracker.js}"></script>
+</head>
+<body>
+
+<div layout:fragment="page-title">
+    <div class="tracker-page-title"><h1 class="h3">Tracker</h1>
+        <button class="btn-edit-mode" onclick="document.body.classList.toggle('edit-mode')">
+            <i class="bi bi-sort-numeric-down"></i>&nbsp;Edit Mode
+        </button>
+    </div>
+</div>
+
+<div layout:fragment="content">
+    <div>
+        <!-- Header with dates perfectly aligned with buttons below -->
+        <header>
+            <div class="header-tracker-content">
+                <div class="header-tracker-title">
+                    <a class="tracker-filter" href="/habit/tracker">
+                        <div class="filter-option tracker-filter" data-filter="own"
+                             th:classappend="${sharedView ? '' : 'active'}">Own Habits
+                        </div>
+                    </a>
+                    <a class="tracker-filter" href="/habit/tracker?shared=true">
+                        <div class="filter-option tracker-filter" data-filter="shared"
+                             th:classappend="${!sharedView ? '' : 'active'}">Shared
+                        </div>
+                    </a>
+                </div>
+                <div class="header-tracker-dates">
+                    <div class="header-tracker-date" th:each="date : ${dates}" th:text="${date}">DD.MM</div>
+                </div>
+            </div>
+        </header>
+
+        <ul class="header-tracker-list" th:if="${(!#lists.isEmpty(habits)) && !sharedView}">
+            <li class="header-tracker-item-list" th:data-id="${habit.getUuid()}" th:data-own="true"
+                th:each="habit : ${habits}">
+                <div class="header-tracker-item">
+                    <div id="challengeIcon" th:if="${habit.isChallengeHabit() && challenge != null}">&#160;🏆&#160;</div>
+                    <div class="header-tracker-container expandable-progress"
+                         th:data-habit-id="${habit.getUuid()}"
+                         th:unless="${habit.isChallengeHabit() && challenge != null}">
+                        <svg class="progress-ring" viewBox="0 0 36 36">
+                            <circle class="progress-background" cx="18" cy="18" r="16"></circle>
+                            <circle class="progress-bar" cx="18" cy="18" r="16"
+                                    th:style="'stroke-dasharray: ' + ${100.48} + '; stroke-dashoffset: ' + ${100.48 - habit.getCompletionPercentage(recordSupplier)}"></circle>
+                        </svg>
+                        <span class="progress-text"
+                              th:text="${#numbers.formatDecimal(habit.getCompletionPercentage(recordSupplier), 0, 0) + '%'}">0%</span>
+                    </div>
+                    <a class="habit-name" th:href="@{'/habit/' + ${habit.uuid}}"
+                       th:unless="${habit.isChallengeHabit() && challenge != null}">
+                        <div class="habit-name"
+                             th:text="${habitMedals.get(habit) != null ? habitMedals.get(habit) + ' ' : ''} + ${habit.name}">
+                            Habit Name
+                        </div>
+                    </a>
+                    <a class="habit-name" th:href="@{'/challenge'}"
+                       th:if="${habit.isChallengeHabit() && challenge != null}">
+                        <div id="challengeHabit"
+                             th:text="${challenge.getTitle()}"></div>
+                    </a>
+                    <div class="habit-records">
+                        <button class="habit-record" th:data-completed="${habit.getCompletionForDay(recordSupplier, dates[i])}"
+                                th:data-daily="${habit.dailyGoal}"
+                                th:data-date="${dates[i]}"
+                                th:data-epochday="${datesEpoch[i]}"
+                                th:data-habit-id="${habit.uuid}"
+                                th:data-index="${i}"
+                                th:data-ischallengehabit="${habit.isChallengeHabit() && challenge != null}"
+                                th:data-value="${recordSupplier.getHabitRecordsByDate(habit, dates[i])}"
+                                th:each="i : ${#numbers.sequence(0, 2)}">
+                            <!-- Content will be set by JavaScript -->
+                        </button>
+                    </div>
+                </div>
+                <!-- Expandable section for other people's habits -->
+                <div class="other-habits-container header-tracker-item" style="display: none;"></div>
+            </li>
+        </ul>
+        <ul class="header-tracker-list shared-habit-list" th:if="${(!#lists.isEmpty(habits)) && sharedView}">
+            <li class="header-tracker-item-list" th:data-id="${shhabit.getValue().getUuid()}"
+                th:each="shhabit : ${sharedHabitHabitList}">
+                <a class="no-decorations" th:href="${'/shared/' + shhabit.getKey().shareCode}">
+                    <div class="shared-habit-title" th:text="${shhabit.getKey().getTitle()}">Shared Habit title</div>
+                </a>
+                <div class="header-tracker-item" th:with="habit=${shhabit.getValue()}, sharedHabit=${shhabit.getKey()}">
+                    <div class="header-tracker-container expandable-progress"
+                         th:data-habit-id="${habit.getUuid()}"
+                         th:data-sharedhabitcode="${sharedHabit.shareCode}"
+                         th:unless="${habit.isChallengeHabit() && challenge != null}">
+                        <svg class="progress-ring" viewBox="0 0 36 36">
+                            <circle class="progress-background" cx="18" cy="18" r="16"></circle>
+                            <circle class="progress-bar" cx="18" cy="18" r="16"
+                                    th:style="'stroke-dasharray: ' + ${100.48} + '; stroke-dashoffset: ' + ${100.48 - sharedHabit.getProgressOfHabit(habit, notificationRuleService, recordSupplier)}"></circle>
+                        </svg>
+                        <span class="progress-text"
+                              th:text="${#numbers.formatDecimal(sharedHabit.getProgressOfHabit(habit, notificationRuleService, recordSupplier), 0, 0) + '%'}">0%</span>
+                    </div>
+                    <a class="habit-name" th:href="@{'/habit/' + ${habit.uuid}}"
+                       th:unless="${habit.isChallengeHabit() && challenge != null}">
+                        <div class="habit-name"
+                             th:text="${habit.name}">Habit Name
+                        </div>
+                    </a>
+                    <button class="habit-record" th:data-completed="${sharedHabit.getCompletionForDay(habit, notificationRuleService, recordSupplier, datesEpoch[i])}"
+                            th:data-daily="${habit.dailyGoal}"
+                            th:data-date="${dates[i]}"
+                            th:data-epochday="${datesEpoch[i]}"
+                            th:data-habit-id="${habit.uuid}"
+                            th:data-index="${i}"
+                            th:data-ischallengehabit="${habit.isChallengeHabit() && challenge != null}"
+                            th:data-sharedhabitcode="${sharedHabit.shareCode}"
+                            th:data-value="${recordSupplier.getHabitRecordsByDate(habit, dates[i])}"
+                            th:each="i : ${#numbers.sequence(0, 2)}">
+                        <!-- Content will be set by JavaScript -->
+                    </button>
+                    <div class="habit-records">
+                    </div>
+                </div>
+                <!-- Expandable section for other people's habits -->
+                <div class="other-habits-container header-tracker-item" style="display: none;"></div>
+            </li>
+        </ul>
+
+        <div class="empty-state" th:if="${#lists.isEmpty(habits)}">
+            <p>You don't have any internal habits yet. External habits from an external habit tracker cannot be edited
+                here. Create your first habit to get started!</p>
+        </div>
+    </div>
+
+    <a class="new-habit-btn" href="/habit/new">+</a>
+
+    <div class="popup-list">
+        <div class="popup" th:data-habit-uuid="${numberConfig.key.uuid}"
+             th:each="numberConfig : ${habitConfigMap.entrySet()}" th:id="${'valuePopup-' + numberConfig.key.uuid}">
+            <div class="popup-content">
+                <div class="popup-header">
+                    <h3 class="popup-title">Select value</h3>
+                    <button class="edit-button" th:data-habit-uuid="${numberConfig.key.uuid}">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                </div>
+                <div class="number-grid" th:data-habit-uuid="${numberConfig.key.uuid}">
+                    <div class="number-item" th:each="n : ${numberConfig.value.getConfigValues()}">
+                        <button class="number-btn" th:text="${n}">1</button>
+                        <span class="remove-number" style="display: none;">×</span>
+                    </div>
+                </div>
+                <div class="add-number-section" style="display: none;">
+                    <input class="new-number-input" min="1" placeholder="New number">
+                    <button class="add-number-btn">Add</button>
+                </div>
+                <input class="custom-value-input" id="customValue" min="1" placeholder="Enter custom value"
+                       type="number">
+                <div class="popup-actions">
+                    <button class="popup-cancel">Cancel</button>
+                    <button class="popup-confirm">Confirm</button>
+                    <button class="edit-done" style="display: none;">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

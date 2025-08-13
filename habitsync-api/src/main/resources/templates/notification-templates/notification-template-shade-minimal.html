@@ -1,0 +1,6 @@
+<div style="padding: 20px;">
+    <!-- Alert message with dynamic content -->
+    <div class="alert-message" th:if="${sharedHabits != null && !sharedHabits.isEmpty()}" th:text="${subject}">
+        subject
+    </div>
+</div>

@@ -1,0 +1,55 @@
+server:
+  port: 8080
+  address: localhost
+
+base:
+  url: http://localhost:8080/
+
+spring:
+  datasource:
+    url: jdbc:h2:file:./habittracker-db
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: <mail-username>
+    password: <mail-password>
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Custom configuration for multiple OIDC issuers
+app:
+  security:
+    issuers:
+        google:
+            url: https://accounts.google.com
+            client-id: 376969935441-13hla5gtm7ecud5rn415l07iignch82g.apps.googleusercontent.com
+        authelia:
+          url: https://auth.jntn.de
+          client-id: BG2MFHT2be7Sd0zmi42rg569EDr6eVybiKOjrPDSU4jrMyI9hg5x7rRLWZeZEIPt
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,quartz,scheduledtasks
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+jwt.secret: T0M8xk85GC3/oOtdEcK++ZYtKKQL7ftrlXDtR4t09dBTqmnxCM+xoEEIdfAwIdEXRLiyGVCx2Z0utBYZcnLR6A==
+
+
+
+

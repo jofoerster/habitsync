@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html
+        layout:decorate="~{layout}"
+        xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+    <title>Statistics</title>
+</head>
+<body>
+<div layout:fragment="page-title">Shared Habit synchronisation</div>
+
+<div layout:fragment="content">
+    <div th:if="${sharedHabit != null}">
+        <h5> Your habit is currently synchronised with the following shared habit: </h5>
+        <span th:text="${sharedHabit.getTitle()}"> Connected Shared Habit</span>
+        <form method="post" th:action="@{'/habit/' + ${habit.getUuid()} + '/unlink-shared-habit'}">
+            <div class="action-buttons" style="margin-bottom: 1.5rem;">
+                <button class="btn btn-primary">Unlink Shared Habit</button>
+            </div>
+        </form>
+        <div class="action-buttons" style="margin-bottom: 1.5rem;">
+            <a class="btn btn-danger" th:href="${'/habit/' + habitUuid + '/edit?forceEdit=true'}">Edit Habit anyway</a>
+        </div>
+    </div>
+
+    <form method="post" th:action="${'/habit/' + habit.getUuid() + '/link-shared-habit'}">
+        <div class="mb-3">
+            <label class="form-label" for="sharedHabitId">Select shared habit to synchronize..</label>
+            <select class="form-select" id="sharedHabitId" name="sharedHabitId" required>
+                <option disabled selected value="">Choose shared habit...</option>
+                <option th:each="sharedHabit : ${sharedHabitsToConnect}"
+                        th:text="${sharedHabit.title}"
+                        th:value="${sharedHabit.id}">
+                </option>
+            </select>
+        </div>
+        <div class="action-buttons" style="margin-bottom: 1.5rem;">
+            <button class="btn btn-primary">Connect to Shared Habit</button>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

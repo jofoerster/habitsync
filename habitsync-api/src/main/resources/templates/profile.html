@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html layout:decorate="~{layout}"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>User Profile</title>
+    <th:block layout:fragment="css">
+        <style>
+            .profile-card {
+                background-color: #fff;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                border-radius: 8px;
+                padding: 25px;
+                margin-bottom: 20px;
+            }
+
+            .profile-header {
+                display: flex;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .profile-avatar {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background-color: #0d6efd;
+                color: white;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 32px;
+                margin-right: 20px;
+            }
+
+            .profile-name {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .profile-email {
+                color: #666;
+                font-size: 16px;
+            }
+
+            .section-title {
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 15px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .form-label {
+                font-weight: 500;
+            }
+
+            .time-select {
+                max-width: 200px;
+            }
+
+            .alert-container {
+                margin-bottom: 20px;
+            }
+        </style>
+    </th:block>
+</head>
+<body>
+<div layout:fragment="page-title">
+    <h1 class="h3">My Profile</h1>
+    <a class="btn btn-primary" href="/logout">
+        <span id="updateButtonText">Logout</span>
+    </a>
+</div>
+
+<div layout:fragment="content">
+
+    <!-- Profile Information Card -->
+    <div class="profile-card">
+        <div class="profile-header">
+            <div class="profile-avatar">
+                <span th:text="${#strings.substring(account.getDisplayName(), 0, 1).toUpperCase()}">U</span>
+            </div>
+            <div>
+                <h2 class="profile-name" th:text="${account.getDisplayName()}">User Name</h2>
+                <div class="profile-email" th:text="${account.email}">user@example.com</div>
+            </div>
+        </div>
+
+        <div class="section-title">Account Details</div>
+
+        <div class="row mb-3">
+            <div class="col-md-3 fw-bold">Account ID:</div>
+            <div class="col-md-9" th:text="${account.getAuthenticationId()}">12345</div>
+        </div>
+    </div>
+
+    <!-- Notification Settings Card -->
+    <div class="profile-card">
+        <form method="post" th:action="@{/profile/update}" th:object="${accountUpdateDTO}">
+            <div class="section-title">Account Settings</div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold"> Display Name:</div>
+                <input class="col-md-9" th:field="*{displayName}" th:value="${accountUpdateDTO.getDisplayName()}">
+                <div class="col-md-3 fw-bold"> Mail:</div>
+                <input class="col-md-9" th:field="*{email}" th:value="${accountUpdateDTO.getEmail()}">
+            </div>
+            <div class="section-title">Notification Settings</div>
+            <div class="mb-3">
+                <label class="form-label" for="notificationCreationHour">Daily Notification Time</label>
+                <select class="form-select time-select" id="notificationCreationHour"
+                        th:field="*{notificationCreationHour}">
+                    <option th:each="hour : ${#numbers.sequence(0, 23)}"
+                            th:selected="${hour == accountUpdateDTO.notificationCreationHour}"
+                            th:text="${hour < 10 ? '0' + hour : hour} + ':00'"
+                            th:value="${hour}">
+                        09:00
+                    </option>
+                </select>
+                <div class="form-text">Choose the hour when you want to receive daily notifications.</div>
+                <div class="invalid-feedback" th:errors="*{notificationCreationHour}"
+                     th:if="${#fields.hasErrors('notificationCreationHour')}">Error
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" id="sendNotificationsViaEmail" role="switch"
+                           th:field="*{sendNotificationsViaEmail}"
+                           type="checkbox">
+                    <label class="form-check-label" for="sendNotificationsViaEmail">Send notifications via email</label>
+                </div>
+                <div class="form-text">When enabled, you will receive a copy of your notifications via email.</div>
+            </div>
+
+            <div class="mb-4">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" id="enableInternalHabitTracker" role="switch"
+                           th:field="*{enableInternalHabitTracker}"
+                           type="checkbox">
+                    <label class="form-check-label" for="enableInternalHabitTracker">Use habit tracker as start
+                        page</label>
+                </div>
+                <div class="form-text">When enabled, the app will open on the Habit Tracker page.</div>
+            </div>
+
+
+            <div class="d-flex justify-content-end">
+                <button class="btn btn-primary" type="submit">
+                    <i class="bi bi-save me-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="profile-card">
+        <h5 class="mb-3">Choose a habit to use for challenges</h5>
+        <b><p th:text="${'Currently linked: ' + selectedHabit.get(0).getName()}"
+              th:unless="${selectedHabit.isEmpty()}"></p></b>
+        <p>The habit may only be used for challenges. It has to be empty to be linked here</p>
+        <div class="card bg-light mt-4" th:if="${!habitsForChallenge.empty}">
+            <div class="card-body">
+                <form method="post" th:action="@{'/profile/set-challenge-habit/'}">
+                    <div class="mb-3">
+                        <label class="form-label" for="habitUuid">Select your habit</label>
+                        <select class="form-select" id="habitUuid" name="habitUuid" required>
+                            <option disabled selected value="">Choose your habit...</option>
+                            <option th:each="habit : ${habitsForChallenge}"
+                                    th:text="${habit.name}"
+                                    th:value="${habit.uuid}">
+                            </option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" type="submit">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Link Habit
+                    </button>
+                </form>
+            </div>
+        </div>
+        <!-- Empty state messaging -->
+        <div class="form-text" th:if="${habitsForChallenge.empty}">
+            You don't have any habits to link. <a href="/habit/tracker">Create an empty habit first</a>.
+        </div>
+    </div>
+
+    <div class="profile-card">
+        <div class="d-flex justify-content-start">
+            <a th:href="${'/profile/approve-users'}">
+                <button class="btn btn-primary">
+                    <i class="bi bi-gear me-2"></i> Approve new users
+                </button>
+            </a>
+        </div>
+    </div>
+    <div class="profile-card">
+        <div class="d-flex justify-content-start">
+            <a th:href="${'/connection/list'}">
+                <button class="btn btn-primary">
+                    <i class="bi bi-folder-symlink me-2"></i> Manage App-Connections
+                </button>
+            </a>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        // Any JavaScript for the profile page can go here
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-close alerts after 5 seconds
+            setTimeout(function () {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(function (alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
+</th:block>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title th:text="${sharedHabit.title + ' - Habit Tracker'}">Shared Habit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+        }
+
+        .preview-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            background-color: white;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .login-btn {
+            background: #6366F1;
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #4F46E5;
+            transform: translateY(-2px);
+        }
+
+        .habit-icon {
+            color: #6366F1;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+    <div class="preview-card p-4 p-md-5">
+        <div class="text-center mb-4">
+            <div class="habit-icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <h2 class="mb-3" th:text="${sharedHabit.title}">Shared Habit Title</h2>
+            <p class="text-muted mb-4" th:if="${sharedHabit.description}" th:text="${sharedHabit.description}">Habit
+                description goes here</p>
+            <p class="text-muted mb-4" th:unless="${sharedHabit.description}">Join this shared habit and track your
+                progress with others.</p>
+        </div>
+
+        <div class="text-center">
+            <a class="btn btn-primary login-btn" th:href="@{'/shared/' + ${sharedHabit.shareCode} + '/main-page'}">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Login to Join
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
