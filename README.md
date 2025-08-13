@@ -5,6 +5,8 @@
 A simple habit tracking application with social features, allowing users to track personal habits and participate in
 shared challenges with others.
 
+![image](images/img.png)
+
 ## Features
 
 - Personal habit tracking with progress visualization
