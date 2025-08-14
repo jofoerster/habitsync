@@ -37,11 +37,10 @@ docker run \
 
 ## Prerequisites
 
-- Java 21
-- Maven 3.6+
-- Node.js 18+
-- npm or yarn
-- Docker and Docker Compose (for deployment)
+- Java
+- Maven
+- Node.js
+- npm
 
 ### Backend API
 
@@ -55,7 +54,6 @@ docker run \
    mvn clean install
    mvn spring-boot:run
    ```
-
 3. The API will be available at `http://localhost:8080`
 
 ### Frontend UI
@@ -69,6 +67,8 @@ docker run \
    ```bash
    npm install
    ```
+   
+3. Set necessary environment variables in `.env`
 
 4. Run the development server:
    ```bash
@@ -77,31 +77,10 @@ docker run \
 
 5. The UI will be available at `http://localhost:8081`
 
-## Configuration
-
-### Manual Deployment
-
-#### Backend
-
-1. Build the Docker image:
-   ```bash
-   cd habitsync-api
-   mvn spring-boot:build-image
-   ```
-
-#### Frontend
-
-1. Build for web:
-   ```bash
-   cd habitsync-ui
-   npx expo export --platform web
-   docker build -t habitsync-ui:0.0.1-SNAPSHOT .
-   ```
-
 ## Database
 
-The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db` should be
-mounted as a volume in production and can be backed up by copying the file.
+The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
+optionally can be mounted as a volume in production and can be backed up by copying the file.
 
 ## API Documentation
 
@@ -126,3 +105,21 @@ mounted as a volume in production and can be backed up by copying the file.
 - Improve habit list sorting
 - Enhance color selection for habits
 - Add push notifications support
+
+## Release Process
+
+```bash
+./release/prepare-release.sh 1.2.3
+git push origin develop
+
+git checkout main
+git merge develop
+git push origin main
+
+# Release via GitHub Actions
+# Go to Actions → "Release and Deploy" → Run workflow → Enter "1.2.3"
+
+git checkout develop
+./release/prepare-release.sh 1.3.0-SNAPSHOT
+git push origin develop
+```
