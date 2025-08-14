@@ -550,7 +550,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         {configType !== ConfigType.CHALLENGE && isNumericalHabit && (
                             <View style={styles.halfInput}>
                                 <View style={styles.labelRow}>
-                                    <Text style={styles.label}>Default Tracker Value</Text>
+                                    <Text style={styles.label}>Default Value</Text>
                                     <HelpIcon tooltipKey="dailyGoal"/>
                                 </View>
                                 <TextInput
