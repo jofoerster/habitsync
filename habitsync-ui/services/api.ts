@@ -17,7 +17,7 @@ export interface ApiHabitRead {
 export interface ApiAccountRead {
     displayName: string;
     authenticationId: string;
-    email: string;
+    email?: string;
 }
 
 export interface ApiAccountSettingsReadWrite {
@@ -31,7 +31,7 @@ export interface ApiAccountSettingsReadWrite {
 
 export interface ApiComputationReadWrite {
     dailyGoal: number;
-    dailyReachableValue?: number;
+    dailyReachableValue: number;
     unit?: string;
     targetDays: number;
     frequencyType: FrequencyTypeDTO;
@@ -43,7 +43,8 @@ export interface ApiComputationReadWrite {
 export enum FrequencyTypeDTO {
     WEEKLY = "WEEKLY",
     MONTHLY = "MONTHLY",
-    X_TIMES_PER_Y_DAYS = "X_TIMES_PER_Y_DAYS"
+    X_TIMES_PER_Y_DAYS = "X_TIMES_PER_Y_DAYS",
+    DAILY = "DAILY",
 }
 
 export enum ChallengeComputationType {

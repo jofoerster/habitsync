@@ -30,6 +30,7 @@ export enum ConfigType {
 }
 
 const FREQUENCY_OPTIONS = [
+    {value: FrequencyTypeDTO.DAILY, label: 'Daily'},
     {value: FrequencyTypeDTO.WEEKLY, label: 'Weekly'},
     {value: FrequencyTypeDTO.MONTHLY, label: 'Monthly'},
     {value: FrequencyTypeDTO.X_TIMES_PER_Y_DAYS, label: 'Custom Period'}
@@ -85,15 +86,15 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [name, setName] = useState('');
         const [selectedColor, setSelectedColor] = useState<number>(1);
         const [dailyGoal, setDailyGoal] = useState('');
-        const [dailyReachableValue, setDailyReachableValue] = useState('');
+        const [dailyReachableValue, setDailyReachableValue] = useState('1');
         const [unit, setUnit] = useState('');
-        const [targetDays, setTargetDays] = useState('');
-        const [frequencyType, setFrequencyType] = useState<FrequencyTypeDTO>(FrequencyTypeDTO.WEEKLY);
+        const [targetDays, setTargetDays] = useState('30');
+        const [frequencyType, setFrequencyType] = useState<FrequencyTypeDTO>(FrequencyTypeDTO.DAILY);
         const [challengeType, setChallengeType] = useState<ChallengeComputationType>(ChallengeComputationType.ABSOLUTE);
         const [frequency, setFrequency] = useState('');
         const [timesPerXDays, setTimesPerXDays] = useState('');
 
-        const [isNumericalHabit, setIsNumericalHabit] = useState(true);
+        const [isNumericalHabit, setIsNumericalHabit] = useState(false);
 
         const [isSharedWithOthers, setIsSharedWithOthers] = useState(false);
         const [modalVisible, setModalVisible] = useState(false);
@@ -105,7 +106,10 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [tempTimesPerXDays, setTempTimesPerXDays] = useState('');
 
         const getFrequencyDisplay = () => {
-            if (frequencyType === FrequencyTypeDTO.WEEKLY) {
+            if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
+            frequency === '1' && timesPerXDays === '1') {
+                return 'Daily';
+            } else if (frequencyType === FrequencyTypeDTO.WEEKLY) {
                 return frequency ? `${frequency} times per week` : 'Daily';
             } else if (frequencyType === FrequencyTypeDTO.MONTHLY) {
                 return frequency ? `${frequency} times per month` : 'Monthly';
@@ -202,8 +206,13 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 return;
             }
 
-            if (!dailyReachableValue || !targetDays) {
-                alert('Error', 'Please fill in all required fields');
+            if (!dailyReachableValue) {
+                alert('Error', 'Please fill in daily goal');
+                return;
+            }
+
+            if (!targetDays) {
+                alert('Error', 'Please fill in target days');
                 return;
             }
 
@@ -211,12 +220,12 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setDailyGoal(dailyReachableValue);
             }
 
-            if ((!frequency && configType !== ConfigType.CHALLENGE) ||
-                (!frequency && configType === ConfigType.CHALLENGE && challengeType !== ChallengeComputationType.MAX_VALUE)) {
+            if (((!frequency && configType !== ConfigType.CHALLENGE) ||
+                (!frequency && configType === ConfigType.CHALLENGE && challengeType !== ChallengeComputationType.MAX_VALUE)) &&
+                frequencyType !== FrequencyTypeDTO.DAILY) {
                 alert('Error', 'Please fill in field frequency');
                 return;
             }
-
 
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && !timesPerXDays) {
                 alert('Error', 'Times per X days is required for custom period');
@@ -231,14 +240,21 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             try {
                 setSaving(true);
 
+                let computedTimesPerXDays = undefined;
+                if (frequencyType === FrequencyTypeDTO.DAILY) {
+                    computedTimesPerXDays = 1;
+                } else if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS) {
+                    computedTimesPerXDays = parseInt(timesPerXDays);
+                }
+
                 const progressComputation: ApiComputationReadWrite = {
                     dailyGoal: parseFloat(dailyGoal),
                     dailyReachableValue: parseFloat(dailyReachableValue),
                     unit: unit.trim() || undefined,
                     targetDays: parseInt(targetDays),
-                    frequencyType,
-                    frequency: parseInt(frequency),
-                    timesPerXDays: frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS ? parseInt(timesPerXDays) : undefined,
+                    frequencyType: frequencyType === FrequencyTypeDTO.DAILY ? FrequencyTypeDTO.X_TIMES_PER_Y_DAYS : frequencyType,
+                    frequency: frequencyType === FrequencyTypeDTO.DAILY ? 1 : parseInt(frequency),
+                    timesPerXDays: computedTimesPerXDays,
                     challengeComputationType: challengeType
                 };
 
@@ -326,25 +342,26 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                     ))}
                                 </View>
                             </View>
-
-                            <View style={[styles.inputContainer, {marginBottom: 5}]}>
-                                <TextInput
-                                    style={styles.input}
-                                    value={tempFrequency}
-                                    onChangeText={(text) => {
-                                        const numericValue = text.replace(/[^0-9.]/g, '');
-                                        setTempFrequency(numericValue);
-                                    }}
-                                    placeholder="Enter frequency"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                />
-                                <Text style={[styles.label, {paddingTop: 10, paddingLeft: 10}]}>
-                                    {tempFrequencyType === FrequencyTypeDTO.WEEKLY ? 'times per week' :
-                                        tempFrequencyType === FrequencyTypeDTO.MONTHLY ? 'times per month' :
-                                            'times per'}
-                                </Text>
-                            </View>
+                            {tempFrequencyType !== FrequencyTypeDTO.DAILY && (
+                                <View style={[styles.inputContainer, {marginBottom: 5}]}>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={tempFrequency}
+                                        onChangeText={(text) => {
+                                            const numericValue = text.replace(/[^0-9.]/g, '');
+                                            setTempFrequency(numericValue);
+                                        }}
+                                        placeholder="Enter frequency"
+                                        placeholderTextColor="#999"
+                                        keyboardType="numeric"
+                                    />
+                                    <Text style={[styles.label, {paddingTop: 10, paddingLeft: 10}]}>
+                                        {tempFrequencyType === FrequencyTypeDTO.WEEKLY ? 'times per week' :
+                                            tempFrequencyType === FrequencyTypeDTO.MONTHLY ? 'times per month' :
+                                                'times per'}
+                                    </Text>
+                                </View>
+                            )}
 
                             {tempFrequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && (
                                 <View style={[styles.inputContainer, {marginBottom: 5}]}>

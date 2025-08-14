@@ -48,9 +48,9 @@ public class HabitController {
      */
     @GetMapping("/{uuid}")
     public ResponseEntity<HabitReadDTO> getHabitByUuid(@PathVariable String uuid) {
-        checkIfisAllowedToRead(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount(),
-                habitService);
         Optional<Habit> habit = habitService.getHabitByUuid(uuid);
+        checkIfisAllowedToRead(habit.orElse(null), accountService.getCurrentAccount(),
+                habitService);
         return habit.map(value -> ResponseEntity.ok(
                         habitService.getApiHabitReadFromHabit(value)))
                 .orElseGet(() -> ResponseEntity.notFound().build());

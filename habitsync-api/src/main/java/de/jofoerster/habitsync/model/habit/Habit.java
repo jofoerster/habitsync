@@ -238,7 +238,11 @@ public class Habit {
         if (parts.length != 2) {
             return new int[]{1, 1};
         }
-        return new int[]{Integer.parseInt(parts[0]), Integer.parseInt(parts[1])};
+        try {
+            return new int[]{Integer.parseInt(parts[0]), Integer.parseInt(parts[1])};
+        } catch (Exception e) {
+            return new int[]{1, 1};
+        }
     }
 
     private Map<String, Double> calculateWeeklyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
@@ -557,8 +561,8 @@ public class Habit {
                 .frequency(frequency)
                 .timesPerXDays(timesPerXDays)
                 .targetDays(this.getTargetDays())
-                .dailyGoal(this.getDailyGoal())
-                .dailyReachableValue(this.getReachableDailyValue())
+                .dailyGoal(this.getDailyGoal() != null ? this.getDailyGoal() : this.getReachableDailyValue())
+                .dailyReachableValue(this.getReachableDailyValue() != null ? this.getReachableDailyValue() : this.getDailyGoal())
                 .build();
     }
 
@@ -580,6 +584,9 @@ public class Habit {
         this.dailyGoalExtra = computationReadWriteDTO.getDailyReachableValue();
         if (this.dailyGoalExtra == null) {
             this.dailyGoalExtra = this.dailyGoal;
+        }
+        if (this.dailyGoal == null) {
+            this.dailyGoal = this.dailyGoalExtra;
         }
         this.targetDays = computationReadWriteDTO.getTargetDays();
         if (computationReadWriteDTO.getFrequencyType() != null) {

@@ -211,8 +211,11 @@ export class AuthService {
         const info = await AsyncStorage.getItem(USER_INFO_KEY);
         if (info) {
             return JSON.parse(info);
+        } else {
+            const userInfoFromApi = await userApi.getUserInfo();
+            await AsyncStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfoFromApi));
+            return userInfoFromApi;
         }
-        return null;
     }
 
     public subscribe(listener: (state: AuthState) => void): () => void {
