@@ -5,7 +5,6 @@ environment variables such as the *API URL*.
 
 # TODOs
  - fix timezone issues
- - fix sorting of habits in habit list
  - improve color selection for habits
  - add push notifications 
 

@@ -112,7 +112,7 @@ public class SecurityConfig {
             if (basicAuthUsers != null && basicAuthUsers.containsKey(username)) {
                 return User.builder()
                         .username(username)
-                        .password("{noop}" + basicAuthUsers.get(username))
+                        .password("{bcrypt}" + basicAuthUsers.get(username))
                         .authorities("USER")
                         .build();
             }
