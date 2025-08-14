@@ -11,7 +11,7 @@ services:
       - APP_SECURITY_ISSUERS_AUTHELIA_URL=<issuer-url>
       - APP_SECURITY_ISSUERS_AUTHELIA_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_AUTHELIA_NEEDS-CONFIRMATION=false
-      - APP_SECURITY_BASIC_AUTH_USERS=<username>:<bcrypt-password-hash> # Create hash using: htpasswd -bnBC 10 "" YOUR_PASSWORD | tr -d ':\n'
+      - APP_SECURITY_BASIC_AUTH_USERS_<username>=<bcrypt-password-hash> # Create hash using: htpasswd -bnBC 10 "" YOUR_PASSWORD | tr -d ':\n'
       - SPRING_MAIL_HOST=<mail-host>
       - SPRING_MAIL_USERNAME=<mail-username>
       - SPRING_MAIL_PASSWORD=<mail-password>

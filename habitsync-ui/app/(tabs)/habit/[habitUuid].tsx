@@ -18,11 +18,11 @@ import alert from "@/services/alert";
 import NumberModal from "@/components/NumberModal";
 import SharedHabitParticipants from "@/components/SharedHabitParticipants";
 import * as Clipboard from "expo-clipboard";
-import {UI_BASE_URL} from "@/app/config";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import {AuthService} from "@/services/auth";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {UI_BASE_URL} from "@/public/config";
 
 const {width} = Dimensions.get('window');
 

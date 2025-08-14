@@ -25,12 +25,12 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useFocusEffect, useLocalSearchParams, useRouter} from "expo-router";
 import {getColorById} from "@/constants/colors";
 import alert from "@/services/alert";
-import {UI_BASE_URL} from "@/app/config";
 import * as Clipboard from 'expo-clipboard';
 import HabitConfig, {ConfigType, HabitConfigRef} from "@/components/HabitConfig";
 import SharedHabitParticipants from "@/components/SharedHabitParticipants";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {UI_BASE_URL} from "@/public/config";
 
 const {width} = Dimensions.get('window');
 

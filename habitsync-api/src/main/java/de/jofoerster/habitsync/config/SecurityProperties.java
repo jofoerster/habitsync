@@ -16,7 +16,7 @@ import java.util.Map;
 @Data
 public class SecurityProperties {
 
-    private List<String> basicAuthUsers;
+    private Map<String, String> basicAuthUsers;
 
     @Getter
     private Map<String, IssuerConfig> issuers = new HashMap<>();
@@ -25,19 +25,6 @@ public class SecurityProperties {
         return issuers.values().stream()
                 .map(IssuerConfig::getUrl)
                 .toList();
-    }
-
-    public Map<String, String> getBasicAuthUsers() {
-        if (basicAuthUsers == null || basicAuthUsers.isEmpty()) {
-            return Map.of();
-        }
-        return basicAuthUsers.stream()
-                .collect(HashMap::new, (map, user) -> {
-                    String[] parts = user.split(":");
-                    if (parts.length == 2) {
-                        map.put(parts[0], parts[1]);
-                    }
-                }, HashMap::putAll);
     }
 
     public SupportedIssuersDTO getDTO() {

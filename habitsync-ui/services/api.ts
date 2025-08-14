@@ -1,4 +1,4 @@
-import {BACKEND_BASE_URL} from '@/app/config';
+import { BACKEND_BASE_URL } from '@/public/config';
 import auth from './auth';
 
 export interface ApiHabitRead {
