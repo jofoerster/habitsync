@@ -66,9 +66,7 @@ export class AuthService {
         }
     }
 
-    private async _performInitialization(): Promise<void> {
-        this.setState({ isLoading: true });
-
+    public async refresh(): Promise<boolean> {
         const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
 
         if (!refreshToken) {
@@ -80,7 +78,7 @@ export class AuthService {
                 userInfo: null,
                 error: null
             });
-            return;
+            return false;
         }
 
         try {
@@ -95,10 +93,17 @@ export class AuthService {
                 userInfo: userInfo || null,
                 error: null,
             });
+            return true;
         } catch (error) {
             console.error('Auth initialization failed:', error);
             await this.clearAuth();
+            return false;
         }
+    }
+
+    private async _performInitialization(): Promise<void> {
+        this.setState({ isLoading: true });
+        await this.refresh();
     }
 
     public async loginWithOAuth2Provider(provider: SupportedOIDCIssuer, redirectPath?: string): Promise<void> {

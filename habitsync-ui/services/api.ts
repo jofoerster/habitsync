@@ -514,7 +514,7 @@ export const authApi = {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ refreshToken }),
+            body: JSON.stringify({refreshToken}),
         });
         if (!response.ok) throw new Error('Failed to refresh token with provided refresh token');
         return response.json();
@@ -546,18 +546,10 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}, alread
     if (response.status === 401 && !alreadyRetried) {
         console.log('Unauthorized, attempting token refresh');
 
-        try {
-            const refreshSuccess = await auth.tryRefreshToken();
-            if (refreshSuccess) {
-                console.log('Token refreshed successfully, retrying request');
-                return await authenticatedFetch(url, options, true);
-            } else {
-                console.log('Token refresh failed, logging out');
-                await auth.logout();
-            }
-        } catch (error) {
-            console.error('Token refresh error:', error);
-            await auth.logout();
+        const refreshSuccess = await auth.refresh();
+        if (refreshSuccess) {
+            console.log('Token refreshed successfully, retrying request');
+            return await authenticatedFetch(url, options, true);
         }
     }
 
