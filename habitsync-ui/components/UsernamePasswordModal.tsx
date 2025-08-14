@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import {
     ActivityIndicator,
-    Alert,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -13,6 +12,9 @@ import {
     View,
 } from 'react-native';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {useTheme} from "@/context/ThemeContext";
+import {createThemedStyles} from "@/constants/styles";
+import alert from "@/services/alert";
 
 interface UsernamePasswordModalProps {
     visible: boolean;
@@ -27,6 +29,9 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                                                          onLogin,
                                                                          loading = false,
                                                                      }) => {
+    const {theme} = useTheme();
+    const styles = createStyles(theme);
+
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
@@ -84,7 +89,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                     onPress={handleClose}
                                     disabled={isSubmitting || loading}
                                 >
-                                    <MaterialCommunityIcons name="close" size={24} color="#666"/>
+                                    <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                                 </TouchableOpacity>
                                 <Text style={styles.title}>Sign In</Text>
                                 <View style={styles.placeholder}/>
@@ -176,7 +181,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
     );
 };
 
-const styles = StyleSheet.create({
+const createStyles = createThemedStyles((theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -190,9 +195,9 @@ const styles = StyleSheet.create({
         maxHeight: '80%',
     },
     modalContent: {
-        backgroundColor: '#fff',
+        backgroundColor: theme.background,
         borderRadius: 16,
-        shadowColor: '#000',
+        shadowColor: theme.shadow,
         shadowOffset: {
             width: 0,
             height: 4,
@@ -204,7 +209,7 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        backgroundColor: '#fff',
+        backgroundColor: theme.background,
     },
     scrollContent: {
         flexGrow: 1,
@@ -217,17 +222,17 @@ const styles = StyleSheet.create({
         paddingTop: 20,
         paddingBottom: 10,
         borderBottomWidth: 1,
-        borderBottomColor: '#e0e0e0',
+        borderBottomColor: theme.border,
     },
     closeButton: {
         padding: 8,
         borderRadius: 20,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: theme.background,
     },
     title: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#333',
+        color: theme.text,
     },
     placeholder: {
         width: 40,
@@ -255,28 +260,30 @@ const styles = StyleSheet.create({
     inputLabel: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: theme.text,
     },
     input: {
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: theme.border,
         borderRadius: 8,
         padding: 16,
         fontSize: 16,
-        backgroundColor: '#fff',
+        backgroundColor: theme.surfaceSecondary,
+        color: theme.text,
     },
     passwordContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: '#ddd',
+        borderColor: theme.border,
         borderRadius: 8,
-        backgroundColor: '#fff',
+        backgroundColor: theme.surfaceSecondary,
     },
     passwordInput: {
         flex: 1,
         padding: 16,
         fontSize: 16,
+        color: theme.text,
     },
     eyeButton: {
         padding: 16,
@@ -295,7 +302,7 @@ const styles = StyleSheet.create({
         opacity: 0.6,
     },
     loginButtonText: {
-        color: '#fff',
+        color: theme.text,
         fontSize: 16,
         fontWeight: 'bold',
     },
@@ -305,10 +312,10 @@ const styles = StyleSheet.create({
     },
     infoText: {
         fontSize: 14,
-        color: '#666',
+        color: theme.textSecondary,
         textAlign: 'center',
         lineHeight: 20,
     },
-});
+}));
 
 export default UsernamePasswordModal;

@@ -170,6 +170,7 @@ export interface SupportedOIDCIssuer {
 
 export interface SupportedOIDCIssuers {
     supportedIssuers: SupportedOIDCIssuer[];
+    allowBasicAuth: boolean;
 }
 
 export interface JWTTokenPair {
@@ -517,6 +518,17 @@ export const authApi = {
             body: JSON.stringify({refreshToken}),
         });
         if (!response.ok) throw new Error('Failed to refresh token with provided refresh token');
+        return response.json();
+    },
+
+    getTokenPairFromUsernamePassword: async (username: string, password: string): Promise<JWTTokenPair> => {
+        const credentials = btoa(`${username}:${password}`);
+        const response = await fetch(`${BACKEND_BASE_URL}/user/refresh-token`, {
+            headers: {
+                'Authorization': `Basic ${credentials}`,
+            }
+        });
+        if (!response.ok) throw new Error('Failed to authenticate with username and password');
         return response.json();
     }
 };

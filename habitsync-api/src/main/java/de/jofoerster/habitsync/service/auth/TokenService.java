@@ -93,7 +93,7 @@ public class TokenService {
 
     public boolean checkIfNeedsConfirmation(JwtAuthenticationToken jwtAuth) {
         String issuer = jwtAuth.getToken().getIssuer() != null ? jwtAuth.getToken().getIssuer().toString() : null;
-        if (issuer == null || !securityProperties.getIssuers().containsKey(issuer)) {
+        if (issuer == null || !securityProperties.getIssuers().containsKey(issuer) || issuer.equals(baseUrl)) {
             return false;
         }
         return securityProperties.getIssuers().get(issuer).isNeedsConfirmation();

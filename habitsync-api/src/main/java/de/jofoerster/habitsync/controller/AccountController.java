@@ -53,6 +53,6 @@ public class AccountController {
 
     @GetMapping("/refresh-token")
     public Map<String, String> refreshTokenGet() {
-        return tokenService.createTokenPair(accountService.getCurrentAccount().getAuthenticationId());
+        return tokenService.createTokenPair(accountService.getAuthenticationIdWithoutCreatingUser());
     }
 }

@@ -23,7 +23,11 @@ spring:
 app:
   security:
     basic-auth-users:
-      test: $2y$10$TxDKMLg7CtRNBG1ogewyPeGUKup6XqsfNfuvTZa7sLByJoFEWY9E6
+      test: $2y$10$/wEejER9Sbkiq2Sa/r7.KO0gier8wyXRaVze79pomeD7DxVCjV4n. # password: PASSWORD
+      test2: $2y$10$/wEejER9Sbkiq2Sa/r7.KO0gier8wyXRaVze79pomeD7DxVCjV4n. # password: PASSWORD
+      test3: $2y$10$/wEejER9Sbkiq2Sa/r7.KO0gier8wyXRaVze79pomeD7DxVCjV4n. # password: PASSWORD
+      test4: $2y$10$/wEejER9Sbkiq2Sa/r7.KO0gier8wyXRaVze79pomeD7DxVCjV4n. # password: PASSWORD
+      test5: $2y$10$/wEejER9Sbkiq2Sa/r7.KO0gier8wyXRaVze79pomeD7DxVCjV4n. # password: PASSWORD
 
 management:
   endpoints:

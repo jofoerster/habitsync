@@ -60,6 +60,10 @@ public class AccountService {
             return getOrCreateAccountById(subject, jwtAuth).getAccountStatus() == AccountStatus.ACTIVE;
         }
 
+        if (authentication instanceof UsernamePasswordAuthenticationToken) {
+            return true; // Allow username/password authentication without additional checks
+        }
+
         log.debug("Authentication type not supported: {}", authentication.getClass().getSimpleName());
         return false;
     }
@@ -210,5 +214,9 @@ public class AccountService {
     public SupportedIssuersDTO getSupportedIssuers() {
         log.info("Getting supported issuers");
         return securityProperties.getDTO();
+    }
+
+    public String getAuthenticationIdWithoutCreatingUser() {
+        return getCurrentAccountId();
     }
 }

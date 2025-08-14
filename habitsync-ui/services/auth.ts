@@ -101,6 +101,17 @@ export class AuthService {
         }
     }
 
+    public async updateUserInfo(): Promise<void> {
+        const userInfo = await authApi.getUserInfo();
+        this.setState({
+            isLoading: false,
+            isAuthenticated: userInfo?.authenticated || false,
+            isApproved: userInfo?.approved || false,
+            userInfo: userInfo || null,
+            error: null,
+        });
+    }
+
     private async _performInitialization(): Promise<void> {
         this.setState({ isLoading: true });
         await this.refresh();
@@ -132,6 +143,33 @@ export class AuthService {
             }
         } catch (error) {
             console.error('OAuth2 login error:', error);
+            this.setState({
+                isLoading: false,
+                error: error instanceof Error ? error.message : 'Login failed',
+            });
+        }
+    }
+
+    public async loginWithUsernamePassword(username: string, password: string, redirectPath?: string): Promise<void> {
+        this.setState({ isLoading: true, error: null });
+
+        try {
+            const tokenPair = await authApi.getTokenPairFromUsernamePassword(username, password);
+
+            await this.setTokens(tokenPair.accessToken, tokenPair.refreshToken);
+
+            const userInfo = await authApi.getUserInfo();
+            this.setState({
+                isLoading: false,
+                isAuthenticated: userInfo?.authenticated || false,
+                isApproved: userInfo?.approved || false,
+                userInfo: userInfo || null,
+                error: null,
+            });
+            console.log("Successfully logged in with username/password");
+
+        } catch (error) {
+            console.error('Username/password login error:', error);
             this.setState({
                 isLoading: false,
                 error: error instanceof Error ? error.message : 'Login failed',

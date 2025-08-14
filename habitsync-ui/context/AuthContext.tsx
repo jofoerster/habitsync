@@ -5,6 +5,7 @@ import {SupportedOIDCIssuer} from '../services/api';
 interface AuthContextType {
     authState: AuthState;
     loginWithOAuth2Provider: (provider: SupportedOIDCIssuer, redirectPath?: string) => Promise<void>;
+    loginWithUsernamePassword: (username: string, password: string, redirectPath?: string) => Promise<void>;
     logout: () => Promise<void>;
     refreshAuthState: () => Promise<void>;
 }
@@ -28,6 +29,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
         }
     };
 
+    const loginWithUsernamePassword = async (username: string, password: string, redirectPath?: string) => {
+        try {
+            await auth.loginWithUsernamePassword(username, password, redirectPath);
+        } catch (error) {
+            console.error('OAuth2 login failed:', error);
+            throw error;
+        }
+    };
+
     const logout = async () => {
         try {
             console.log("logout triggered")
@@ -41,7 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
     const refreshAuthState = async () => {
         try {
             console.log('Refresh auth state:');
-            await auth.initialize();
+            await auth.updateUserInfo();
         } catch (error) {
             console.error('Failed to refresh auth state:', error);
         }
@@ -51,6 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
         <AuthContext.Provider value={{
             authState,
             loginWithOAuth2Provider,
+            loginWithUsernamePassword,
             logout,
             refreshAuthState
         }}>

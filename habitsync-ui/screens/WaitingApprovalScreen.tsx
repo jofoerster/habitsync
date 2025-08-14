@@ -1,15 +1,25 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 import {ActivityIndicator, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {useAuth} from '../context/AuthContext';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {useRouter} from "expo-router";
 
 const WaitingApprovalScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
     const {authState, logout, refreshAuthState} = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (authState.isAuthenticated && authState.isApproved) {
+            router.replace('/');
+        } else if (!authState.isAuthenticated) {
+            router.replace('/login');
+        }
+    }, [authState.isAuthenticated, authState.isApproved]);
 
     const handleRefresh = async () => {
         try {
@@ -121,7 +131,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     userInfoLabel: {
         fontSize: 14,
-        color: theme.surfaceTertiary,
+        color: theme.text,
         marginBottom: 4,
     },
     userInfoText: {

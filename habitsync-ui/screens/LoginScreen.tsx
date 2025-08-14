@@ -15,7 +15,7 @@ const LoginScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const {loginWithOAuth2Provider, authState} = useAuth();
+    const {loginWithOAuth2Provider, loginWithUsernamePassword, authState} = useAuth();
     const {redirectPath} = useLocalSearchParams<{ redirectPath?: string }>();
     const router = useRouter();
     const [loginMethods, setLoginMethods] = useState<SupportedOIDCIssuers | null>(null);
@@ -28,8 +28,9 @@ const LoginScreen = () => {
 
     useEffect(() => {
         if (authState.isAuthenticated && authState.isApproved) {
-            console.log('Login successful, redirecting to:', redirectPath || '/');
             router.replace(redirectPath || '/');
+        } else if (authState.isAuthenticated && !authState.isApproved) {
+            router.replace('/waiting-approval');
         }
     }, [authState.isAuthenticated, authState.isApproved, redirectPath, router]);
 
@@ -115,7 +116,7 @@ const LoginScreen = () => {
     }
 
     const hasOAuth2Providers = loginMethods?.supportedIssuers.length > 0;
-    const hasUsernamePassword = false;
+    const hasUsernamePassword = loginMethods?.allowBasicAuth;
     const isMaintenanceMode = !hasOAuth2Providers && !hasUsernamePassword;
 
     const currentError = authState.error;
