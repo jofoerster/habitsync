@@ -1,4 +1,4 @@
-name: Release and Deploy
+name: Release
 
 on:
   workflow_dispatch:
