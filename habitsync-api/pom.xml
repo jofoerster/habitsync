@@ -8,11 +8,11 @@
 		<version>3.4.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>de.jntn.habit</groupId>
+	<groupId>de.jofoerster.habitsync</groupId>
 	<artifactId>habitsync-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>syncserver</name>
-	<description>Synchronisation Server for Table Habit</description>
+	<name>habitsync</name>
+	<description>Habit tracker with sharing and challenge functions</description>
 	<url/>
 	<licenses>
 		<license/>
