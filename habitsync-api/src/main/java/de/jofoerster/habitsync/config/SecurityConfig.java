@@ -54,7 +54,22 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/auth/**").permitAll()
-                        .requestMatchers("/**").access(this::checkUserAccess)
+                        // Allow access to all static resources (React Native web app)
+                        .requestMatchers("/", "/index.html").permitAll()
+                        .requestMatchers("/static/**").permitAll()
+                        .requestMatchers("/manifest.json", "/favicon.ico", "/sw.js").permitAll()
+                        .requestMatchers("/*.js", "/*.css", "/*.png", "/*.jpg", "/*.ico", "/*.ttf", "/*.woff", "/*.woff2").permitAll()
+                        .requestMatchers("/icon-*.png").permitAll()
+                        // Allow access to React app routes (SPA routing) 
+                        .requestMatchers("/habits", "/habits/**").permitAll()
+                        .requestMatchers("/challenges", "/challenges/**").permitAll()
+                        .requestMatchers("/profile", "/profile/**").permitAll()
+                        .requestMatchers("/login", "/waiting-approval", "/auth-callback").permitAll()
+                        // Secure actual API endpoints (these should start with /api when context path is applied)
+                        .requestMatchers("/users/**", "/habits-api/**", "/challenges-api/**").access(this::checkUserAccess)
+                        .requestMatchers("/h2-console/**").access(this::checkUserAccess)
+                        // Default: allow other requests (since we're serving the SPA)
+                        .anyRequest().permitAll()
                 );
 
         return http.build();

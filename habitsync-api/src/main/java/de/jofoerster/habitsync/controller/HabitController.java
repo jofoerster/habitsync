@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 import static de.jofoerster.habitsync.controller.PermissionChecker.*;
 
 @RestController
-@RequestMapping("/habit")
+@RequestMapping("/api/habit")
 public class HabitController {
 
     private final HabitService habitService;

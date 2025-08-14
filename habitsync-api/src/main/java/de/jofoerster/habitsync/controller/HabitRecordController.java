@@ -14,7 +14,7 @@ import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllo
 import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToRead;
 
 @RestController
-@RequestMapping("/record")
+@RequestMapping("/api/record")
 public class HabitRecordController {
 
     private final HabitService habitService;

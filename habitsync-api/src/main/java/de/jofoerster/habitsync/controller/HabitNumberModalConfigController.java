@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @Controller
-@RequestMapping("/habitNumberModalConfig")
+@RequestMapping("/api/habitNumberModalConfig")
 @RestController
 @RequiredArgsConstructor
 public class HabitNumberModalConfigController {

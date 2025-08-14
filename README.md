@@ -23,6 +23,16 @@ shared challenges with others.
 
 1. Update the environment variables in `docker-compose.yml` and start the application. That's all.
 
+### Docker
+
+```
+docker run \
+  -p 6842:6842 \
+  -e BASE_URL=http://localhost:6842 \
+  -e APP_SECURITY_BASIC_AUTH_USERS=test:$2y$10$xBSslnUjM3WUHE3/LnxQf.993lLLLrvhhYg/./DBUU9DXUpu9b8hGj \
+  habitsync
+```
+
 ## Development Setup
 
 ## Prerequisites

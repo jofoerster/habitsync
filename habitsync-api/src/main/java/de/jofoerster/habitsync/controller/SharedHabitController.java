@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/shared-habit")
+@RequestMapping("/api/shared-habit")
 public class SharedHabitController {
 
     private final SharedHabitService sharedHabitService;
