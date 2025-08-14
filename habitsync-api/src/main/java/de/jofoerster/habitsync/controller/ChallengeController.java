@@ -24,7 +24,7 @@ import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllo
 import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToEdit;
 
 @RestController
-@RequestMapping("/challenge")
+@RequestMapping("/api/challenge")
 public class ChallengeController {
 
     private final ChallengeService challengeService;
@@ -156,8 +156,8 @@ public class ChallengeController {
         } else {
             Challenge challenge = challengeService.getCurrentlyActiveChallenge();
             Habit challengeHabit = challengeHabits.getFirst();
-            Map<Account, ChallengeProgress> progress = challenge.getProgressOfHabits(List.of(challengeHabit),
-                    new HabitRecordSupplier(habitRecordRepository));
+            Map<Account, ChallengeProgress> progress = challenge != null ? challenge.getProgressOfHabits(List.of(challengeHabit),
+                    new HabitRecordSupplier(habitRecordRepository)) : Map.of();
             HabitReadDTO habit = habitService.getApiHabitReadFromHabit(challengeHabit);
             habit.setCurrentPercentage(progress.get(accountService.getCurrentAccount()).getPercentage());
             return ResponseEntity.ok(habit);
