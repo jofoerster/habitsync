@@ -376,7 +376,7 @@ const ChallengesScreen = () => {
 
         switch (activeTab) {
             case 'active':
-                data = [challengeOverview.activeChallenge];
+                data = challengeOverview.activeChallenge ? [challengeOverview.activeChallenge] : [];
                 break;
             case 'proposed':
                 data = challengeOverview.proposedChallenges;
@@ -384,6 +384,14 @@ const ChallengesScreen = () => {
             case 'created':
                 data = challengeOverview.createdChallenges;
                 break;
+        }
+
+        if (data.length === 0) {
+            return (
+                <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No {activeTab} challenges found</Text>
+                </View>
+            );
         }
 
         return (
