@@ -24,8 +24,8 @@ FROM eclipse-temurin:21-jre-alpine AS runtime
 
 RUN apk add --no-cache wget dumb-init
 
-RUN addgroup -g 1001 -S appgroup && \
-    adduser -u 1001 -S appuser -G appgroup
+RUN addgroup -g 6842 -S appgroup && \
+    adduser -u 6842 -S appuser -G appgroup
 
 RUN mkdir -p /data && chown appuser:appgroup /data
 
