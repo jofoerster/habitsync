@@ -142,11 +142,6 @@ jobs:
           ```bash
           docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_number }}
           ```
-          
-          ## Quick Deploy
-          ```bash
-          ./deploy.sh deploy ${{ steps.version.outputs.version }}
-          ```
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
