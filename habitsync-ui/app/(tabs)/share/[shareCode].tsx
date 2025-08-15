@@ -413,7 +413,9 @@ const SharedHabitDetailsScreen = () => {
                 <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
                 <Switch
                     value={allowEditingOfAllUsers}
-                    onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}>
+                    onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
+                    trackColor={{ false: theme.surfaceTertiary, true: theme.primaryLight }}
+                    thumbColor={isEditing ? theme.primary : theme.textTertiary}>
                 </Switch>
             </View>
 
