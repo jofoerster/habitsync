@@ -4,6 +4,7 @@ import de.jofoerster.habitsync.dto.SupportedIssuerDTO;
 import de.jofoerster.habitsync.dto.SupportedIssuersDTO;
 import lombok.Data;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @ConfigurationProperties(prefix = "app.security")
 @Component
 @Data
@@ -28,7 +30,7 @@ public class SecurityProperties {
     }
 
     public SupportedIssuersDTO getDTO() {
-        return SupportedIssuersDTO.builder()
+        SupportedIssuersDTO supportedIssuersDTO = SupportedIssuersDTO.builder()
                 .supportedIssuers(
                         issuers.entrySet().stream()
                                 .map(entry -> SupportedIssuerDTO.builder()
@@ -42,6 +44,8 @@ public class SecurityProperties {
                 )
                 .allowBasicAuth(basicAuthUsers != null && !basicAuthUsers.isEmpty())
                 .build();
+        log.info("Returning supported issuers: {}", supportedIssuersDTO);
+        return supportedIssuersDTO;
     }
 
 
