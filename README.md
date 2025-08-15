@@ -36,7 +36,7 @@ Start locally using Docker with the following command. Login with username `test
 docker run \
   -p 6842:6842 \
   -e BASE_URL=http://localhost:6842 \
-  -e APP_SECURITY_BASIC_AUTH_USERS_test=ey$10$TxDKMLg7CtRNBG1ogewyPeGUKup6XqsfNfuvTZa7sLByJoFEWY9E6 \
+  -e APP_SECURITY_BASIC-AUTH-USERS_test=ey$10$TxDKMLg7CtRNBG1ogewyPeGUKup6XqsfNfuvTZa7sLByJoFEWY9E6 \
   ghcr.io/jofoerster/habitsync:latest
 ```
 
@@ -58,7 +58,7 @@ services:
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-SECRET=<client-secret> # ONLY AS WORKAROUND FOR GOOGLE, PUBLICALLY AVAILABLE TO CLIENTS!
       # Login using username and password (basic auth), recommended for api access
-      - APP_SECURITY_BASIC_AUTH_USERS_<username>=<bcrypt-password-hash> # Create hash using: htpasswd -bnBC 10 "" YOUR_PASSWORD | tr -d ':\n'
+      - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash> # Create hash using: htpasswd -bnBC 10 "" YOUR_PASSWORD | tr -d ':\n'
       # Mail setup for notifications
       - SPRING_MAIL_HOST=<mail-host>
       - SPRING_MAIL_USERNAME=<mail-username>
