@@ -1,3 +1,4 @@
+# COMING SOON: THIS README IS A WORK IN PROGRESS
 # DEPLOYMENT INSTRUCTIONS AND SETUP GUIDE AS WELL AS PUBLIC DOCKER IMAGES IN PROGRESS AND WILL BE AVAILABLE SOON
 
 # HabitSync
@@ -5,12 +6,22 @@
 A simple habit tracking application with social features, allowing users to track personal habits and participate in
 shared challenges with others.
 
-![image](images/img.png)
+<div>
+  <img src="images/1.gif" width="30%" style="margin: 5px;">
+  <img src="images/2.gif" width="30%" style="margin: 5px;">
+  <img src="images/3.gif" width="30%" style="margin: 5px;">
+</div>
+<div>
+  <img src="images/4.gif" width="30%" style="margin: 5px;">
+  <img src="images/5.gif" width="30%" style="margin: 5px;">
+  <img src="images/6.gif" width="30%" style="margin: 5px;">
+</div>
+
 
 ## Features
 
 - Simple personal habit tracking with progress visualization
-- Shared habits to compare progress with friends
+- Shared habits to compare progress with friends (monthly medals for top 3)
 - One monthly challenge to compete, including leaderboard and voting for the next challenge
 - SSO OIDC authentication (optional: require confirmation for new users)
 - Dark/Light mode support
@@ -65,8 +76,7 @@ services:
 
 
 ## Development Setup
-
-## Prerequisites
+### Prerequisites
 
 - Java
 - Maven
@@ -109,9 +119,9 @@ services:
 5. The UI will be available at `http://localhost:8081`
 
 ## Database
-
 The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
-optionally can be mounted as a volume in production and can be backed up by copying the file.
+optionally can be mounted as a volume in production and can be backed up by copying the file. 
+WARNING: Currently you cannot change to another database as database schema migrations always run against the H2 database.
 
 ## API Documentation
 
@@ -126,14 +136,12 @@ optionally can be mounted as a volume in production and can be backed up by copy
 ### Backend
 
 - Complete notification system implementation
-- Fix timezone handling
-- Add support for habit progress pictures
+- Fix timezone handling (especially for challenges)
 - Improve shared habit connection cleanup
 
 ### Frontend
 
 - Fix timezone issues
-- Improve habit list sorting
 - Enhance color selection for habits
 - Add push notifications support
 
