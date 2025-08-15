@@ -159,7 +159,7 @@ public class ChallengeController {
             Map<Account, ChallengeProgress> progress = challenge != null ? challenge.getProgressOfHabits(List.of(challengeHabit),
                     new HabitRecordSupplier(habitRecordRepository)) : Map.of();
             HabitReadDTO habit = habitService.getApiHabitReadFromHabit(challengeHabit);
-            habit.setCurrentPercentage(progress.get(accountService.getCurrentAccount()).getPercentage());
+            habit.setCurrentPercentage(challenge != null ? progress.get(accountService.getCurrentAccount()).getPercentage() : 0);
             return ResponseEntity.ok(habit);
         }
     }

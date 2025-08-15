@@ -151,7 +151,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginTop: 8,
     },
     userCard: {
-        backgroundColor: 'white',
+        backgroundColor: theme.background,
         borderRadius: 12,
         padding: 16,
         marginBottom: 12,
