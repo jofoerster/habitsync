@@ -123,7 +123,11 @@ jobs:
           CHANGELOG=$(git log --oneline --pretty=format:"- %s" | head -20)
         fi
         
-        echo "$CHANGELOG" > changelog.txt
+        {
+          echo 'changelog<<EOF'
+          echo "$CHANGELOG"
+          echo 'EOF'
+        } >> $GITHUB_OUTPUT
 
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v1
@@ -132,7 +136,7 @@ jobs:
         name: Release ${{ steps.version.outputs.version }}
         body: |
           ## Changes
-          $(cat changelog.txt)
+          ${{ steps.changelog.outputs.changelog }}
           
           ## Docker Image
           ```bash
