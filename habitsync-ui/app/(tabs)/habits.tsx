@@ -5,7 +5,6 @@ import {ApiHabitRead, habitApi} from '@/services/api';
 import {Link, useFocusEffect} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import {useKeepAwake} from "expo-keep-awake";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
@@ -54,8 +53,6 @@ const HabitTrackerScreen = () => {
     const [connectedHabits, setConnectedHabits] = useState<{ [key: string]: ApiHabitRead[] | undefined }>({});
     const [loading, setLoading] = useState(true);
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
-
-    useKeepAwake();
 
     useFocusEffect(
         useCallback(() => {

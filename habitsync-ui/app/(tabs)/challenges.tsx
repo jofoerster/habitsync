@@ -1,4 +1,5 @@
 import {
+    ApiAccountRead,
     ApiChallengeOverviewRead,
     ApiChallengeRead,
     ApiComputationReadWrite,
@@ -16,6 +17,7 @@ import HabitRow from "@/components/HabitRow";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
+import {AuthService} from "@/services/auth";
 
 const ChallengesScreen = () => {
     const {theme} = useTheme();
@@ -29,6 +31,21 @@ const ChallengesScreen = () => {
     const [activeTab, setActiveTab] = useState<'active' | 'proposed' | 'created'>('active');
     const [challengeHabit, setChallengeHabit] = useState<ApiHabitRead | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
+
+    const [currentUser, setCurrentUser] = useState<ApiAccountRead | null>(null);
+
+    useEffect(() => {
+        const getCurrentUser = async () => {
+            try {
+                const user = await AuthService.getInstance().getCurrentUser();
+                console.log("current user", user);
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+        };
+        getCurrentUser();
+    }, []);
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -276,7 +293,7 @@ const ChallengesScreen = () => {
                         </View>
                     )}
 
-                    {(item.status === ChallengeStatus.PROPOSED && item.account.authenticationId === 'currentUser') && (
+                    {(item.status === ChallengeStatus.PROPOSED && item.account.authenticationId === currentUser?.authenticationId) && (
                         <TouchableOpacity
                             style={[styles.actionButton, styles.deleteButton]}
                             onPress={() => handleDeleteChallenge(item.id)}
@@ -290,7 +307,6 @@ const ChallengesScreen = () => {
         );
     };
 
-    // Move renderFooter function outside of renderTabContent and memoize it with useCallback
     const renderFooter = useCallback(() => {
         if (activeTab === 'active' && challengeHabit && challengeOverview) {
             return (
@@ -317,7 +333,7 @@ const ChallengesScreen = () => {
                                 <View style={styles.participantInfo}>
                                     <View style={styles.participantDetails}>
                                         <Link href={{
-                                            pathname: challengeProgress.linkToHabit,
+                                            pathname: challengeProgress.linkToHabit + (challengeProgress.account.authenticationId === currentUser?.authenticationId ? '?isOwnHabit=true' : ''),
                                         }}>
                                             <Pressable>
                                                 <Text

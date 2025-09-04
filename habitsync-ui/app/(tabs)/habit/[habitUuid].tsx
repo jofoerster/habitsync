@@ -335,7 +335,7 @@ const HabitDetailsScreen = () => {
 
             <ActivityCalendar key={lastValueUpdate} handleClickOnCalendarItem={handleClickOnCalendarItem}
                               handleLongClickOnCalendarItem={handleLongClickOnCalendarItem}
-                              habit={habitDetail} isBooleanHabit={isNonNummericHabit}/>
+                              habit={habitDetail} isBooleanHabit={isNonNummericHabit && !isChallenge}/>
 
             {habitUuid && isOwnHabit === "true" && (
                 <NumberModal
