@@ -1,9 +1,8 @@
 import * as AuthSession from 'expo-auth-session';
+import {DiscoveryDocument} from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
-import * as Crypto from 'expo-crypto';
 import {SupportedOIDCIssuer} from "@/services/api";
-import {DiscoveryDocument} from "expo-auth-session";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import {secureStorage} from "@/services/storage";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -134,7 +133,7 @@ export class OAuthService {
         }
 
         try {
-            const cachedData = await AsyncStorage.getItem(`discovery-${provider.name}`);
+            const cachedData = await secureStorage.getItem(`discovery-${provider.name}`);
             if (cachedData) {
                 const cachedDiscovery = JSON.parse(cachedData);
                 if (cachedDiscovery.authorizationEndpoint && cachedDiscovery.tokenEndpoint) {
@@ -150,7 +149,7 @@ export class OAuthService {
 
         this.discoveryCache.set(provider.name, discovery);
         try {
-            await AsyncStorage.setItem(`discovery-${provider.name}`, JSON.stringify(discovery));
+            await secureStorage.setItem(`discovery-${provider.name}`, JSON.stringify(discovery));
         } catch (error) {
             console.warn('Failed to cache discovery document:', error);
         }
