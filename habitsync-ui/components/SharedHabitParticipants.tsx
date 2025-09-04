@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {getColorById} from "@/constants/colors";
 import ProgressBar from "@/components/ProgressBar";
-import {ApiAccountRead, ApiHabitRead, ApiSharedHabitRead, ApiSharedHabitMedalsRead} from "@/services/api";
+import {ApiAccountRead, ApiHabitRead, ApiSharedHabitMedalsRead, ApiSharedHabitRead} from "@/services/api";
 import {ChevronDown, ChevronUp} from "lucide-react-native";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import {useTheme} from "@/context/ThemeContext";
@@ -48,7 +48,7 @@ const SharedHabitParticipants = ({sharedHabit, currentUser, hideHabit, medals}: 
                                                 key={index}
                                                 style={[
                                                     styles.medalBubble,
-                                                    { backgroundColor: `#${medal.color.toString(16).padStart(6, '0')}` }
+                                                    {backgroundColor: `#${medal.color.toString(16).padStart(6, '0')}`}
                                                 ]}
                                             >
                                                 <Text style={styles.medalIcon}>{medal.asciiCode}</Text>
@@ -71,7 +71,9 @@ const SharedHabitParticipants = ({sharedHabit, currentUser, hideHabit, medals}: 
                             </View>
                         </View>
                         <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
-                            {isExpandedList.get(habit.uuid) && (<ActivityCalendar handleClickOnCalendarItem={() => {}} habit={habit}/>)}
+                            {isExpandedList.get(habit.uuid) && (<ActivityCalendar handleClickOnCalendarItem={() => {
+                            }} handleLongClickOnCalendarItem={() => {
+                            }} habit={habit}/>)}
                         </View>
                     </View>
                 </View>
