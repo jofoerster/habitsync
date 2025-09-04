@@ -36,7 +36,7 @@ Start locally using Docker with the following command. Login with username `test
 docker run \
   -p 6842:6842 \
   -e BASE_URL=http://localhost:6842 \
-  -e APP_SECURITY_BASIC-AUTH-USERS_test=ey$10$TxDKMLg7CtRNBG1ogewyPeGUKup6XqsfNfuvTZa7sLByJoFEWY9E6 \
+  -e 'APP_SECURITY_BASIC-AUTH-USERS_test=$2y$10$EyuJ.fL/PzCTMMKTONEquuFLxAR8SAzl9iXF2v.qDZYCh5K2m78fS' \
   ghcr.io/jofoerster/habitsync:latest
 ```
 
