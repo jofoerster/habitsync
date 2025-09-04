@@ -73,7 +73,8 @@ const SharedHabitDetailsScreen = () => {
             currentPercentage: 0,
             name: "",
             uuid: "",
-            progressComputation: progressComputation!
+            progressComputation: progressComputation!,
+            sortPosition: 0
         }
     }
 
@@ -371,7 +372,7 @@ const SharedHabitDetailsScreen = () => {
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="target" size={20} color="#2196F3"/>
                                     <Text style={styles.progressDetailText}>
-                                        {progressComputation?.targetDays} days target
+                                        Percentage of last {progressComputation?.targetDays} days
                                     </Text>
                                 </View>
 

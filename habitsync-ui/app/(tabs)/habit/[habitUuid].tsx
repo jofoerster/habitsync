@@ -306,12 +306,6 @@ const HabitDetailsScreen = () => {
                             </View>
 
                             <View style={styles.progressDetails}>
-                                <View style={styles.progressDetailItem}>
-                                    <MaterialCommunityIcons name="target" size={20} color="#2196F3"/>
-                                    <Text style={styles.progressDetailText}>
-                                        {habitDetail?.progressComputation?.targetDays} days target
-                                    </Text>
-                                </View>
 
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="calendar-clock" size={20} color="#FF9800"/>
@@ -325,6 +319,13 @@ const HabitDetailsScreen = () => {
                                     <Text style={styles.progressDetailText}>
                                         Daily
                                         goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
+                                    </Text>
+                                </View>
+
+                                <View style={styles.progressDetailItem}>
+                                    <MaterialCommunityIcons name="target" size={20} color="#2196F3"/>
+                                    <Text style={styles.progressDetailText}>
+                                        Percentage of last {habitDetail?.progressComputation?.targetDays} days
                                     </Text>
                                 </View>
                             </View>
