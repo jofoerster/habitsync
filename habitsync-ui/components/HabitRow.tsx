@@ -1,6 +1,6 @@
 import {ChevronDown, ChevronUp} from "lucide-react-native";
 import React, {useEffect, useState} from "react";
-import {Pressable, Text, TouchableOpacity, View, StyleSheet} from "react-native";
+import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead, habitApi, habitRecordApi} from "../services/api";
 import NumberModal from "./NumberModal";
 import ProgressRing from "./ProgressRing";
@@ -21,7 +21,7 @@ interface DayButtonProps {
     hideDates?: boolean
 }
 
-const DayButton : React.FC<DayButtonProps> = ({day, completion, value, onPress, onLongPress, disabled, hideDates}) => {
+const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, onLongPress, disabled, hideDates}) => {
     const {theme} = useTheme();
 
     const getButtonStyle = () => {
@@ -98,27 +98,29 @@ interface HabitRowProps {
     onUpdate?: (habit: ApiHabitRead) => void,
     isDragModeEnabled?: boolean,
     hideDates?: boolean,
+    hideProgressRing?: boolean,
     habitIndex?: number,
     totalHabits?: number,
     onMoveUp?: (habitUuid: string) => void,
     onMoveDown?: (habitUuid: string) => void
 }
 
-const HabitRow : React.FC<HabitRowProps> = ({
-                      habit,
-                      isExpanded,
-                      onToggleExpand,
-                      connectedHabits,
-                      isConnectedHabitView,
-                      isChallengeHabit,
-                      onUpdate,
-                      isDragModeEnabled = false,
-                      hideDates = false,
-                      habitIndex = 0,
-                      totalHabits = 1,
-                      onMoveUp,
-                      onMoveDown
-                  }) => {
+const HabitRow: React.FC<HabitRowProps> = ({
+                                               habit,
+                                               isExpanded,
+                                               onToggleExpand,
+                                               connectedHabits,
+                                               isConnectedHabitView,
+                                               isChallengeHabit,
+                                               onUpdate,
+                                               isDragModeEnabled = false,
+                                               hideDates = false,
+                                               hideProgressRing = false,
+                                               habitIndex = 0,
+                                               totalHabits = 1,
+                                               onMoveUp,
+                                               onMoveDown
+                                           }) => {
     const {theme} = useTheme();
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -259,7 +261,8 @@ const HabitRow : React.FC<HabitRowProps> = ({
             }}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <View style={{paddingRight: 10}}>
-                        <ProgressRing color={habitColor} percentage={percentage}/>
+                        {!hideProgressRing && (
+                        <ProgressRing color={habitColor} percentage={percentage}/>)}
                     </View>
                     <View style={{flex: 1}}>
                         <Link href={{
@@ -291,7 +294,8 @@ const HabitRow : React.FC<HabitRowProps> = ({
                             }}
                             onPress={onToggleExpand}
                         >
-                            {isExpanded ? <ChevronUp color={theme.text} size={20}/> : <ChevronDown color={theme.text} size={20}/>}
+                            {isExpanded ? <ChevronUp color={theme.text} size={20}/> :
+                                <ChevronDown color={theme.text} size={20}/>}
                         </TouchableOpacity>
                     )}
                     <View style={{flex: 1}}>
