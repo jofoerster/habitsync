@@ -70,7 +70,13 @@ public class HabitRecordService {
             habitRecord.setParentUuid(habitUuid);
             habitRecord.setRecordDate(recordWrite.getEpochDay());
         } else {
-            habitRecord = records.getFirst();
+            if (records.size() > 1) {
+                records.sort(Comparator.comparing(HabitRecord::getModifyT));
+                habitRecord = records.removeLast();
+                habitRecordRepository.deleteAll(records);
+            } else {
+                habitRecord = records.getFirst();
+            }
         }
         habitRecord.setRecordValue(recordWrite.getRecordValue());
         habitRecord = habitRecordRepository.save(habitRecord);
