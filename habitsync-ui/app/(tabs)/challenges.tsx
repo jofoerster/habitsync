@@ -305,6 +305,7 @@ const ChallengesScreen = () => {
                         connectedHabits={[]}
                         isConnectedHabitView={false}
                         isChallengeHabit={true}
+                        hideProgressRing={true}
                     />
                     <View style={styles.participantsSection}>
                         <Text style={styles.sectionTitle}>Challenge Progress

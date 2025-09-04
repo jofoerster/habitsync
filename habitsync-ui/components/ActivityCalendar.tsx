@@ -6,8 +6,9 @@ import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 
-const ActivityCalendar = ({handleClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
+const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
     handleClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
+    handleLongClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
     habit: ApiHabitRead,
     showTitle?: boolean,
     isBooleanHabit?: boolean
@@ -129,6 +130,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, habit, showTitle = true, i
                                 {day.record && !day.isInFuture ? (
                                     <Pressable
                                         onPress={() => handleClickOnCalendarItem(day.record)}
+                                        onLongPress={() => handleLongClickOnCalendarItem(day.record)}
                                         style={[
                                             styles.daySquare,
                                             {

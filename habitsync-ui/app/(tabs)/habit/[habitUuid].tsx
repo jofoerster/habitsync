@@ -61,6 +61,8 @@ const HabitDetailsScreen = () => {
         getCurrentUser();
     }, []);
 
+    const isChallenge = habitDetail?.isChallengeHabit || habitDetail?.progressComputation?.challengeComputationType;
+
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
         && habitDetail.progressComputation.dailyGoal === 1;
 
@@ -238,8 +240,8 @@ const HabitDetailsScreen = () => {
         }
     }
 
-    const handleClickOnCalendarItem = async (record?: ApiHabitRecordRead) => {
-        if (isNonNummericHabit) {
+    const handleClickOnCalendarItem = async (record?: ApiHabitRecordRead, longClick?: boolean) => {
+        if (isNonNummericHabit && !longClick && !isChallenge) {
             const value = record ? (record.recordValue === 1 ? 0 : 1) : 1;
             await habitRecordApi.createRecord(habitUuid, {epochDay: record!.epochDay, recordValue: value})
             setLastValueUpdate(Date.now());
@@ -249,6 +251,11 @@ const HabitDetailsScreen = () => {
                 setSelectedEpochDay(record.epochDay);
             }
         }
+    }
+
+    const handleLongClickOnCalendarItem = async (record?: ApiHabitRecordRead) => {
+        console.log("long click on record", record);
+        await handleClickOnCalendarItem(record, true);
     }
 
     const handleEditHabit = () => {
@@ -266,8 +273,6 @@ const HabitDetailsScreen = () => {
             </View>
         );
     }
-
-    const isChallenge = habitDetail?.isChallengeHabit || habitDetail?.progressComputation?.challengeComputationType;
 
     return (
         <ScrollView style={styles.container}>
@@ -329,6 +334,7 @@ const HabitDetailsScreen = () => {
             )}
 
             <ActivityCalendar key={lastValueUpdate} handleClickOnCalendarItem={handleClickOnCalendarItem}
+                              handleLongClickOnCalendarItem={handleLongClickOnCalendarItem}
                               habit={habitDetail} isBooleanHabit={isNonNummericHabit}/>
 
             {habitUuid && isOwnHabit === "true" && (
