@@ -1,7 +1,7 @@
 {
   "name": "habitsync-ui",
   "main": "expo-router/entry",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -48,7 +48,8 @@
     "react-native-vector-icons": "^10.2.0",
     "react-native-web": "^0.20.0",
     "react-native-webview": "13.13.5",
-    "react-native-worklets": "^0.4.1"
+    "react-native-worklets": "^0.4.1",
+    "expo-secure-store": "~14.2.4"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

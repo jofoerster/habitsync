@@ -5,6 +5,7 @@ import {
     Modal,
     Platform,
     StyleSheet,
+    Switch,
     Text,
     TextInput,
     TouchableOpacity,
@@ -22,6 +23,7 @@ import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {MAX_INTEGER} from "@/constants/numbers";
 
 const {width} = Dimensions.get('window');
 
@@ -59,7 +61,8 @@ const TOOLTIP_TEXTS = {
     frequencyType: "Choose the time period for your frequency. Weekly: 'Y times per week'" +
         " Monthly: 'Y times per month', Custom Period: 'Y times per X days'",
     frequency: "The Y in 'Y times per X days'.",
-    customDays: "The X in 'Y times per X days'."
+    customDays: "The X in 'Y times per X days'.",
+    asMuchAsPossible: "A challenge where you can log as much as you want each day. The user with the highest total value wins"
 };
 
 type HabitConfigProps = {
@@ -105,9 +108,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [tempFrequency, setTempFrequency] = useState('');
         const [tempTimesPerXDays, setTempTimesPerXDays] = useState('');
 
+        const [isAsMuchAsPossibleChallenge, setIsAsMuchAsPossibleChallenge] = useState(false);
+
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
-            frequency === '1' && timesPerXDays === '1') {
+                frequency === '1' && timesPerXDays === '1') {
                 return 'Daily';
             } else if (frequencyType === FrequencyTypeDTO.WEEKLY) {
                 return frequency ? `${frequency} times per week` : 'Daily';
@@ -175,6 +180,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setIsSharedWithOthers(!(habit.synchronizedSharedHabitId === undefined
                             || habit.synchronizedSharedHabitId === null));
                         setIsNumericalHabit(habit.progressComputation.dailyReachableValue !== 1);
+                        setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
+                            && parseInt(habit.progressComputation.dailyReachableValue) >= (MAX_INTEGER-1));
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -197,8 +204,22 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setDailyGoal('1');
                 setDailyReachableValue('1');
                 setUnit('');
+                setIsAsMuchAsPossibleChallenge(false);
             }
         };
+
+        const switchAsMuchAsPossibleChallenge = () => {
+            setIsAsMuchAsPossibleChallenge(!isAsMuchAsPossibleChallenge);
+            if (!isAsMuchAsPossibleChallenge) {
+                setDailyReachableValue(MAX_INTEGER.toString());
+                setFrequencyType(FrequencyTypeDTO.MONTHLY);
+                setFrequency("1");
+                setChallengeType(ChallengeComputationType.RELATIVE);
+            } else {
+                setDailyReachableValue('1');
+                setChallengeType(ChallengeComputationType.ABSOLUTE);
+            }
+        }
 
         const handleUpdate = async (): Promise<ApiHabitWrite | undefined> => {
             if (configType === ConfigType.HABIT && !name.trim()) {
@@ -221,7 +242,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             }
 
             if (((!frequency && configType !== ConfigType.CHALLENGE) ||
-                (!frequency && configType === ConfigType.CHALLENGE && challengeType !== ChallengeComputationType.MAX_VALUE)) &&
+                    (!frequency && configType === ConfigType.CHALLENGE && challengeType !== ChallengeComputationType.MAX_VALUE)) &&
                 frequencyType !== FrequencyTypeDTO.DAILY) {
                 alert('Error', 'Please fill in field frequency');
                 return;
@@ -451,7 +472,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 )}
 
                 {
-                    configType === ConfigType.CHALLENGE && (
+                    configType === ConfigType.CHALLENGE && !isAsMuchAsPossibleChallenge && (
                         <View style={styles.section}>
                             <View style={styles.titleRow}>
                                 <Text style={styles.sectionTitle}>Challenge Computation Type</Text>
@@ -525,7 +546,24 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     </View>
 
                     <View style={styles.row}>
-                        {isNumericalHabit && (
+                        {isNumericalHabit && configType === ConfigType.CHALLENGE && (
+                            <View style={styles.halfInput}>
+                                <View style={styles.labelRow}>
+                                    <Text style={styles.label}>As much as possible</Text>
+                                    <HelpIcon tooltipKey="asMuchAsPossible"/>
+                                    {isFieldLocked() && <LockIcon/>}
+                                </View>
+                                <Switch
+                                    value={isAsMuchAsPossibleChallenge}
+                                    onValueChange={switchAsMuchAsPossibleChallenge}
+                                    disabled={isFieldLocked()}
+                                    trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                                    thumbColor={isAsMuchAsPossibleChallenge ? theme.primary : theme.surface}
+                                />
+                            </View>
+                        )}
+
+                        {isNumericalHabit && !isAsMuchAsPossibleChallenge && (
                             <View style={styles.halfInput}>
                                 <View style={styles.labelRow}>
                                     <Text style={styles.label}>Daily Goal</Text>
@@ -586,35 +624,35 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     )}
 
-                    {/* Simplified Frequency Field */}
-                    {(configType !== ConfigType.CHALLENGE || challengeType !== ChallengeComputationType.MAX_VALUE) && (
-                        <View style={styles.inputContainer}>
-                            <View style={styles.labelRow}>
-                                <Text style={styles.label}>Frequency</Text>
-                                <HelpIcon tooltipKey="frequencySettings"/>
-                                {isFieldLocked() && <LockIcon/>}
+                    {(configType !== ConfigType.CHALLENGE || challengeType !== ChallengeComputationType.MAX_VALUE)
+                        && !isAsMuchAsPossibleChallenge && (
+                            <View style={styles.inputContainer}>
+                                <View style={styles.labelRow}>
+                                    <Text style={styles.label}>Frequency</Text>
+                                    <HelpIcon tooltipKey="frequencySettings"/>
+                                    {isFieldLocked() && <LockIcon/>}
+                                </View>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.frequencyDisplayButton,
+                                        isFieldLocked() && styles.lockedInput
+                                    ]}
+                                    onPress={isFieldLocked() ? undefined : openFrequencyModal}
+                                    disabled={isFieldLocked()}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={[
+                                        styles.frequencyDisplayText,
+                                        isFieldLocked() && styles.lockedButtonText
+                                    ]}>
+                                        {getFrequencyDisplay()}
+                                    </Text>
+                                    {!isFieldLocked() && (
+                                        <Text style={styles.editIcon}>✏️</Text>
+                                    )}
+                                </TouchableOpacity>
                             </View>
-                            <TouchableOpacity
-                                style={[
-                                    styles.frequencyDisplayButton,
-                                    isFieldLocked() && styles.lockedInput
-                                ]}
-                                onPress={isFieldLocked() ? undefined : openFrequencyModal}
-                                disabled={isFieldLocked()}
-                                activeOpacity={0.7}
-                            >
-                                <Text style={[
-                                    styles.frequencyDisplayText,
-                                    isFieldLocked() && styles.lockedButtonText
-                                ]}>
-                                    {getFrequencyDisplay()}
-                                </Text>
-                                {!isFieldLocked() && (
-                                    <Text style={styles.editIcon}>✏️</Text>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    )}
+                        )}
 
                     {/* Target Days moved below frequency */}
                     {configType !== ConfigType.CHALLENGE && (

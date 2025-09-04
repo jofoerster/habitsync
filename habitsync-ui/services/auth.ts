@@ -1,6 +1,6 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import OAuthService, {AuthResult} from './oauth';
+import OAuthService from './oauth';
 import {ApiAccountRead, authApi, SupportedOIDCIssuer, userApi} from './api';
+import {secureStorage} from "@/services/storage";
 
 const ACCESS_TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
@@ -67,7 +67,7 @@ export class AuthService {
     }
 
     public async refresh(): Promise<boolean> {
-        const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+        const refreshToken = await secureStorage.getItem(REFRESH_TOKEN_KEY);
 
         if (!refreshToken) {
             console.log("No refresh token found");
@@ -113,12 +113,12 @@ export class AuthService {
     }
 
     private async _performInitialization(): Promise<void> {
-        this.setState({ isLoading: true });
+        this.setState({isLoading: true});
         await this.refresh();
     }
 
     public async loginWithOAuth2Provider(provider: SupportedOIDCIssuer, redirectPath?: string): Promise<void> {
-        this.setState({ isLoading: true, error: null });
+        this.setState({isLoading: true, error: null});
 
         try {
             const result = await OAuthService.loginWithOAuthProvider(provider, redirectPath);
@@ -151,7 +151,7 @@ export class AuthService {
     }
 
     public async loginWithUsernamePassword(username: string, password: string, redirectPath?: string): Promise<void> {
-        this.setState({ isLoading: true, error: null });
+        this.setState({isLoading: true, error: null});
 
         try {
             const tokenPair = await authApi.getTokenPairFromUsernamePassword(username, password);
@@ -183,7 +183,7 @@ export class AuthService {
 
     private async clearAuth(): Promise<void> {
         console.log('Clearing auth');
-        await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_INFO_KEY]);
+        await secureStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_INFO_KEY]);
         this.setState({
             isLoading: false,
             isAuthenticated: false,
@@ -194,12 +194,12 @@ export class AuthService {
     }
 
     public async getAccessToken(): Promise<string | null> {
-        return await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
+        return await secureStorage.getItem(ACCESS_TOKEN_KEY);
     }
 
     private async setTokens(accessToken: string, refreshToken: string): Promise<void> {
-        await AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-        await AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        await secureStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        await secureStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     }
 
 
@@ -208,12 +208,12 @@ export class AuthService {
     }
 
     public async getCurrentUser(): Promise<ApiAccountRead | null> {
-        const info = await AsyncStorage.getItem(USER_INFO_KEY);
+        const info = await secureStorage.getItem(USER_INFO_KEY);
         if (info) {
             return JSON.parse(info);
         } else {
             const userInfoFromApi = await userApi.getUserInfo();
-            await AsyncStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfoFromApi));
+            await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfoFromApi));
             return userInfoFromApi;
         }
     }
@@ -226,7 +226,7 @@ export class AuthService {
     }
 
     private setState(newState: Partial<AuthState>): void {
-        this.state = { ...this.state, ...newState };
+        this.state = {...this.state, ...newState};
         this.listeners.forEach(listener => listener(this.state));
     }
 }
