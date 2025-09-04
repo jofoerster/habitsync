@@ -383,12 +383,14 @@ const SharedHabitDetailsScreen = () => {
                                     </Text>
                                 </View>
 
-                                <View style={styles.progressDetailItem}>
-                                    <MaterialCommunityIcons name="flag" size={20} color="#4CAF50"/>
-                                    <Text style={styles.progressDetailText}>
-                                        {progressComputation?.dailyGoal} daily goal
-                                    </Text>
-                                </View>
+                                {progressComputation?.dailyGoal === 1 && (
+                                    <View style={styles.progressDetailItem}>
+                                        <MaterialCommunityIcons name="flag" size={20} color="#4CAF50"/>
+                                        <Text style={styles.progressDetailText}>
+                                            {progressComputation?.dailyGoal} daily goal
+                                        </Text>
+                                    </View>
+                                )}
 
                                 {progressComputation?.unit && (
                                     <View style={styles.progressDetailItem}>
@@ -415,7 +417,7 @@ const SharedHabitDetailsScreen = () => {
                 <Switch
                     value={allowEditingOfAllUsers}
                     onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
-                    trackColor={{ false: theme.surfaceTertiary, true: theme.primaryLight }}
+                    trackColor={{false: theme.surfaceTertiary, true: theme.primaryLight}}
                     thumbColor={isEditing ? theme.primary : theme.textTertiary}>
                 </Switch>
             </View>

@@ -18,6 +18,7 @@ import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
 import {AuthService} from "@/services/auth";
+import {MAX_INTEGER} from "@/constants/numbers";
 
 const ChallengesScreen = () => {
     const {theme} = useTheme();
@@ -169,6 +170,8 @@ const ChallengesScreen = () => {
         const isProposed = item.status === ChallengeStatus.PROPOSED;
         const isActive = item.status === ChallengeStatus.ACTIVE;
         const timeRemaining = isActive ? getTimeRemaining(item.endDay) : null;
+        const isAsMuchAsPossibleChallenge = item.computation.challengeComputationType === ChallengeComputationType.RELATIVE &&
+            item.computation.frequency === 1 && item.computation.dailyReachableValue === MAX_INTEGER;
 
         return (
             <View style={styles.challengeCard}>
@@ -207,7 +210,7 @@ const ChallengesScreen = () => {
                 <View style={styles.goalSection}>
                     <View style={styles.goalHeader}>
                         <MaterialCommunityIcons name="target" size={18} color="#2196F3"/>
-                        <Text style={styles.goalTitle}>Goal</Text>
+                        <Text style={styles.goalTitle}>Progress Computation</Text>
                     </View>
 
                     <View style={styles.goalDetails}>
@@ -218,7 +221,16 @@ const ChallengesScreen = () => {
                             </Text>
                         </View>
 
-                        {item.computation.challengeComputationType !== ChallengeComputationType.MAX_VALUE && (
+                        {isAsMuchAsPossibleChallenge && (
+                            <View style={styles.goalItem}>
+                                <MaterialCommunityIcons name="ruler" size={16} color="#666"/>
+                                <Text style={styles.goalItemText}>
+                                    As many {item.computation.unit} as possible
+                                </Text>
+                            </View>
+                        )}
+
+                        {item.computation.challengeComputationType !== ChallengeComputationType.MAX_VALUE && !isAsMuchAsPossibleChallenge && (
                             <View style={styles.goalItem}>
                                 <MaterialCommunityIcons name="calendar-clock" size={16} color="#666"/>
                                 <Text style={styles.goalItemText}>
@@ -227,7 +239,7 @@ const ChallengesScreen = () => {
                             </View>
                         )}
 
-                        {item.computation?.dailyReachableValue && (
+                        {item.computation?.dailyReachableValue && !isAsMuchAsPossibleChallenge && (
                             <View style={styles.goalItem}>
                                 <MaterialCommunityIcons name="ruler" size={16} color="#666"/>
                                 <Text style={styles.goalItemText}>
