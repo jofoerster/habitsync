@@ -4,6 +4,7 @@ import {Modal, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {habitNumberModalApi} from "../services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
+import {useKeepAwake} from "expo-keep-awake";
 
 const NumberModal = ({visible, onClose, onSubmit, habit, showStopwatch = true, currentRecordValue = null}) => {
     const {theme} = useTheme();
@@ -20,6 +21,8 @@ const NumberModal = ({visible, onClose, onSubmit, habit, showStopwatch = true, c
     const minutes = Math.floor((timerTime / 60000) % 60);
     const seconds = Math.floor(((timerTime / 1000) % 60));
     const milliseconds = Math.floor((timerTime / 10) % 100);
+
+    useKeepAwake();
 
     useEffect(() => {
         fetchNumbers();
