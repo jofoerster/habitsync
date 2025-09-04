@@ -1,6 +1,3 @@
-# COMING SOON: THIS README IS A WORK IN PROGRESS
-# DEPLOYMENT INSTRUCTIONS AND SETUP GUIDE AS WELL AS PUBLIC DOCKER IMAGES IN PROGRESS AND WILL BE AVAILABLE SOON
-
 # HabitSync
 
 A simple habit tracking application with social features, allowing users to track personal habits and participate in
@@ -17,7 +14,6 @@ shared challenges with others.
   <img src="images/6.gif" width="30%" style="margin: 5px;">
 </div>
 
-
 ## Features
 
 - Simple personal habit tracking with progress visualization
@@ -30,8 +26,10 @@ shared challenges with others.
 - Email notifications as habit reminders (coming soon)
 
 ## Deployment
-### Docker
-Start locally using Docker with the following command. Login with username `test` and password `PASSWORD`.
+
+### Docker (Quickstart for testing)
+
+Start locally using Docker with the following command:
 ```
 docker run \
   -p 6842:6842 \
@@ -39,9 +37,13 @@ docker run \
   -e 'APP_SECURITY_BASIC-AUTH-USERS_test=$2y$10$EyuJ.fL/PzCTMMKTONEquuFLxAR8SAzl9iXF2v.qDZYCh5K2m78fS' \
   ghcr.io/jofoerster/habitsync:latest
 ```
+When started, login under `http://localhost:6842` with username `test` and
+password `PASSWORD`.
 
-### Docker Compose
+### Docker Compose (Recommended for production use)
+
 See `docker-compose.yml` for more details on how to run the application using Docker Compose.
+
 ```
 services:
   web:
@@ -74,8 +76,8 @@ services:
       - "9092:9092" # For database access, optional
 ```
 
-
 ## Development Setup
+
 ### Prerequisites
 
 - Java
@@ -108,7 +110,7 @@ services:
    ```bash
    npm install
    ```
-   
+
 3. Set necessary environment variables in `.env`
 
 4. Run the development server:
@@ -119,9 +121,11 @@ services:
 5. The UI will be available at `http://localhost:8081`
 
 ## Database
+
 The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
-optionally can be mounted as a volume in production and can be backed up by copying the file. 
-WARNING: Currently you cannot change to another database as database schema migrations always run against the H2 database.
+optionally can be mounted as a volume in production and can be backed up by copying the file.
+WARNING: Currently you cannot change to another database as database schema migrations always run against the H2
+database.
 
 ## API Documentation
 
