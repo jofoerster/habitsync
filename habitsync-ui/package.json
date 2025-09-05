@@ -1,7 +1,7 @@
 {
   "name": "habitsync-ui",
   "main": "expo-router/entry",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
