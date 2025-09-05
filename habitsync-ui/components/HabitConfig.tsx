@@ -767,7 +767,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     )}
                 </View>
 
-                {configType !== ConfigType.CHALLENGE && (
+                {configType !== ConfigType.CHALLENGE && habit?.uuid && (
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
                             <Text style={styles.sectionTitle}>Notification</Text>

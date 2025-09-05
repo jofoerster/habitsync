@@ -1,6 +1,7 @@
 package de.jofoerster.habitsync.service.notification;
 
 import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
+import de.jofoerster.habitsync.model.account.Account;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -46,6 +47,19 @@ public class SchedulingService {
             }
         } catch (SchedulerException e) {
             log.error("Failed to schedule notification job for habit {}", id, e);
+        }
+    }
+
+    public void removeNotificationJob(String id) {
+        log.debug("Remove notification job for habit {}", id);
+        JobKey jobKey = JobKey.jobKey("notifyJob_" + id, "notifications");
+        try {
+            if (scheduler.checkExists(jobKey)) {
+                log.debug("Job to delete {} exists", jobKey);
+                scheduler.deleteJob(jobKey);
+            }
+        } catch (SchedulerException ignored) {
+            log.error(ignored.getMessage());
         }
     }
 

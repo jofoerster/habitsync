@@ -57,6 +57,7 @@ public class NotificationServiceNew {
         try {
             habit.setReminderCustom(mapper.writeValueAsString(frequency));
             habitService.saveHabit(habit);
+            schedulingService.scheduleNotificationJob(habit.getUuid(), frequency);
             return true;
         } catch (JsonProcessingException e) {
             log.warn("Could not set reminderCustom for habit {}", habit.getUuid(), e);
@@ -67,6 +68,7 @@ public class NotificationServiceNew {
     public boolean deleteNotificationForHabit(Habit habit) {
         habit.setReminderCustom(null);
         habitService.saveHabit(habit);
+        schedulingService.removeNotificationJob(habit.getUuid());
         return true;
     }
 
