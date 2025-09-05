@@ -2,7 +2,7 @@
   "expo": {
     "name": "HabitSync",
     "slug": "habitsync-ui",
-    "version": "0.4.1",
+    "version": "0.4.2",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "habitsync",
