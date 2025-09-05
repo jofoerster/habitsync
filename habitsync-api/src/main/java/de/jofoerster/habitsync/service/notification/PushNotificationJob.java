@@ -18,6 +18,6 @@ public class PushNotificationJob implements Job {
         String id = context.getJobDetail()
                 .getJobDataMap()
                 .getString("id");
-        notificationService.sendPushNotificationsForUser(id);
+        notificationService.sendPushNotifications(id);
     }
 }

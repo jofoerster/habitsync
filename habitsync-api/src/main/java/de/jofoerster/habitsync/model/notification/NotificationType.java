@@ -10,7 +10,8 @@ public enum NotificationType {
             "No Own Record",
             "${sharedHabitName}: You did not submit any records for ${noRecordsForDays} days"), PING_FROM_OTHER_USER(
             "Ping", "${sharedHabitName}: Ping from ${senderName}"), CUSTOM("Custom",
-            "${sharedHabitName}: ${customText}"), PERIODICALLY("Periodically", "${sharedHabitName}: ${customText}");
+            "${sharedHabitName}: ${customText}"), PERIODICALLY("Periodically", "${sharedHabitName}: ${customText}"),
+    PUSH_NOTIFICATION_HABIT("Habit Reminder", "Habit Reminder: ${habitName}");
 
     public final String label;
     public final String template;

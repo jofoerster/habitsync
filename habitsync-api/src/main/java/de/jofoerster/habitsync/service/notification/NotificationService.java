@@ -47,6 +47,9 @@ public class NotificationService {
     @Autowired
     private NotificationTemplateService notificationTemplateService;
 
+    @Value("${spring.mail.username}")
+    private String mailSender;
+
     public void scheduleNotificationJob(Account account) {
         log.info("Schedule notification job for account {}", account.getAuthenticationId());
         JobKey jobKey = JobKey.jobKey("notifyJob_" + account.getAuthenticationId(), "notifications");
@@ -113,7 +116,7 @@ public class NotificationService {
 
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom("habitsync@jntn.de");
+            helper.setFrom(mailSender);
             helper.setTo(account.getEmail());
             helper.setSubject("Habit sync notifications");
             helper.setText(mailContent, true); // true = isHtml
@@ -146,9 +149,9 @@ public class NotificationService {
                             .forEach((b, habit) -> {
                                 if (b) {
                                     notificationRepository.save(rule.getNotificationTemplate()
-                                            .createNotification(account, Optional.empty(), sharedHabit, rule,
+                                            .createNotification(account, Optional.empty(), sharedHabit, null, rule,
                                                     templateEngine, notificationRuleService,
-                                                    new HabitRecordSupplier(habitRecordRepository), baseUrl));
+                                                    new HabitRecordSupplier(habitRecordRepository), baseUrl, null));
                                 }
                             });
                 });
@@ -198,7 +201,7 @@ public class NotificationService {
 
         try {
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom("habitsync@jntn.de");
+            helper.setFrom(mailSender);
             helper.setTo(notification.getReceiverAccount()
                     .getEmail());
             helper.setSubject(notification.getSubject());
@@ -295,9 +298,9 @@ public class NotificationService {
         NotificationRule notificationRule =
                 sharedHabit.getTemporaryMainNotificationRule(notificationRuleService, notificationTemplate);
         Notification notification =
-                notificationTemplate.createNotification(receiverAccount, Optional.of(senderAccount), sharedHabit,
+                notificationTemplate.createNotification(receiverAccount, Optional.of(senderAccount), sharedHabit, null,
                         notificationRule, templateEngine, notificationRuleService,
-                        new HabitRecordSupplier(habitRecordRepository), baseUrl);
+                        new HabitRecordSupplier(habitRecordRepository), baseUrl, null);
         notificationRepository.save(notification);
         sendNotificationViaMail(notification); //TODO check that notification is not being sent multiple times
     }

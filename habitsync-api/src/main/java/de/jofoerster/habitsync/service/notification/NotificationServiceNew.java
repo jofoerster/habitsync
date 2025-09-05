@@ -3,31 +3,47 @@ package de.jofoerster.habitsync.service.notification;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
-import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
-import de.jofoerster.habitsync.repository.notification.NotificationRepository;
+import de.jofoerster.habitsync.model.notification.Notification;
+import de.jofoerster.habitsync.model.notification.NotificationStatus;
+import de.jofoerster.habitsync.model.notification.NotificationTemplate;
+import de.jofoerster.habitsync.model.notification.NotificationType;
+import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
+import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import jakarta.annotation.PostConstruct;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.quartz.*;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.thymeleaf.TemplateEngine;
+
+import java.util.Optional;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class NotificationServiceNew {
 
     private final HabitService habitService;
-    private final NotificationRepository notificationRepository;
     private final SchedulingService schedulingService;
+    private final NotificationTemplateService notificationTemplateService;
+    private final TemplateEngine templateEngine;
+    private final NotificationRuleService notificationRuleService;
+    private final HabitRecordRepository habitRecordRepository;
+    private JavaMailSender emailSender;
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public NotificationServiceNew(HabitService habitService, NotificationRepository notificationRepository,
-                                  SchedulingService schedulingService) {
-        this.habitService = habitService;
-        this.notificationRepository = notificationRepository;
-        this.schedulingService = schedulingService;
-    }
+    @Value("${spring.mail.username}")
+    private String mailSender;
+
+    @Value("${base.url}")
+    String baseUrl;
 
     @PostConstruct
     public void init() {
@@ -54,7 +70,37 @@ public class NotificationServiceNew {
         return true;
     }
 
-    public void sendPushNotificationsForUser(String id) {
-        //TODO implement
+    public void sendPushNotifications(String id) {
+        Optional<Habit> habitOpt = habitService.getHabitByUuid(id);
+        if (habitOpt.isEmpty()) {
+            log.warn("Could not find habit with id {}", id);
+            return;
+        }
+        NotificationTemplate notificationTemplate =
+                notificationTemplateService.getNotificationTemplateByNotificationType(
+                        NotificationType.PUSH_NOTIFICATION_HABIT);
+        Habit habit = habitOpt.get();
+        Notification notification =
+                notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
+                        templateEngine,
+                        notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
+                        NotificationStatus.STATELESS_NOTIFICATION);
+        sendNotificationViaMail(notification);
+    }
+
+    public void sendNotificationViaMail(Notification notification) {
+        MimeMessage mimeMessage = emailSender.createMimeMessage();
+
+        try {
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
+            helper.setFrom(mailSender);
+            helper.setTo(notification.getReceiverAccount()
+                    .getEmail());
+            helper.setSubject(notification.getSubject());
+            helper.setText(notification.getContent(), true); // true = isHtml
+
+            emailSender.send(mimeMessage);
+        } catch (MessagingException ignored) {
+        }
     }
 }

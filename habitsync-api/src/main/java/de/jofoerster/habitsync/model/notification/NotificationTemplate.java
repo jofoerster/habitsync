@@ -1,6 +1,7 @@
 package de.jofoerster.habitsync.model.notification;
 
 import de.jofoerster.habitsync.model.account.Account;
+import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
@@ -32,20 +33,20 @@ public class NotificationTemplate {
     public NotificationTemplate() {
     }
 
-    public Notification createNotification(Account receiver, Optional<Account> sender, SharedHabit sharedHabit,
+    public Notification createNotification(Account receiver, Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                            NotificationRule rule, TemplateEngine templateEngine,
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                           String baseUrl) {
+                                           String baseUrl, NotificationStatus notificationStatus) {
         String subject =
                 getSubjectContent(sender, receiver, sharedHabit, rule, templateEngine, ruleService, recordSupplier);
         return Notification.builder()
-                .content(getNotificationContent(templateEngine, receiver, sender, sharedHabit, ruleService,
+                .content(getNotificationContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                         recordSupplier, baseUrl, subject))
                 .htmlContentShade(
-                        getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, ruleService,
+                        getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                                 recordSupplier, baseUrl, subject))
                 .htmlContentShadeMinimal(
-                        getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, ruleService,
+                        getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                                 recordSupplier, baseUrl, subject))
                 .subject(subject)
                 .receiverAccount(receiver)
@@ -54,7 +55,7 @@ public class NotificationTemplate {
                         .hashCode() + sharedHabit.getId()
                         .hashCode() + rule.getId()
                         .hashCode() + getHashCodeOfSenderAccount(sender))
-                .status(NotificationStatus.WAITING)
+                .status(notificationStatus == null ? NotificationStatus.WAITING : notificationStatus)
                 .timestamp(LocalDateTime.now())
                 .sharedHabitIt(sharedHabit.getId())
                 .build();
@@ -76,32 +77,32 @@ public class NotificationTemplate {
     }
 
     private String getNotificationContent(TemplateEngine templateEngine, Account receiver, Optional<Account> sender,
-                                          SharedHabit sharedHabit, NotificationRuleService ruleService,
+                                          SharedHabit sharedHabit, Habit habit, NotificationRuleService ruleService,
                                           HabitRecordSupplier recordSupplier, String baseurl, String subject) {
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, ruleService, recordSupplier, baseurl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl, subject));
         return templateEngine.process(htmlTemplateName, context);
     }
 
     private String getNotificationShadeContent(TemplateEngine templateEngine, Account receiver,
-                                               Optional<Account> sender, SharedHabit sharedHabit,
+                                               Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                                String baseurl, String subject) {
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, ruleService, recordSupplier, baseurl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl, subject));
         return templateEngine.process(htmlShadeTemplateName, context);
     }
 
     private String getNotificationShadeContentMinimal(TemplateEngine templateEngine, Account receiver,
-                                                      Optional<Account> sender, SharedHabit sharedHabit,
+                                                      Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                       NotificationRuleService ruleService,
                                                       HabitRecordSupplier recordSupplier, String baseUrl,
                                                       String subject) {
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, ruleService, recordSupplier, baseUrl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl, subject));
         return templateEngine.process(htmlShadeMinimalTemplateName, context);
     }
 
@@ -125,7 +126,7 @@ public class NotificationTemplate {
     }
 
     private Map<String, Object> getNotificationVariables(Account receiver, Optional<Account> sender,
-                                                         SharedHabit sharedHabit,
+                                                         SharedHabit sharedHabit, Habit habit,
                                                          NotificationRuleService notificationRuleService,
                                                          HabitRecordSupplier habitRecordSupplier, String baseUrl,
                                                          String subject) {
@@ -134,13 +135,14 @@ public class NotificationTemplate {
         parameters.put("receiver", receiver);
         parameters.put("subject", subject);
         parameters.put("sharedHabits", List.of(sharedHabit));
+        parameters.put("habit", habit);
         parameters.put("notificationRuleService", notificationRuleService);
         parameters.put("habitRecordSupplier", habitRecordSupplier);
         sender.ifPresent(account -> parameters.put("sender", account.getUserName()));
 
         int maxProgress = (int) Math.round(sharedHabit.getHabits()
                 .stream()
-                .map(habit -> sharedHabit.getProgressOfHabit(habit, notificationRuleService, habitRecordSupplier))
+                .map(h -> sharedHabit.getProgressOfHabit(h, notificationRuleService, habitRecordSupplier))
                 .max(Comparator.naturalOrder())
                 .orElse(0d));
         parameters.put("maxProgress", maxProgress);
