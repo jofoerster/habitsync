@@ -15,9 +15,9 @@ public class PushNotificationJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) {
-        String userId = context.getJobDetail()
+        String id = context.getJobDetail()
                 .getJobDataMap()
-                .getString("userId");
-        notificationService.sendPushNotificationsForUser(accountService.getOrCreateAccountById(userId));
+                .getString("id");
+        notificationService.sendPushNotificationsForUser(id);
     }
 }

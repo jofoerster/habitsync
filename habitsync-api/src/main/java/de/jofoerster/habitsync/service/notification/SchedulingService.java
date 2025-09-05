@@ -31,7 +31,7 @@ public class SchedulingService {
                 scheduler.rescheduleJob(triggerKey, newTrigger);
             } else {
                 log.debug("Job {} does not exist, creating new", jobKey);
-                JobDetail jobDetail = JobBuilder.newJob(NotificationJob.class)
+                JobDetail jobDetail = JobBuilder.newJob(PushNotificationJob.class)
                         .withIdentity(jobKey)
                         .usingJobData("jobId", id)
                         .build();

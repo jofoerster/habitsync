@@ -54,8 +54,7 @@ public class NotificationServiceNew {
         return true;
     }
 
-    public void sendPushNotificationsForUser(Account account) {
-        notificationRepository.findAllByReceiverAccount(account);
-
+    public void sendPushNotificationsForUser(String id) {
+        //TODO implement
     }
 }

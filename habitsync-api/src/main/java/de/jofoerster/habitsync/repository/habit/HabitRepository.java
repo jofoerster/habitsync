@@ -4,6 +4,8 @@ import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -32,5 +34,6 @@ public interface HabitRepository extends JpaRepository<Habit, Long> {
     List<Habit> findByAccountAndHabitTypeAndStatusOrderBySortPosition(Account account, HabitType habitType,
                                                                       Integer status);
 
-    List<Habit> findByReminderCustomIsNotEmptyAndStatus(Integer status);
+    @Query("SELECT h FROM Habit h WHERE h.reminderCustom IS NOT NULL AND h.reminderCustom != '' AND h.status = :status")
+    List<Habit> findByReminderCustomIsNotEmptyAndStatus(@Param("status") Integer status);
 }
