@@ -1,9 +1,10 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {NotificationFrequency} from "@/services/api";
+import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime} from "@/services/timezone";
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
@@ -39,8 +40,10 @@ const FrequencyPicker: React.FC<Props> = ({
     useEffect(() => {
         if (notificationFrequency) {
             setFrequency(notificationFrequency.frequency);
-            setHour(Number(notificationFrequency.time.split(':')[0]));
-            setMinute(Number(notificationFrequency.time.split(':')[1]));
+            const {hour: utcHour, minute: utcMinute} = parseTime(notificationFrequency.time);
+            const localTime = convertUTCToLocalTime(utcHour, utcMinute);
+            setHour(localTime.hour);
+            setMinute(localTime.minute);
             if (notificationFrequency.frequency === 'weekly' && notificationFrequency.weekdays) {
                 setWeekdays(notificationFrequency.weekdays);
             } else {
@@ -50,9 +53,10 @@ const FrequencyPicker: React.FC<Props> = ({
     }, [notificationFrequency])
 
     useEffect(() => {
-        const time = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const utcTime = convertLocalTimeToUTC(hour, minute);
+        const time = formatTime(utcTime.hour, utcTime.minute);
         onChange?.({frequency, weekdays, time});
-    }, [frequency, weekdays, hour, minute]);
+    }, [frequency, weekdays, hour, minute, onChange]);
 
     return (
         <View style={styles.container}>
@@ -127,7 +131,7 @@ const FrequencyPicker: React.FC<Props> = ({
 
 export default FrequencyPicker;
 
-const createStyles = createThemedStyles((theme) => StyleSheet.create({
+const createStyles = createThemedStyles((_theme) => StyleSheet.create({
     container: {
         padding: 16,
         borderRadius: 8,

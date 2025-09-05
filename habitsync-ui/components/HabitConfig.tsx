@@ -25,6 +25,7 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {MAX_INTEGER} from "@/constants/numbers";
 import FrequencyPicker from "@/components/FrequencyPicker";
+import {convertUTCToLocalTime, parseTime, formatTime} from "@/services/timezone";
 
 const {width} = Dimensions.get('window');
 
@@ -187,7 +188,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             || habit.synchronizedSharedHabitId === null));
                         setIsNumericalHabit(habit.progressComputation.dailyReachableValue !== 1);
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
-                            && parseInt(habit.progressComputation.dailyReachableValue) >= (MAX_INTEGER-1));
+                            && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER-1));
                         setNotificationFrequency(habit.notificationFrequency);
                     }
                     if (configType === ConfigType.CHALLENGE) {
@@ -196,14 +197,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setTargetDays('31');
                     }
                     setLoading(false);
-                } catch (error) {
+                } catch (_error) {
                     alert('Error', 'Failed to fetch habit data');
                     navigation.goBack();
                 }
             };
 
             readHabit();
-        }, [habit?.uuid]);
+        }, [habit?.uuid, configType, navigation]);
 
         const switchNumericalBooleanHabit = (value: boolean) => {
             setIsNumericalHabit(value);
@@ -257,11 +258,16 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             if (!notificationFrequency) {
                 return 'Off';
             }
+
+            const {hour: utcHour, minute: utcMinute} = parseTime(notificationFrequency.time);
+            const localTime = convertUTCToLocalTime(utcHour, utcMinute);
+            const localTimeString = formatTime(localTime.hour, localTime.minute);
+
             if (notificationFrequency.frequency === 'daily') {
-                return `Daily at ${notificationFrequency.time}`;
+                return `Daily at ${localTimeString}`;
             } else if (notificationFrequency.frequency === 'weekly' && notificationFrequency.weekdays) {
                 const days = notificationFrequency.weekdays.join(', ');
-                return `Weekly on ${days} at ${notificationFrequency.time}`;
+                return `Weekly on ${days} at ${localTimeString}`;
             }
             return 'Custom notification set';
         }
@@ -336,7 +342,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 }
                 setSaving(false);
                 return habitData;
-            } catch (error) {
+            } catch (_error) {
                 alert('Error', 'Failed to update/create habit');
                 setSaving(false);
             }
@@ -510,7 +516,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     <View style={styles.syncInfoContainer}>
                         <Text style={styles.syncInfoText}>
                             🔒 Some fields are locked because this habit is synchronized with others. To edit these
-                            fields, select "edit for all" on the habit detail page (requires permission).
+                            fields, select &quot;edit for all&quot; on the habit detail page (requires permission).
                         </Text>
                     </View>
                 )}
@@ -1159,3 +1165,4 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
 
 export default HabitConfig;
 
+HabitConfig.displayName = 'HabitConfig';
