@@ -131,11 +131,11 @@ const FrequencyPicker: React.FC<Props> = ({
 
 export default FrequencyPicker;
 
-const createStyles = createThemedStyles((_theme) => StyleSheet.create({
+const createStyles = createThemedStyles((theme) => StyleSheet.create({
     container: {
         padding: 16,
         borderRadius: 8,
-        backgroundColor: '#f2f2f2',
+        backgroundColor: theme.surfaceSecondary,
         maxWidth: 400,
     },
     row: {
@@ -157,12 +157,12 @@ const createStyles = createThemedStyles((_theme) => StyleSheet.create({
     },
     dayButton: {
         borderWidth: 1,
-        borderColor: '#ccc',
+        borderColor: theme.border,
         borderRadius: 4,
         paddingHorizontal: 10,
         paddingVertical: 6,
         margin: 4,
-        backgroundColor: '#fff',
+        backgroundColor: theme.surfaceTertiary,
     },
     dayButtonSelected: {
         backgroundColor: '#007bff',
@@ -170,7 +170,7 @@ const createStyles = createThemedStyles((_theme) => StyleSheet.create({
     },
     dayText: {
         fontSize: 14,
-        color: '#333',
+        color: theme.text,
     },
     dayTextSelected: {
         color: '#fff',
