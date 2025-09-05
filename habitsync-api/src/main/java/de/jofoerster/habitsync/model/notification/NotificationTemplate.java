@@ -146,18 +146,17 @@ public class NotificationTemplate {
         parameters.put("subject", subject);
         if (sharedHabit != null) {
             parameters.put("sharedHabits", List.of(sharedHabit));
+            int maxProgress = (int) Math.round(sharedHabit.getHabits()
+                    .stream()
+                    .map(h -> sharedHabit.getProgressOfHabit(h, notificationRuleService, habitRecordSupplier))
+                    .max(Comparator.naturalOrder())
+                    .orElse(0d));
+            parameters.put("maxProgress", maxProgress);
         }
         parameters.put("habit", habit);
         parameters.put("notificationRuleService", notificationRuleService);
         parameters.put("habitRecordSupplier", habitRecordSupplier);
         sender.ifPresent(account -> parameters.put("sender", account.getUserName()));
-
-        int maxProgress = (int) Math.round(sharedHabit.getHabits()
-                .stream()
-                .map(h -> sharedHabit.getProgressOfHabit(h, notificationRuleService, habitRecordSupplier))
-                .max(Comparator.naturalOrder())
-                .orElse(0d));
-        parameters.put("maxProgress", maxProgress);
 
         return parameters;
     }
