@@ -22,7 +22,9 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
-RUN apk add --no-cache wget dumb-init
+RUN apk add --no-cache wget dumb-init tzdata
+
+RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
 
 RUN addgroup -g 6842 -S appgroup && \
     adduser -u 6842 -S appuser -G appgroup
