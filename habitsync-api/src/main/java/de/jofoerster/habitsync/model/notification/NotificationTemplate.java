@@ -33,7 +33,8 @@ public class NotificationTemplate {
     public NotificationTemplate() {
     }
 
-    public Notification createNotification(Account receiver, Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
+    public Notification createNotification(Account receiver, Optional<Account> sender, SharedHabit sharedHabit,
+                                           Habit habit,
                                            NotificationRule rule, TemplateEngine templateEngine,
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                            String baseUrl, NotificationStatus notificationStatus) {
@@ -46,18 +47,18 @@ public class NotificationTemplate {
                         getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                                 recordSupplier, baseUrl, subject))
                 .htmlContentShadeMinimal(
-                        getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
+                        getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, habit,
+                                ruleService,
                                 recordSupplier, baseUrl, subject))
                 .subject(subject)
                 .receiverAccount(receiver)
                 .senderAccount(getSenderAccount(sender))
                 .identifier(receiver.getUserName()
-                        .hashCode() + sharedHabit.getId()
-                        .hashCode() + rule.getId()
-                        .hashCode() + getHashCodeOfSenderAccount(sender))
+                        .hashCode() + (sharedHabit != null ? sharedHabit.getId().hashCode() : 0) +
+                        (rule != null ? rule.getId().hashCode() : 0) + getHashCodeOfSenderAccount(sender))
                 .status(notificationStatus == null ? NotificationStatus.WAITING : notificationStatus)
                 .timestamp(LocalDateTime.now())
-                .sharedHabitIt(sharedHabit.getId())
+                .sharedHabitIt(sharedHabit != null ? sharedHabit.getId() : null)
                 .build();
     }
 
@@ -81,7 +82,8 @@ public class NotificationTemplate {
                                           HabitRecordSupplier recordSupplier, String baseurl, String subject) {
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
+                        subject));
         return templateEngine.process(htmlTemplateName, context);
     }
 
@@ -94,7 +96,8 @@ public class NotificationTemplate {
         }
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
+                        subject));
         return templateEngine.process(htmlShadeTemplateName, context);
     }
 
@@ -108,7 +111,8 @@ public class NotificationTemplate {
         }
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl, subject));
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl,
+                        subject));
         return templateEngine.process(htmlShadeMinimalTemplateName, context);
     }
 
