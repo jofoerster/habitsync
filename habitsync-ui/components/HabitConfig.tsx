@@ -753,7 +753,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     {configType !== ConfigType.CHALLENGE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
-                                <Text style={styles.label}>Target Days</Text>
+                                <Text style={styles.label}>Target Days (Advanced)</Text>
                                 <HelpIcon tooltipKey="targetDays"/>
                                 {isFieldLocked() && <LockIcon/>}
                             </View>
