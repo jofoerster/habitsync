@@ -123,10 +123,14 @@ public class ChallengeService {
         throw new IllegalStateException("There is more than one active challenge");
     }
 
-    public Map<Account, ChallengeProgress> getScoresOfAccounts(HabitRecordSupplier recordSupplier) {
+    public Map<Account, ChallengeProgress> getScoresOfAccountsOfCurrentlyActiveChallenge(HabitRecordSupplier recordSupplier) {
+        Challenge challenge = getCurrentlyActiveChallenge();
+        return getScoresOfAccounts(recordSupplier, challenge);
+    }
+
+    public Map<Account, ChallengeProgress> getScoresOfAccounts(HabitRecordSupplier recordSupplier, Challenge challenge) {
         Map<Account, ChallengeProgress> scores = new HashMap<>();
         List<Habit> habits = habitService.getChallengeHabits();
-        Challenge challenge = getCurrentlyActiveChallenge();
         if (challenge == null) {
             return scores;
         }
@@ -250,7 +254,7 @@ public class ChallengeService {
                                 .build())
                         .points(entry.getValue()).build()).toList();
         Map<Account, ChallengeProgress> progressMap =
-                this.getScoresOfAccounts(new HabitRecordSupplier(habitRecordRepository));
+                this.getScoresOfAccountsOfCurrentlyActiveChallenge(new HabitRecordSupplier(habitRecordRepository));
         List<ChallengeProgressReadDTO> progressCurrentChallengeUsers = progressMap.entrySet().stream()
                 .map((entry) -> ChallengeProgressReadDTO.builder()
                         .account(entry.getKey().getApiAccountRead())
@@ -266,5 +270,27 @@ public class ChallengeService {
                 .leaderboard(leaderboard)
                 .progressCurrentChallengeUsers(progressCurrentChallengeUsers)
                 .build();
+    }
+
+    public Challenge getLastMonthChallenge() {
+        List<Challenge> challenges = challengeRepository.findAllByStatus(ChallengeStatus.COMPLETED);
+        if (challenges.isEmpty()) {
+            log.info("No completed challenge found");
+            return null;
+        } else {
+            List<Challenge> challengesFiltered =
+                    challenges.stream()
+                            .filter(c ->
+                                    c.getEndDate().isAfter(LocalDate.now().minusMonths(1)))
+                            .toList();
+            if (challengesFiltered.isEmpty()) {
+                log.info("No completed challenge found in the last month");
+                return null;
+            } else {
+                Challenge challenge = challengesFiltered.getFirst();
+                log.info("Last completed challenge is {}", challenge.getTitle());
+                return challenge;
+            }
+        }
     }
 }

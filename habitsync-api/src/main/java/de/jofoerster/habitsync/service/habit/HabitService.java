@@ -1,7 +1,9 @@
 package de.jofoerster.habitsync.service.habit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.HabitReadDTO;
 import de.jofoerster.habitsync.dto.HabitWriteDTO;
+import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
@@ -30,6 +32,8 @@ public class HabitService {
     private final HabitRecordRepository habitRecordRepository;
     private final Random rand = new Random();
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
+
+    ObjectMapper mapper = new ObjectMapper();
 
     public List<Habit> getAllUserHabitsByType(Account account, HabitType habitType) {
         return habitRepository.findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
@@ -173,6 +177,7 @@ public class HabitService {
                 .sortPosition(habit.getSortPosition())
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
+                .notificationFrequency(this.getNotificationFrequency(habit))
                 .build();
 
     }
@@ -242,6 +247,23 @@ public class HabitService {
             index++;
         }
         habitRepository.saveAll(habitsToUpdate);
+    }
+
+    public List<Habit> getHabitsWithReminders() {
+        return habitRepository.findByReminderCustomIsNotEmptyAndStatus(1);
+    }
+
+    public NotificationFrequencyDTO getNotificationFrequency(Habit habit) {
+        String frequency = habit.getReminderCustom();
+        if (frequency == null || frequency.isEmpty()) {
+            return null;
+        }
+        try {
+            return mapper.readValue(frequency, NotificationFrequencyDTO.class);
+        } catch (Exception e){
+            log.warn("Could not parse notification frequency: {}", frequency, e);
+            return null;
+        }
     }
 
     private String getLastMonthMedalString(Habit h) {

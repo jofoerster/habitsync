@@ -17,13 +17,15 @@ import {
     ApiHabitRead,
     ApiHabitWrite,
     ChallengeComputationType,
-    FrequencyTypeDTO
+    FrequencyTypeDTO, notificationApi, NotificationFrequency
 } from "@/services/api";
 import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {MAX_INTEGER} from "@/constants/numbers";
+import FrequencyPicker from "@/components/FrequencyPicker";
+import {convertUTCToLocalTime, parseTime, formatTime} from "@/services/timezone";
 
 const {width} = Dimensions.get('window');
 
@@ -103,12 +105,17 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [modalVisible, setModalVisible] = useState(false);
         const [modalContent, setModalContent] = useState('');
 
+        const [notificationModalVisible, setNotificationModalVisible] = useState(false);
+
         const [frequencyModalVisible, setFrequencyModalVisible] = useState(false);
         const [tempFrequencyType, setTempFrequencyType] = useState<FrequencyTypeDTO>(FrequencyTypeDTO.WEEKLY);
         const [tempFrequency, setTempFrequency] = useState('');
         const [tempTimesPerXDays, setTempTimesPerXDays] = useState('');
 
         const [isAsMuchAsPossibleChallenge, setIsAsMuchAsPossibleChallenge] = useState(false);
+
+        const [notificationFrequency, setNotificationFrequency] = useState<NotificationFrequency | null>(null);
+        const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationFrequency | null>(null);
 
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
@@ -181,7 +188,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             || habit.synchronizedSharedHabitId === null));
                         setIsNumericalHabit(habit.progressComputation.dailyReachableValue !== 1);
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
-                            && parseInt(habit.progressComputation.dailyReachableValue) >= (MAX_INTEGER-1));
+                            && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER-1));
+                        setNotificationFrequency(habit.notificationFrequency);
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -189,14 +197,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setTargetDays('31');
                     }
                     setLoading(false);
-                } catch (error) {
+                } catch (_error) {
                     alert('Error', 'Failed to fetch habit data');
                     navigation.goBack();
                 }
             };
 
             readHabit();
-        }, [habit?.uuid]);
+        }, [habit?.uuid, configType, navigation]);
 
         const switchNumericalBooleanHabit = (value: boolean) => {
             setIsNumericalHabit(value);
@@ -219,6 +227,49 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setDailyReachableValue('1');
                 setChallengeType(ChallengeComputationType.ABSOLUTE);
             }
+        }
+
+        const handleNotificationSettingsUpdate = async () => {
+            if (habit && notificationFrequencyNew) {
+                try {
+                    await notificationApi.updateNotificationForHabit(habit.uuid, notificationFrequencyNew);
+                    setNotificationFrequency(notificationFrequencyNew);
+                    setNotificationModalVisible(false);
+                } catch {
+                    alert('Error', 'Failed to update notification settings');
+                }
+            }
+        }
+
+        const handleDeleteNotificationSettings = async () => {
+            if (habit) {
+                try {
+                    await notificationApi.deleteNotificationForHabit(habit.uuid);
+                    setNotificationFrequency(null);
+                    setNotificationFrequencyNew(null);
+                    setNotificationModalVisible(false);
+                } catch {
+                    alert('Error', 'Failed to delete notification settings');
+                }
+            }
+        }
+
+        const getNotificationFrequencyDisplay = () => {
+            if (!notificationFrequency) {
+                return 'Off';
+            }
+
+            const {hour: utcHour, minute: utcMinute} = parseTime(notificationFrequency.time);
+            const localTime = convertUTCToLocalTime(utcHour, utcMinute);
+            const localTimeString = formatTime(localTime.hour, localTime.minute);
+
+            if (notificationFrequency.frequency === 'daily') {
+                return `Daily at ${localTimeString}`;
+            } else if (notificationFrequency.frequency === 'weekly' && notificationFrequency.weekdays) {
+                const days = notificationFrequency.weekdays.join(', ');
+                return `Weekly on ${days} at ${localTimeString}`;
+            }
+            return 'Custom notification set';
         }
 
         const handleUpdate = async (): Promise<ApiHabitWrite | undefined> => {
@@ -291,7 +342,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 }
                 setSaving(false);
                 return habitData;
-            } catch (error) {
+            } catch (_error) {
                 alert('Error', 'Failed to update/create habit');
                 setSaving(false);
             }
@@ -417,11 +468,55 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     </View>
                 </Modal>
 
+                <Modal
+                    animationType="fade"
+                    transparent={true}
+                    visible={notificationModalVisible}
+                    onRequestClose={() => setNotificationModalVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalText}>Set Notification</Text>
+
+                            <FrequencyPicker
+                                onChange={setNotificationFrequencyNew}
+                                hideFrequency={false}
+                                hideWeekdays={false}
+                                notificationFrequency={notificationFrequency || undefined}
+                            />
+
+                            <TouchableOpacity
+                                style={[styles.saveButton, {backgroundColor: '#4ECDC4'}]}
+                                onPress={handleNotificationSettingsUpdate}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.saveButtonText}>Apply Notification</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.saveButton, {backgroundColor: '#e53e3e'}]}
+                                onPress={handleDeleteNotificationSettings}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.saveButtonText}>Delete Notification</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.saveButton, {backgroundColor: theme.warning}]}
+                                onPress={() => setNotificationModalVisible(false)}
+                                activeOpacity={0.8}
+                            >
+                                <Text style={styles.saveButtonText}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+
                 {isSharedWithOthers && (
                     <View style={styles.syncInfoContainer}>
                         <Text style={styles.syncInfoText}>
                             🔒 Some fields are locked because this habit is synchronized with others. To edit these
-                            fields, select "edit for all" on the habit detail page (requires permission).
+                            fields, select &quot;edit for all&quot; on the habit detail page (requires permission).
                         </Text>
                     </View>
                 )}
@@ -658,7 +753,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     {configType !== ConfigType.CHALLENGE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
-                                <Text style={styles.label}>Target Days</Text>
+                                <Text style={styles.label}>Target Days (Advanced)</Text>
                                 <HelpIcon tooltipKey="targetDays"/>
                                 {isFieldLocked() && <LockIcon/>}
                             </View>
@@ -677,6 +772,32 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     )}
                 </View>
+
+                {configType !== ConfigType.CHALLENGE && habit?.uuid && (
+                    <View style={styles.section}>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.sectionTitle}>Notification</Text>
+                        </View>
+
+                        <View style={styles.inputContainer}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.label}>Notification Settings</Text>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.notificationConfigButton}
+                                onPress={() => {
+                                    setNotificationModalVisible(true);
+                                }}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={styles.notificationConfigText}>
+                                    {getNotificationFrequencyDisplay()}
+                                </Text>
+                                <Text style={styles.configIcon}>⚙️</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                )}
 
                 {
                     showSaveButton && (
@@ -1020,7 +1141,28 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: '#4ECDC4',
         marginLeft: 8,
     },
+    notificationConfigButton: {
+        borderWidth: 1,
+        borderColor: theme.border,
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: theme.background,
+    },
+    notificationConfigText: {
+        fontSize: 16,
+        color: theme.text,
+    },
+    configIcon: {
+        fontSize: 16,
+        color: theme.text,
+        marginLeft: 8,
+    },
 }));
 
 export default HabitConfig;
 
+HabitConfig.displayName = 'HabitConfig';

@@ -28,18 +28,22 @@ public class NotificationTemplateService {
                 template = templates.getFirst();
             }
             template.setNotificationType(notificationType);
-            template.setHtmlTemplateName(
-                    "notification-templates/notification-template-single"); //move into switch as soon as there are
-            // different ones
-            template.setHtmlShadeTemplateName(
-                    "notification-templates/notification-template-shade"); //move into switch as soon as there are
-            // different ones
-            template.setHtmlShadeMinimalTemplateName(
-                    "notification-templates/notification-template-shade-minimal"); //move into switch as soon as
-            // there are different ones
+            switch (notificationType) {
+                case PUSH_NOTIFICATION_HABIT -> {
+                    template.setHtmlTemplateName(
+                            "notification-templates/notification-template-habit");
+                }
+                default -> {
+                    template.setHtmlTemplateName(
+                            "notification-templates/notification-template-single");
+                    template.setHtmlShadeTemplateName(
+                            "notification-templates/notification-template-shade");
+                    template.setHtmlShadeMinimalTemplateName(
+                            "notification-templates/notification-template-shade-minimal");
+                }
+            }
             template.setSubjectTemplate(notificationType.template);
             notificationTemplateRepository.save(template);
-
         }
     }
 

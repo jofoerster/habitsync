@@ -38,8 +38,30 @@ public class ChallengeSchedulerService {
     public void changeChallenge() {
         Challenge challenge = challengeService.getCurrentlyActiveChallenge();
         if (challenge != null) {
+            challenge.setStatus(ChallengeStatus.COMPLETED);
+            challengeRepository.save(challenge);
+        }
+
+        List<Challenge> challenges = getChallengesWithMostVotes();
+        if (!challenges.isEmpty()) {
+            Random rnd = new Random();
+            Challenge challengeNew = challenges.get(rnd.nextInt(challenges.size()));
+            challengeNew.setStatus(ChallengeStatus.ACTIVE);
+            challengeNew.setStartDate(LocalDate.now());
+            challengeNew.setEndDate(LocalDate.now()
+                    .plusMonths(1)
+                    .minusDays(1));
+            challengeRepository.save(challengeNew);
+        }
+    }
+
+    @Transactional
+    @Scheduled(cron = "0 0 0 2 * *")
+    public void computeChallengeResults() {
+        Challenge challenge = challengeService.getLastMonthChallenge();
+        if (challenge != null) {
             Map<Account, ChallengeProgress> scores =
-                    challengeService.getScoresOfAccounts(new HabitRecordSupplier(habitRecordRepository));
+                    challengeService.getScoresOfAccounts(new HabitRecordSupplier(habitRecordRepository), challenge);
 
             List<Map.Entry<Account, Double>> bestEntries = scores.entrySet()
                     .stream()
@@ -59,7 +81,9 @@ public class ChallengeSchedulerService {
                     currentPlacement++;
                     currentValue = entry.getValue();
                 }
-                resultList.add(new ChallengeResult(entry.getKey(), challenge, entry.getValue(), 0, currentPlacement));
+                resultList.add(
+                        new ChallengeResult(entry.getKey(), challenge, entry.getValue(),
+                                0, currentPlacement));
             }
 
             List<ChallengeResult> resultListFiltered = resultList.stream().filter(r -> {
@@ -71,21 +95,6 @@ public class ChallengeSchedulerService {
             }).toList();
 
             challengeResultRepository.saveAll(resultListFiltered);
-
-            challenge.setStatus(ChallengeStatus.COMPLETED);
-            challengeRepository.save(challenge);
-        }
-
-        List<Challenge> challenges = getChallengesWithMostVotes();
-        if (!challenges.isEmpty()) {
-            Random rnd = new Random();
-            Challenge challengeNew = challenges.get(rnd.nextInt(challenges.size()));
-            challengeNew.setStatus(ChallengeStatus.ACTIVE);
-            challengeNew.setStartDate(LocalDate.now());
-            challengeNew.setEndDate(LocalDate.now()
-                    .plusMonths(1)
-                    .minusDays(1));
-            challengeRepository.save(challengeNew);
         }
     }
 

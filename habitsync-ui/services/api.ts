@@ -12,6 +12,7 @@ export interface ApiHabitRead {
     isChallengeHabit?: boolean;
     synchronizedSharedHabitId?: number;
     sortPosition: number;
+    notificationFrequency: NotificationFrequency | null;
 }
 
 export interface ApiAccountRead {
@@ -179,6 +180,12 @@ export interface JWTTokenPair {
     refreshToken: string;
 }
 
+export interface NotificationFrequency {
+    frequency: 'daily' | 'weekly';
+    weekdays: string[];
+    time: string;
+}
+
 // API service functions
 
 // User API
@@ -284,6 +291,23 @@ export const habitApi = {
         if (!response.ok) throw new Error('Failed to move habit down');
     }
 };
+
+export const notificationApi = {
+    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationFrequency): Promise<void> => {
+        const response = await authenticatedFetch(`${BACKEND_BASE_URL}/notifications/habit/${habitUuid}`, {
+            method: 'PUT',
+            body: JSON.stringify(frequency),
+        });
+        if (!response.ok) throw new Error('Failed to update notification for habit');
+    },
+
+    deleteNotificationForHabit: async (habitUuid: string): Promise<void> => {
+        const response = await authenticatedFetch(`${BACKEND_BASE_URL}/notifications/habit/${habitUuid}`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to delete notification for habit');
+    }
+}
 
 export const habitNumberModalApi = {
     addNumber: async (habitUuid: string, number: string): Promise<void> => {
