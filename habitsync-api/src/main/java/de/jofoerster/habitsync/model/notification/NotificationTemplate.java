@@ -89,6 +89,9 @@ public class NotificationTemplate {
                                                Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                                String baseurl, String subject) {
+        if (htmlShadeTemplateName == null || htmlShadeTemplateName.isEmpty()) {
+            return "";
+        }
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl, subject));
@@ -100,6 +103,9 @@ public class NotificationTemplate {
                                                       NotificationRuleService ruleService,
                                                       HabitRecordSupplier recordSupplier, String baseUrl,
                                                       String subject) {
+        if (htmlShadeMinimalTemplateName == null || htmlShadeMinimalTemplateName.isEmpty()) {
+            return "";
+        }
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl, subject));
@@ -110,13 +116,17 @@ public class NotificationTemplate {
                                      NotificationRule rule, TemplateEngine templateEngine,
                                      NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
         Map<String, String> parameters = new HashMap<>();
-        parameters.put("sharedHabitName", sharedHabit.getTitle());
-        Integer percentageForN = rule.getPercentageOfGoalForNotificationTrigger();
-        parameters.put("percentage", String.valueOf(percentageForN));
-        sharedHabit.getHabitByOwner(receiver)
-                .ifPresent(habit -> parameters.put("noRecordsForDays",
-                        recordSupplier.getTimeSinceLastRecordByHabit(habit)
-                                .toString()));
+        if (sharedHabit != null) {
+            parameters.put("sharedHabitName", sharedHabit.getTitle());
+            sharedHabit.getHabitByOwner(receiver)
+                    .ifPresent(habit -> parameters.put("noRecordsForDays",
+                            recordSupplier.getTimeSinceLastRecordByHabit(habit)
+                                    .toString()));
+        }
+        if (rule != null) {
+            Integer percentageForN = rule.getPercentageOfGoalForNotificationTrigger();
+            parameters.put("percentage", String.valueOf(percentageForN));
+        }
 
         parameters.put("receiver", receiver.getDisplayName());
         parameters.put("senderName", sender.isPresent() ? sender.get()
@@ -134,7 +144,9 @@ public class NotificationTemplate {
         parameters.put("baseUrl", baseUrl);
         parameters.put("receiver", receiver);
         parameters.put("subject", subject);
-        parameters.put("sharedHabits", List.of(sharedHabit));
+        if (sharedHabit != null) {
+            parameters.put("sharedHabits", List.of(sharedHabit));
+        }
         parameters.put("habit", habit);
         parameters.put("notificationRuleService", notificationRuleService);
         parameters.put("habitRecordSupplier", habitRecordSupplier);
