@@ -13,6 +13,7 @@ spring:
     enabled: true
     locations: classpath:db/migration
     baseline-on-migrate: true
+    baseline-version: 0.0.1
     user: sa
     password: password
     schemas: PUBLIC
