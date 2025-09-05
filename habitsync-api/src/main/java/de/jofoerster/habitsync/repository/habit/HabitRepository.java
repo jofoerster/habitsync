@@ -31,4 +31,6 @@ public interface HabitRepository extends JpaRepository<Habit, Long> {
 
     List<Habit> findByAccountAndHabitTypeAndStatusOrderBySortPosition(Account account, HabitType habitType,
                                                                       Integer status);
+
+    List<Habit> findByReminderCustomIsNotEmptyAndStatus(Integer status);
 }

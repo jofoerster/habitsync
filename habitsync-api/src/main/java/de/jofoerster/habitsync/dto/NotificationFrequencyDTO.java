@@ -1,8 +1,5 @@
 package de.jofoerster.habitsync.dto;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,12 +11,3 @@ public class NotificationFrequencyDTO {
     private String time;
 }
 
-enum FrequencyEnum {
-    daily,
-    weekly;
-
-    @JsonCreator
-    public static FrequencyEnum fromString(String value) {
-        return FrequencyEnum.valueOf(value);
-    }
-}

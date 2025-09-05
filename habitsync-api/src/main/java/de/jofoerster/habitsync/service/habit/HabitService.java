@@ -249,6 +249,23 @@ public class HabitService {
         habitRepository.saveAll(habitsToUpdate);
     }
 
+    public List<Habit> getHabitsWithReminders() {
+        return habitRepository.findByReminderCustomIsNotEmptyAndStatus(1);
+    }
+
+    public NotificationFrequencyDTO getNotificationFrequency(Habit habit) {
+        String frequency = habit.getReminderCustom();
+        if (frequency == null || frequency.isEmpty()) {
+            return null;
+        }
+        try {
+            return mapper.readValue(frequency, NotificationFrequencyDTO.class);
+        } catch (Exception e){
+            log.warn("Could not parse notification frequency: {}", frequency, e);
+            return null;
+        }
+    }
+
     private String getLastMonthMedalString(Habit h) {
         List<SharedHabit> sharedHabits = sharedHabitRepository.findAllByHabitsContaining(List.of(h));
         SharedHabit sharedHabit;
@@ -273,19 +290,5 @@ public class HabitService {
             }
         }
         return "";
-    }
-
-    private NotificationFrequencyDTO getNotificationFrequency(Habit habit) {
-        String frequency = habit.getReminderCustom();
-        if (frequency == null || frequency.isEmpty()) {
-            return null;
-        }
-        try {
-            return mapper.readValue(frequency, NotificationFrequencyDTO.class);
-        } catch (Exception e){
-            log.warn("Could not parse notification frequency: {}", frequency, e);
-            return null;
-        }
-
     }
 }

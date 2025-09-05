@@ -34,12 +34,13 @@ public class AccountService {
     private final SecurityProperties securityProperties;
     private final TokenService tokenService;
 
-    @PostConstruct
-    public void init() {
-        log.info("Initializing account service, scheduling user notification jobs");
-        List<Account> accounts = accountRepository.getAccountsBySendNotificationsViaEmail(true);
-        accounts.forEach(notificationService::scheduleNotificationJob);
-    }
+//    Currently not needed
+//    @PostConstruct
+//    public void init() {
+//        log.info("Initializing account service, scheduling user notification jobs");
+//        List<Account> accounts = accountRepository.getAccountsBySendNotificationsViaEmail(true);
+//        accounts.forEach(notificationService::scheduleNotificationJob);
+//    }
 
     public boolean isUserAllowed(Authentication authentication) {
         log.debug("Checking user authorization");

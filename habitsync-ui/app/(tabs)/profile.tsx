@@ -163,36 +163,36 @@ const UserSettingsComponent = () => {
                     </View>
                 </View>
 
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Notifications</Text>
+                {/*<View style={styles.section}>*/}
+                {/*    <Text style={styles.sectionTitle}>Notifications</Text>*/}
 
-                    <View style={styles.switchField}>
-                        <Text style={styles.label}>Email Notifications</Text>
-                        <Switch
-                            value={isEmailNotificationsEnabled}
-                            onValueChange={setIsEmailNotificationsEnabled}
-                            trackColor={{ false: theme.disabled, true: theme.primaryLight }}
-                            thumbColor={isEmailNotificationsEnabled ? theme.primary : theme.surface}
-                        />
-                    </View>
+                {/*    <View style={styles.switchField}>*/}
+                {/*        <Text style={styles.label}>Email Notifications</Text>*/}
+                {/*        <Switch*/}
+                {/*            value={isEmailNotificationsEnabled}*/}
+                {/*            onValueChange={setIsEmailNotificationsEnabled}*/}
+                {/*            trackColor={{ false: theme.disabled, true: theme.primaryLight }}*/}
+                {/*            thumbColor={isEmailNotificationsEnabled ? theme.primary : theme.surface}*/}
+                {/*        />*/}
+                {/*    </View>*/}
 
-                    <View style={styles.field}>
-                        <Text style={styles.label}>Daily Notification Hour</Text>
-                        <TouchableOpacity
-                            style={styles.hourSelector}
-                            onPress={() => setShowHourPicker(true)}
-                        >
-                            <Text style={styles.hourSelectorText}>
-                                {dailyNotificationHour.toString().padStart(2, '0')}:00
-                            </Text>
-                            <MaterialCommunityIcons
-                                name="chevron-down"
-                                size={20}
-                                color={theme.textSecondary}
-                            />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                {/*    <View style={styles.field}>*/}
+                {/*        <Text style={styles.label}>Daily Notification Hour</Text>*/}
+                {/*        <TouchableOpacity*/}
+                {/*            style={styles.hourSelector}*/}
+                {/*            onPress={() => setShowHourPicker(true)}*/}
+                {/*        >*/}
+                {/*            <Text style={styles.hourSelectorText}>*/}
+                {/*                {dailyNotificationHour.toString().padStart(2, '0')}:00*/}
+                {/*            </Text>*/}
+                {/*            <MaterialCommunityIcons*/}
+                {/*                name="chevron-down"*/}
+                {/*                size={20}*/}
+                {/*                color={theme.textSecondary}*/}
+                {/*            />*/}
+                {/*        </TouchableOpacity>*/}
+                {/*    </View>*/}
+                {/*</View>*/}
 
                 <TouchableOpacity
                     style={[styles.saveButton, saving && styles.saveButtonDisabled]}
