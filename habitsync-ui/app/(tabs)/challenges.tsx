@@ -440,6 +440,12 @@ const ChallengesScreen = () => {
         );
     };
 
+    const shouldShowResultsBanner = () => {
+        const now = new Date();
+        const utcDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+        return utcDate.getUTCDate() === 1;
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -450,6 +456,16 @@ const ChallengesScreen = () => {
 
     return (
         <View style={styles.container}>
+            {shouldShowResultsBanner() && (
+                <View style={styles.resultsBanner}>
+                    <MaterialCommunityIcons name="information" size={20} color="#2196F3"/>
+                    <Text style={styles.bannerText}>
+                        If last month's challenge was active, results will be published tomorrow! (UTC). Last chance to
+                        log challenge progress today!
+                    </Text>
+                </View>
+            )}
+
             <View style={styles.tabContainer}>
                 <TouchableOpacity
                     style={[styles.tab, activeTab === 'active' && styles.activeTab]}
@@ -883,6 +899,21 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         color: '#2196F3',
+    },
+    resultsBanner: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#E8F5E9',
+        padding: 12,
+        borderRadius: 8,
+        margin: 16,
+        elevation: 2,
+    },
+    bannerText: {
+        fontSize: 14,
+        color: '#2E7D32',
+        marginLeft: 8,
+        flex: 1,
     },
 }));
 
