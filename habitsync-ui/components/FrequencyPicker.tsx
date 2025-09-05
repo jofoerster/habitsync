@@ -145,6 +145,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     label: {
         fontSize: 16,
+        color: theme.text,
     },
     toggleText: {
         fontSize: 16,
@@ -185,6 +186,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     picker: {
         width: 100,
         height: 40,
+        backgroundColor: theme.surfaceTertiary,
+        color: theme.text,
     },
     colon: {
         fontSize: 18,

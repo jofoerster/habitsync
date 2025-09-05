@@ -16,7 +16,6 @@ import java.util.TimeZone;
 public class SyncserverApplication {
 
     public static void main(String[] args) throws SQLException {
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Paris"));
         Server.createTcpServer("-tcp", "-tcpAllowOthers", "-ifNotExists")
                 .start();
         SpringApplication.run(SyncserverApplication.class, args);
