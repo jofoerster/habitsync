@@ -6,7 +6,8 @@ import {
     ApiHabitRead,
     challengeApi,
     ChallengeComputationType,
-    ChallengeStatus
+    ChallengeStatus,
+    FrequencyTypeDTO
 } from "@/services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import React, {useCallback, useEffect, useState} from 'react';
@@ -84,6 +85,22 @@ const ChallengesScreen = () => {
         }
         return 'Custom frequency';
     };
+
+    const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
+        return progressComputation.frequencyType === FrequencyTypeDTO.DAILY || progressComputation.frequency !== 1;
+    }
+
+    const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
+        if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY) {
+            return "Daily";
+        }
+        if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
+            return "Weekly";
+        }
+        if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
+            return "Monthly";
+        }
+    }
 
     useFocusEffect(
         useCallback(() => {
@@ -230,7 +247,7 @@ const ChallengesScreen = () => {
                             </View>
                         )}
 
-                        {item.computation.challengeComputationType !== ChallengeComputationType.MAX_VALUE && !isAsMuchAsPossibleChallenge && (
+                        {item.computation.challengeComputationType !== ChallengeComputationType.MAX_VALUE && !isAsMuchAsPossibleChallenge && isCustomFrequency(item.computation) && (
                             <View style={styles.goalItem}>
                                 <MaterialCommunityIcons name="calendar-clock" size={16} color="#666"/>
                                 <Text style={styles.goalItemText}>
@@ -243,7 +260,7 @@ const ChallengesScreen = () => {
                             <View style={styles.goalItem}>
                                 <MaterialCommunityIcons name="ruler" size={16} color="#666"/>
                                 <Text style={styles.goalItemText}>
-                                    Daily: {item.computation.dailyReachableValue} {item.computation.unit}
+                                    {getFrequencyTypeText(item.computation)}: {item.computation.dailyReachableValue} {item.computation.unit}
                                 </Text>
                             </View>
                         )}

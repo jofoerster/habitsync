@@ -35,7 +35,7 @@ public class NotificationServiceNew {
     private final TemplateEngine templateEngine;
     private final NotificationRuleService notificationRuleService;
     private final HabitRecordRepository habitRecordRepository;
-    private JavaMailSender emailSender;
+    private final JavaMailSender emailSender;
 
     ObjectMapper mapper = new ObjectMapper();
 
