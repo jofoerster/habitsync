@@ -1,6 +1,6 @@
 # HabitSync
 
-A simple habit tracking application with social features, allowing users to track personal habits and participate in
+A simple self hostable habit tracking application with social features, allowing users to track personal habits and participate in
 shared challenges with others.
 
 <div>
@@ -16,14 +16,14 @@ shared challenges with others.
 
 ## Features
 
-- Simple personal habit tracking with progress visualization
+- Simple personal habit tracking with goals and progress visualization
 - Shared habits to compare progress with friends (monthly medals for top 3)
 - One monthly challenge to compete, including leaderboard and voting for the next challenge
-- SSO OIDC authentication (optional: require confirmation for new users)
+- SSO OIDC authentication (optional: require confirmation for new users, multiple issuers possible)
+- Email notifications as habit reminders
 - Dark/Light mode support
 - Simple docker setup for deployment
 - React Native frontend, web app installable as pwa (mobile apps coming soon)
-- Email notifications as habit reminders (coming soon)
 
 ## Deployment
 
@@ -78,13 +78,6 @@ services:
 
 ## Development Setup
 
-### Prerequisites
-
-- Java
-- Maven
-- Node.js
-- npm
-
 ### Backend API
 
 1. Navigate to the API directory:
@@ -120,34 +113,31 @@ services:
 
 5. The UI will be available at `http://localhost:8081`
 
-## Database
+## Database and Backups
 
 The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
 optionally can be mounted as a volume in production and can be backed up by copying the file.
-WARNING: Currently you cannot change to another database as database schema migrations always run against the H2
-database.
+You can also connect to the database using a database client on port `9092`.
+To use a different database (not tested), set the appropriate Spring datasource environment variables.
 
 ## API Documentation
 
-[Add API documentation URL or swagger endpoint]
+There is currently no official API documentation. The API is incomplete and may change.
 
 ## Contributing
 
-[Add contribution guidelines]
+All contributions are welcome!
 
 ## Known Issues / TODOs
 
 ### Backend
 
-- Complete notification system implementation
-- Fix timezone handling (especially for challenges)
 - Improve shared habit connection cleanup
 
 ### Frontend
 
-- Fix timezone issues
-- Enhance color selection for habits
 - Add push notifications support
+- Support for mobile apps
 
 ## Release Process
 
