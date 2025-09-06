@@ -200,7 +200,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setFrequencyType(FrequencyTypeDTO.MONTHLY);
                         setTargetDays('31');
                     }
-                    if (habit?.progressComputation.frequency === 1) {
+                    if (habit?.progressComputation.frequency === 1 && habit?.progressComputation.dailyReachableValue !== 1) {
                         if (habit.progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
                             setGoalType('Weekly');
                         } else if (habit.progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
