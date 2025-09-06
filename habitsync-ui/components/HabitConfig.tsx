@@ -17,7 +17,9 @@ import {
     ApiHabitRead,
     ApiHabitWrite,
     ChallengeComputationType,
-    FrequencyTypeDTO, notificationApi, NotificationFrequency
+    FrequencyTypeDTO,
+    notificationApi,
+    NotificationFrequency
 } from "@/services/api";
 import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
@@ -25,7 +27,7 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {MAX_INTEGER} from "@/constants/numbers";
 import FrequencyPicker from "@/components/FrequencyPicker";
-import {convertUTCToLocalTime, parseTime, formatTime} from "@/services/timezone";
+import {convertUTCToLocalTime, formatTime, parseTime} from "@/services/timezone";
 
 const {width} = Dimensions.get('window');
 
@@ -52,14 +54,14 @@ const CHALLENGE_COMPUTATION_OPTIONS = [
 const TOOLTIP_TEXTS = {
     habitType: "Choose between a numerical habit (e.g., minutes, pages) or a boolean habit (e.g., done/not done)",
     dailyGoal: "The target amount you want to achieve each day. This will be used as default entry for single clicks on fields in the habit tracker",
-    maxDailyValue: "The maximum value you can achieve in a single day. " +
+    maxDailyValue: "The maximum value you can achieve in a single day/week/month. " +
         "This has to be achieved for a day to count as completed",
     unit: "The unit of measurement for your habit (e.g., minutes, pages, reps)",
     targetDays: "Number of days used for progress calculation (default: 30). When computing the current progress " +
         "the last X days will be used, where X is the targetDays value",
     challengeComputation: "How the challenge winner will be determined. Absolute percentage means that the 'normal' percentage of completion is beeing used at the end of the month." +
         "Relative percentage means that the participant with the highest percentage counts as 100%. Highest daily value means that for each participant only the highest day-value ist counted",
-    frequencySettings: "Configure how often you want to perform this habit",
+    frequencySettings: "Configure how often you want to perform this habit.",
     frequencyType: "Choose the time period for your frequency. Weekly: 'Y times per week'" +
         " Monthly: 'Y times per month', Custom Period: 'Y times per X days'",
     frequency: "The Y in 'Y times per X days'.",
@@ -116,6 +118,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const [notificationFrequency, setNotificationFrequency] = useState<NotificationFrequency | null>(null);
         const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationFrequency | null>(null);
+
+        const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
 
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
@@ -188,13 +192,20 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             || habit.synchronizedSharedHabitId === null));
                         setIsNumericalHabit(habit.progressComputation.dailyReachableValue !== 1);
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
-                            && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER-1));
+                            && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
                         setFrequencyType(FrequencyTypeDTO.MONTHLY);
                         setTargetDays('31');
+                    }
+                    if (habit?.progressComputation.frequency === 1) {
+                        if (habit.progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
+                            setGoalType('Weekly');
+                        } else if (habit.progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
+                            setGoalType('Monthly');
+                        }
                     }
                     setLoading(false);
                 } catch (_error) {
@@ -270,6 +281,26 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 return `Weekly on ${days} at ${localTimeString}`;
             }
             return 'Custom notification set';
+        }
+
+        const rotateGoalType = () => {
+            const types = ['Daily', 'Weekly', 'Monthly'];
+            const currentIndex = types.indexOf(goalType);
+            const possibleNewType = types[(currentIndex + 1) % types.length] as 'Daily' | 'Weekly' | 'Monthly'
+            const newType =
+                configType === ConfigType.CHALLENGE && possibleNewType === "Weekly" ? "Monthly" as 'Daily' | 'Weekly' | 'Monthly'
+                    : possibleNewType;
+            setGoalType(newType);
+            setFrequency("1");
+            if (newType === 'Weekly') {
+                setFrequencyType(FrequencyTypeDTO.WEEKLY)
+            }
+            if (newType === 'Monthly') {
+                setFrequencyType(FrequencyTypeDTO.MONTHLY)
+            }
+            if (newType === 'Daily') {
+                setFrequencyType(FrequencyTypeDTO.DAILY)
+            }
         }
 
         const handleUpdate = async (): Promise<ApiHabitWrite | undefined> => {
@@ -661,7 +692,17 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         {isNumericalHabit && !isAsMuchAsPossibleChallenge && (
                             <View style={styles.halfInput}>
                                 <View style={styles.labelRow}>
-                                    <Text style={styles.label}>Daily Goal</Text>
+                                    <View style={styles.labelWithClickable}>
+                                        <TouchableOpacity
+                                            style={!isFieldLocked() && styles.clickableWord}
+                                            onPress={!isFieldLocked() ? rotateGoalType : () => {
+                                            }}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
+                                        </TouchableOpacity>
+                                        <Text style={styles.label}> Goal</Text>
+                                    </View>
                                     <HelpIcon tooltipKey="maxDailyValue"/>
                                     {isFieldLocked() && <LockIcon/>}
                                 </View>
@@ -720,7 +761,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     )}
 
                     {(configType !== ConfigType.CHALLENGE || challengeType !== ChallengeComputationType.MAX_VALUE)
-                        && !isAsMuchAsPossibleChallenge && (
+                        && !isAsMuchAsPossibleChallenge && goalType === "Daily" && (
                             <View style={styles.inputContainer}>
                                 <View style={styles.labelRow}>
                                     <Text style={styles.label}>Frequency</Text>
@@ -1160,6 +1201,20 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontSize: 16,
         color: theme.text,
         marginLeft: 8,
+    },
+    labelWithClickable: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    clickableWord: {
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        borderRadius: 4,
+        backgroundColor: theme.primaryLight + '20', // 20% opacity
+    },
+    clickableText: {
+        color: '#4ECDC4',
+        fontWeight: '600',
     },
 }));
 
