@@ -39,7 +39,7 @@ public class NotificationTemplate {
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                            String baseUrl, NotificationStatus notificationStatus) {
         String subject =
-                getSubjectContent(sender, receiver, sharedHabit, rule, templateEngine, ruleService, recordSupplier);
+                getSubjectContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService, recordSupplier);
         return Notification.builder()
                 .content(getNotificationContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                         recordSupplier, baseUrl, subject))
@@ -116,16 +116,19 @@ public class NotificationTemplate {
         return templateEngine.process(htmlShadeMinimalTemplateName, context);
     }
 
-    private String getSubjectContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
+    private String getSubjectContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit, Habit habit,
                                      NotificationRule rule, TemplateEngine templateEngine,
                                      NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
         Map<String, String> parameters = new HashMap<>();
         if (sharedHabit != null) {
             parameters.put("sharedHabitName", sharedHabit.getTitle());
             sharedHabit.getHabitByOwner(receiver)
-                    .ifPresent(habit -> parameters.put("noRecordsForDays",
-                            recordSupplier.getTimeSinceLastRecordByHabit(habit)
+                    .ifPresent(h -> parameters.put("noRecordsForDays",
+                            recordSupplier.getTimeSinceLastRecordByHabit(h)
                                     .toString()));
+        }
+        if (habit != null) {
+            parameters.put("habitName", habit.getName());
         }
         if (rule != null) {
             Integer percentageForN = rule.getPercentageOfGoalForNotificationTrigger();
