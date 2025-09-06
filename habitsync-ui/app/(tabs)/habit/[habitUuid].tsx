@@ -6,7 +6,7 @@ import {
     ApiHabitRead,
     ApiHabitRecordRead,
     ApiSharedHabitMedalsRead,
-    ApiSharedHabitRead,
+    ApiSharedHabitRead, FrequencyTypeDTO,
     habitApi,
     habitRecordApi,
     sharedHabitApi
@@ -109,6 +109,22 @@ const HabitDetailsScreen = () => {
         }
         return 'Custom frequency';
     };
+
+    const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
+        return progressComputation.frequencyType === FrequencyTypeDTO.DAILY || progressComputation.frequency !== 1;
+    }
+
+    const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
+        if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY) {
+            return "Daily";
+        }
+        if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
+            return "Weekly";
+        }
+        if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
+            return "Monthly";
+        }
+    }
 
     const handleShareHabit = async () => {
         if (sharedHabits.length > 0) {
@@ -307,19 +323,20 @@ const HabitDetailsScreen = () => {
 
                             <View style={styles.progressDetails}>
 
-                                <View style={styles.progressDetailItem}>
-                                    <MaterialCommunityIcons name="calendar-clock" size={20} color="#FF9800"/>
-                                    <Text style={styles.progressDetailText}>
-                                        {formatFrequency(habitDetail?.progressComputation)}
-                                    </Text>
-                                </View>
+                                {isCustomFrequency(habitDetail.progressComputation) && (
+                                    <View style={styles.progressDetailItem}>
+                                        <MaterialCommunityIcons name="calendar-clock" size={20} color="#FF9800"/>
+                                        <Text style={styles.progressDetailText}>
+                                            {formatFrequency(habitDetail?.progressComputation)}
+                                        </Text>
+                                    </View>
+                                )}
 
-                                {habitDetail?.progressComputation?.dailyGoal === "1" && (
+                                {habitDetail?.progressComputation?.dailyReachableValue && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
-                                            Daily
-                                            goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
+                                            {getFrequencyTypeText(habitDetail?.progressComputation)} goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
                                         </Text>
                                     </View>
                                 )}
