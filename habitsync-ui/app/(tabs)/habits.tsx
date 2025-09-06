@@ -97,7 +97,7 @@ const HabitTrackerScreen = () => {
         );
     }
 
-    const handleDragEnd = ({data}: {data: ApiHabitRead[]}) => {
+    const handleDragEnd = ({data}: { data: ApiHabitRead[] }) => {
         setHabits(data);
     };
 
@@ -110,8 +110,8 @@ const HabitTrackerScreen = () => {
             const aboveHabit = habits[currentIndex - 1];
 
             const updatedHabits = [...habits];
-            updatedHabits[currentIndex] = { ...currentHabit, sortPosition: aboveHabit.sortPosition };
-            updatedHabits[currentIndex - 1] = { ...aboveHabit, sortPosition: currentHabit.sortPosition };
+            updatedHabits[currentIndex] = {...currentHabit, sortPosition: aboveHabit.sortPosition};
+            updatedHabits[currentIndex - 1] = {...aboveHabit, sortPosition: currentHabit.sortPosition};
             updatedHabits.sort((a, b) => a.sortPosition - b.sortPosition);
             setHabits(updatedHabits);
 
@@ -131,8 +131,8 @@ const HabitTrackerScreen = () => {
             const belowHabit = habits[currentIndex + 1];
 
             const updatedHabits = [...habits];
-            updatedHabits[currentIndex] = { ...currentHabit, sortPosition: belowHabit.sortPosition };
-            updatedHabits[currentIndex + 1] = { ...belowHabit, sortPosition: currentHabit.sortPosition };
+            updatedHabits[currentIndex] = {...currentHabit, sortPosition: belowHabit.sortPosition};
+            updatedHabits[currentIndex + 1] = {...belowHabit, sortPosition: currentHabit.sortPosition};
             updatedHabits.sort((a, b) => a.sortPosition - b.sortPosition);
             setHabits(updatedHabits);
 
@@ -151,7 +151,7 @@ const HabitTrackerScreen = () => {
                 <MaterialCommunityIcons.Button
                     name="pencil"
                     backgroundColor={theme.background}
-                    color= {isDragModeEnabled ? "#ff0000" : theme.text}
+                    color={isDragModeEnabled ? "#ff0000" : theme.text}
                     size={14}
                     style={{marginRight: 16}}
                     onPress={() => setIsDragModeEnabled(!isDragModeEnabled)}
@@ -215,7 +215,7 @@ const HabitTrackerScreen = () => {
                         colors={['#667eea', '#764ba2']}
                         style={styles.fabGradient}
                     >
-                        <MaterialCommunityIcons name="plus" size={50} color="white"/>
+                        <Text style={styles.plusIcon}>+</Text>
                     </LinearGradient>
                 </TouchableOpacity>
             </Link>
@@ -316,6 +316,10 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: '600',
         color: theme.text,
         textAlign: 'center',
+    },
+    plusIcon: {
+        color: '#fff',
+        fontSize: 46,
     },
 }));
 
