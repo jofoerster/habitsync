@@ -145,7 +145,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                                         <Text style={[
                                             styles.dayText,
                                             {
-                                                color: theme.text,
+                                                color: '#ffffff',
                                                 fontWeight: day.isCurrentMonth ? 'bold' : 'normal'
                                             }
                                         ]}>
