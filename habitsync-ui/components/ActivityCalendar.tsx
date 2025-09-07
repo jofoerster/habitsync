@@ -67,7 +67,10 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
             new Date() :
             new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - firstDay.getDay() + 1 );
+
+        const dayOfWeek = firstDay.getDay();
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        startDate.setDate(startDate.getDate() - mondayOffset);
 
         const days = [];
         const current = new Date(startDate);
@@ -142,7 +145,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                                         <Text style={[
                                             styles.dayText,
                                             {
-                                                color: theme.text,
+                                                color: '#ffffff',
                                                 fontWeight: day.isCurrentMonth ? 'bold' : 'normal'
                                             }
                                         ]}>

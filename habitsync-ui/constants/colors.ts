@@ -1,15 +1,29 @@
-export const COLOR_OPTIONS = [
-    {id: 1, color: '#FF6B6B', secondaryColor: '#FF8E8E', name: 'Red'},
-    {id: 2, color: '#4ECDC4', secondaryColor: '#6ED5CE', name: 'Teal'},
-    {id: 3, color: '#45B7D1', secondaryColor: '#6BC5D8', name: 'Blue'},
-    {id: 4, color: '#96CEB4', secondaryColor: '#A8D4C0', name: 'Green'},
-    {id: 5, color: '#66e0e3', secondaryColor: '#85E6E8', name: 'Yellow'},
-    {id: 6, color: '#5f5ff1', secondaryColor: '#7F7FF4', name: 'Purple'},
-    {id: 7, color: '#2decbf', secondaryColor: '#52F0CB', name: 'Mint'},
-    {id: 8, color: '#F7DC6F', secondaryColor: '#F9E386', name: 'Gold'},
-    {id: 9, color: '#BB8FCE', secondaryColor: '#C8A2D6', name: 'Lavender'},
-    {id: 10, color: '#f5a25b', secondaryColor: '#F7B177', name: 'Sky Blue'}
-];
+export const COLOR_OPTIONS = [{id: 1, color: '#FF9AA2', secondaryColor: '#FFB3B8', name: 'Rose'}, {
+    id: 2,
+    color: '#FFD3A5',
+    secondaryColor: '#FFE0B8',
+    name: 'Peach'
+}, {id: 3, color: '#FD9644', secondaryColor: '#FDAB66', name: 'Orange'}, {
+    id: 4,
+    color: '#FCFC62',
+    secondaryColor: '#FDFD7E',
+    name: 'Lemon'
+}, {id: 5, color: '#C7CEEA', secondaryColor: '#D4DAF0', name: 'Periwinkle'}, {
+    id: 6,
+    color: '#B5EAD7',
+    secondaryColor: '#C7F0E3',
+    name: 'Mint'
+}, {id: 7, color: '#A0E7E5', secondaryColor: '#B3EDEB', name: 'Aqua'}, {
+    id: 8,
+    color: '#9BB5FF',
+    secondaryColor: '#B0C4FF',
+    name: 'Sky'
+}, {id: 9, color: '#E0BBE4', secondaryColor: '#E8CCEB', name: 'Lilac'}, {
+    id: 10,
+    color: '#957DAD',
+    secondaryColor: '#A991BD',
+    name: 'Mauve'
+}];
 
 export const getColorById = (id: number) => {
     const colorOption = COLOR_OPTIONS.find(option => option.id === id);

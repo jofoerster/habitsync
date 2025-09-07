@@ -374,10 +374,9 @@ const HabitDetailsScreen = () => {
                         {sharedHabits.map(sharedHabit => (
                             <React.Fragment key={sharedHabit.shareCode}>
                                 <Text style={{fontSize: 16, color: theme.textSecondary}}>{sharedHabit.title}</Text>
-                                <Text>{sharedHabit.description}</Text>
+                                <Text style={{color: theme.textSecondary}}>{sharedHabit.description}</Text>
                                 <SharedHabitParticipants
                                     sharedHabit={sharedHabit}
-                                    hideHabit={habitDetail}
                                     medals={medals}
                                 />
                             </React.Fragment>

@@ -48,7 +48,7 @@ const CHALLENGE_COMPUTATION_OPTIONS = [
         value: ChallengeComputationType.RELATIVE,
         label: 'Percentage relative to best'
     },
-    {value: ChallengeComputationType.MAX_VALUE, label: 'Highest daily value'},
+    {value: ChallengeComputationType.MAX_VALUE, label: 'Highest value reached'},
 ];
 
 const TOOLTIP_TEXTS = {
@@ -60,7 +60,7 @@ const TOOLTIP_TEXTS = {
     targetDays: "Number of days used for progress calculation (default: 30). When computing the current progress " +
         "the last X days will be used, where X is the targetDays value",
     challengeComputation: "How the challenge winner will be determined. Absolute percentage means that the 'normal' percentage of completion is beeing used at the end of the month." +
-        "Relative percentage means that the participant with the highest percentage counts as 100%. Highest daily value means that for each participant only the highest day-value ist counted",
+        " Relative percentage means that the participant with the highest percentage counts as 100%. Highest value means that for each participant only the highest day-value ist counted",
     frequencySettings: "Configure how often you want to perform this habit.",
     frequencyType: "Choose the time period for your frequency. Weekly: 'Y times per week'" +
         " Monthly: 'Y times per month', Custom Period: 'Y times per X days'",
@@ -637,39 +637,43 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         <Text style={styles.sectionTitle}>Goal Configuration</Text>
                     </View>
 
-                    <View style={styles.inputContainer}>
-                        <View style={styles.labelRow}>
-                            <Text style={styles.label}>Habit Type</Text>
-                            <HelpIcon tooltipKey="habitType"/>
-                            {isFieldLocked() && <LockIcon/>}
+                    {!challengeType || challengeType !== ChallengeComputationType.MAX_VALUE && (
+                        <View style={styles.inputContainer}>
+                            <View style={styles.labelRow}>
+                                <Text style={styles.label}>Habit Type</Text>
+                                <HelpIcon tooltipKey="habitType"/>
+                                {isFieldLocked() && <LockIcon/>}
+                            </View>
+                            <View style={styles.habitTypeContainer}>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.habitTypeButton,
+                                        !isNumericalHabit && styles.selectedHabitTypeButton
+                                    ]}
+                                    onPress={() => isFieldLocked() ? {} : switchNumericalBooleanHabit(false)}
+                                >
+                                    <Text style={[
+                                        styles.habitTypeButtonText,
+                                        !isNumericalHabit && styles.selectedHabitTypeButtonText
+                                    ]}>Yes/No</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[
+                                        styles.habitTypeButton,
+                                        isNumericalHabit && styles.selectedHabitTypeButton
+                                    ]}
+                                    onPress={() => isFieldLocked() ? {} : switchNumericalBooleanHabit(true)}
+                                >
+                                    <Text style={[
+                                        styles.habitTypeButtonText,
+                                        isNumericalHabit && styles.selectedHabitTypeButtonText
+                                    ]}>Numerical</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
-                        <View style={styles.habitTypeContainer}>
-                            <TouchableOpacity
-                                style={[
-                                    styles.habitTypeButton,
-                                    !isNumericalHabit && styles.selectedHabitTypeButton
-                                ]}
-                                onPress={() => isFieldLocked() ? {} : switchNumericalBooleanHabit(false)}
-                            >
-                                <Text style={[
-                                    styles.habitTypeButtonText,
-                                    !isNumericalHabit && styles.selectedHabitTypeButtonText
-                                ]}>Yes/No</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[
-                                    styles.habitTypeButton,
-                                    isNumericalHabit && styles.selectedHabitTypeButton
-                                ]}
-                                onPress={() => isFieldLocked() ? {} : switchNumericalBooleanHabit(true)}
-                            >
-                                <Text style={[
-                                    styles.habitTypeButtonText,
-                                    isNumericalHabit && styles.selectedHabitTypeButtonText
-                                ]}>Numerical</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
+                    )}
+
+                    {challengeType !== ChallengeComputationType.MAX_VALUE && (
 
                     <View style={styles.row}>
                         {isNumericalHabit && configType === ConfigType.CHALLENGE && (
@@ -741,8 +745,9 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             </View>
                         )}
                     </View>
+                    )}
 
-                    {isNumericalHabit && (
+                    {(isNumericalHabit || challengeType === ChallengeComputationType.MAX_VALUE) && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
                                 <Text style={styles.label}>Unit (Optional)</Text>
