@@ -377,7 +377,6 @@ const HabitDetailsScreen = () => {
                                 <Text style={{color: theme.textSecondary}}>{sharedHabit.description}</Text>
                                 <SharedHabitParticipants
                                     sharedHabit={sharedHabit}
-                                    hideHabit={habitDetail}
                                     medals={medals}
                                 />
                             </React.Fragment>
