@@ -652,12 +652,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: '#F44336',
     },
     goalSection: {
-        backgroundColor: theme.surface,
-        borderRadius: 8,
-        padding: 12,
-        marginBottom: 12,
-        borderLeftWidth: 3,
-        borderLeftColor: '#2196F3',
+        padding: 6,
+        marginTop: 5,
     },
     goalHeader: {
         flexDirection: 'row',
