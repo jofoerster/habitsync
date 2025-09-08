@@ -217,7 +217,7 @@ const LoginScreen = () => {
 
             <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>
-                    You will be redirected to the login page to sign in securely. If no login options are available,
+                    If no login options are available,
                     refresh the page.
                 </Text>
             </View>

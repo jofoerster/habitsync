@@ -166,12 +166,6 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                         )}
                                     </TouchableOpacity>
                                 </View>
-
-                                <View style={styles.infoContainer}>
-                                    <Text style={styles.infoText}>
-                                        Use your account credentials to sign in to HabitSync.
-                                    </Text>
-                                </View>
                             </View>
                         </ScrollView>
                     </View>
