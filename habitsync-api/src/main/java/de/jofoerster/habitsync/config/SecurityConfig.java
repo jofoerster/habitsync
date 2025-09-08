@@ -2,10 +2,12 @@ package de.jofoerster.habitsync.config;
 
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.auth.TokenService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -60,7 +62,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/**").access(this::checkUserAccess)
                         .requestMatchers("/h2-console/**").access(this::checkUserAccess)
                         .anyRequest().permitAll()
-                );
+                )
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(
+                        (request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                            response.getWriter()
+                                    .write("{\"error\": \"Unauthorized: " + authException.getMessage() + "\"}");
+                        }));
+        ;
 
         return http.build();
     }
