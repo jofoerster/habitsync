@@ -336,7 +336,7 @@ const HabitDetailsScreen = () => {
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
-                                            {getFrequencyTypeText(habitDetail?.progressComputation)} goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
+                                            {getFrequencyTypeText(habitDetail?.progressComputation)} Goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
                                         </Text>
                                     </View>
                                 )}
