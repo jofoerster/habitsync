@@ -302,7 +302,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         opacity: 0.6,
     },
     loginButtonText: {
-        color: theme.text,
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },
