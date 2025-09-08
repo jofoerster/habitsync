@@ -26,6 +26,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -90,7 +91,11 @@ public class SecurityConfig {
     private AuthorizationDecision checkUserAccess(java.util.function.Supplier<Authentication> authSupplier,
                                                   RequestAuthorizationContext context) {
         Authentication auth = authSupplier.get();
-        boolean granted = accountService.isUserAllowed(auth);
+        List<String> allowedURIs = List.of("/api/user/refresh-token");
+        boolean granted = true;
+        if (!allowedURIs.contains(context.getRequest().getRequestURI())) {
+            granted = accountService.isUserAllowed(auth);
+        }
         return new AuthorizationDecision(granted);
     }
 
