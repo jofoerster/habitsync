@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -93,9 +94,16 @@ public class TokenService {
 
     public boolean checkIfNeedsConfirmation(JwtAuthenticationToken jwtAuth) {
         String issuer = jwtAuth.getToken().getIssuer() != null ? jwtAuth.getToken().getIssuer().toString() : null;
-        if (issuer == null || !securityProperties.getIssuers().containsKey(issuer) || issuer.equals(baseUrl)) {
+        List issuerUrls = securityProperties.getIssuers().values().stream().map(SecurityProperties.IssuerConfig::getUrl).toList();
+        if (issuer == null || (!securityProperties.getIssuers().containsKey(issuer) && !issuerUrls.contains(issuer)) || issuer.equals(baseUrl)) {
             return false;
         }
-        return securityProperties.getIssuers().get(issuer).isNeedsConfirmation();
+        SecurityProperties.IssuerConfig config = securityProperties.getIssuers().get(issuer);
+        if (config != null) {
+            return config.isNeedsConfirmation();
+        } else {
+            config = securityProperties.getIssuers().values().stream().filter(i -> i.getUrl().equals(issuer)).findFirst().get();
+        }
+        return config == null || config.isNeedsConfirmation();
     }
 }

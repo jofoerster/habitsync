@@ -53,7 +53,8 @@ services:
     environment:
       - BASE_URL=https://your-domain.com/
       # Choose one or more of the following authentication methods:
-      # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), more than one issuer can be configured
+      # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), set BASE_URL/auth-callback as redirect
+      # more than one issuer can be configured
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_NEEDS-CONFIRMATION=true # New users need to to be 'let in' by other user, default: true 
