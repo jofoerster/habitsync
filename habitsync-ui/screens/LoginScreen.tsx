@@ -129,10 +129,7 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.titleContainer}>
-                <Text style={styles.title}>Track your habits</Text>
-                <Text style={styles.subtitle}>
-                    Track and share your habits.
-                </Text>
+                <Text style={styles.title}>Track and share your habits</Text>
             </View>
 
             {currentError && (
