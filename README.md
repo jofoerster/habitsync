@@ -3,6 +3,8 @@
 A simple self hostable habit tracking application with social features, allowing users to track personal habits and participate in
 shared challenges with others.
 
+Demo Server available under: [https://demo.habitsync.de](https://demo.habitsync.de) (very limited resources)
+
 <div>
   <img src="images/1.gif" width="30%" style="margin: 5px;">
   <img src="images/2.gif" width="30%" style="margin: 5px;">
@@ -60,7 +62,9 @@ services:
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-SECRET=<client-secret> # ONLY AS WORKAROUND FOR GOOGLE, PUBLICALLY AVAILABLE TO CLIENTS!
       # Login using username and password (basic auth), recommended for api access
-      - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash> # Create hash using: htpasswd -bnBC 10 "" YOUR_PASSWORD | tr -d ':\n'
+      # Create hash using: htpasswd -bnBC 10 "" password123 | tr -d ':\n' | sed 's/\$/\$\$/g'
+      # $ get replaced with $$ to work in env variables. This might be different in other environments
+      - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash>
       # Mail setup for notifications
       - SPRING_MAIL_HOST=<mail-host>
       - SPRING_MAIL_USERNAME=<mail-username>

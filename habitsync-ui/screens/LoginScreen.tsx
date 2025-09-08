@@ -129,10 +129,7 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.titleContainer}>
-                <Text style={styles.title}>Track your habits</Text>
-                <Text style={styles.subtitle}>
-                    Track and share your habits.
-                </Text>
+                <Text style={styles.title}>Track and share your habits</Text>
             </View>
 
             {currentError && (
@@ -217,7 +214,7 @@ const LoginScreen = () => {
 
             <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>
-                    You will be redirected to the login page to sign in securely. If no login options are available,
+                    If no login options are available,
                     refresh the page.
                 </Text>
             </View>

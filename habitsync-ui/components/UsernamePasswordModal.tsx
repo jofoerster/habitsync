@@ -166,12 +166,6 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                         )}
                                     </TouchableOpacity>
                                 </View>
-
-                                <View style={styles.infoContainer}>
-                                    <Text style={styles.infoText}>
-                                        Use your account credentials to sign in to HabitSync.
-                                    </Text>
-                                </View>
                             </View>
                         </ScrollView>
                     </View>
@@ -302,7 +296,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         opacity: 0.6,
     },
     loginButtonText: {
-        color: theme.text,
+        color: '#fff',
         fontSize: 16,
         fontWeight: 'bold',
     },

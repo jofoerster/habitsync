@@ -215,7 +215,7 @@ const HabitTrackerScreen = () => {
                         colors={['#667eea', '#764ba2']}
                         style={styles.fabGradient}
                     >
-                        <Text style={styles.plusIcon}>+</Text>
+                        <MaterialCommunityIcons name="plus" size={45} color="white"/>
                     </LinearGradient>
                 </TouchableOpacity>
             </Link>
