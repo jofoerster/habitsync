@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationProvider;
 import org.springframework.security.oauth2.server.resource.authentication.JwtIssuerAuthenticationManagerResolver;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.web.cors.CorsConfiguration;
@@ -52,9 +53,12 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .userDetailsService(userDetailsService())
-                .httpBasic(Customizer.withDefaults())
+                .httpBasic(httpBasic -> httpBasic
+                        .authenticationEntryPoint(customAuthenticationEntryPoint())
+                )
                 .oauth2ResourceServer(oauth2 -> oauth2
                         .authenticationManagerResolver(authenticationManagerResolver)
+                        .authenticationEntryPoint(customAuthenticationEntryPoint())
                 )
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
@@ -63,13 +67,8 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").access(this::checkUserAccess)
                         .anyRequest().permitAll()
                 )
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(
-                        (request, response, authException) -> {
-                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                            response.getWriter()
-                                    .write("{\"error\": \"Unauthorized: " + authException.getMessage() + "\"}");
-                        }));
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint(customAuthenticationEntryPoint()));
         ;
 
         return http.build();
@@ -137,6 +136,16 @@ public class SecurityConfig {
             }
 
             throw new UsernameNotFoundException("User not found: " + username);
+        };
+    }
+
+    @Bean
+    public AuthenticationEntryPoint customAuthenticationEntryPoint() {
+        return (request, response, authException) -> {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            response.getWriter()
+                    .write("{\"error\": \"Unauthorized: Access is denied due to invalid credentials\"}");
         };
     }
 }
