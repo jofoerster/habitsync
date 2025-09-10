@@ -19,7 +19,7 @@ import {
     ChallengeComputationType,
     FrequencyTypeDTO,
     notificationApi,
-    NotificationFrequency
+    NotificationConfig
 } from "@/services/api";
 import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
@@ -116,8 +116,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const [isAsMuchAsPossibleChallenge, setIsAsMuchAsPossibleChallenge] = useState(false);
 
-        const [notificationFrequency, setNotificationFrequency] = useState<NotificationFrequency | null>(null);
-        const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationFrequency | null>(null);
+        const [notificationFrequency, setNotificationFrequency] = useState<NotificationConfig | null>(null);
+        const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationConfig | null>(null);
+
+        const [showAppriseField, setShowAppriseField] = useState(false);
+        const [appriseUrl, setAppriseUrl] = useState('');
 
         const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
 
@@ -194,6 +197,10 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
                             && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
+                        if (habit.notificationFrequency?.appriseTarget) {
+                            setAppriseUrl(habit.notificationFrequency.appriseTarget);
+                            setShowAppriseField(true);
+                        }
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -243,8 +250,13 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const handleNotificationSettingsUpdate = async () => {
             if (habit && notificationFrequencyNew) {
                 try {
-                    await notificationApi.updateNotificationForHabit(habit.uuid, notificationFrequencyNew);
-                    setNotificationFrequency(notificationFrequencyNew);
+                    const updatedNotification: NotificationConfig = {
+                        ...notificationFrequencyNew,
+                        appriseTarget: appriseUrl.trim() || undefined
+                    };
+
+                    await notificationApi.updateNotificationForHabit(habit.uuid, updatedNotification);
+                    setNotificationFrequency(updatedNotification);
                     setNotificationModalVisible(false);
                 } catch {
                     alert('Error', 'Failed to update notification settings');
@@ -258,6 +270,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     await notificationApi.deleteNotificationForHabit(habit.uuid);
                     setNotificationFrequency(null);
                     setNotificationFrequencyNew(null);
+                    setAppriseUrl('');
+                    setShowAppriseField(false);
                     setNotificationModalVisible(false);
                 } catch {
                     alert('Error', 'Failed to delete notification settings');
@@ -515,6 +529,21 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 hideWeekdays={false}
                                 notificationFrequency={notificationFrequency || undefined}
                             />
+
+                            <View style={[styles.inputContainer, {marginLeft: 15, marginRight: 15, marginBottom: 5}]}>
+                                <View style={styles.labelRow}>
+                                    <Text style={styles.label}>Apprise URL (Optional)</Text>
+                                </View>
+                                <TextInput
+                                    style={styles.input}
+                                    value={appriseUrl}
+                                    onChangeText={setAppriseUrl}
+                                    placeholder="e.g., service://token/chat_id"
+                                    placeholderTextColor="#999"
+                                    autoCapitalize="none"
+                                    autoCorrect={false}
+                                />
+                            </View>
 
                             <TouchableOpacity
                                 style={[styles.saveButton, {backgroundColor: '#4ECDC4'}]}

@@ -3,7 +3,7 @@ import {StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {NotificationFrequency} from "@/services/api";
+import {NotificationConfig} from "@/services/api";
 import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime} from "@/services/timezone";
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
@@ -11,8 +11,8 @@ const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 type Props = {
     hideFrequency?: boolean;
     hideWeekdays?: boolean;
-    onChange?: (value: NotificationFrequency) => void;
-    notificationFrequency?: NotificationFrequency;
+    onChange?: (value: NotificationConfig) => void;
+    notificationFrequency?: NotificationConfig;
 };
 
 const FrequencyPicker: React.FC<Props> = ({

@@ -17,9 +17,14 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
 import java.util.Optional;
@@ -36,6 +41,7 @@ public class NotificationServiceNew {
     private final NotificationRuleService notificationRuleService;
     private final HabitRecordRepository habitRecordRepository;
     private final JavaMailSender emailSender;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -44,6 +50,9 @@ public class NotificationServiceNew {
 
     @Value("${base.url}")
     String baseUrl;
+
+    @Value("${apprise.api.url:}")
+    String appriseApiUrl;
 
     @PostConstruct
     public void init() {
@@ -88,6 +97,7 @@ public class NotificationServiceNew {
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
                         NotificationStatus.STATELESS_NOTIFICATION);
         sendNotificationViaMail(notification);
+        sendNotificationViaApprise(notification, habit);
     }
 
     public void sendNotificationViaMail(Notification notification) {
@@ -103,6 +113,63 @@ public class NotificationServiceNew {
 
             emailSender.send(mimeMessage);
         } catch (MessagingException ignored) {
+        }
+    }
+
+    public void sendNotificationViaApprise(Notification notification, Habit habit) {
+        if (habit == null) {
+            log.debug("Could not find habit for notification with id {}. Cannot send apprise notification",
+                    notification.getId());
+            return;
+        }
+        String appriseTarget = this.getAppriseTargetFromHabit(habit);
+        if (appriseTarget == null || appriseTarget.isEmpty()) {
+            log.debug("No Apprise target specified for notification {}", notification.getId());
+            return;
+        }
+
+        if (appriseApiUrl == null || appriseApiUrl.isEmpty()) {
+            log.debug("Apprise API URL not configured");
+            return;
+        }
+
+        try {
+            var payload = new java.util.HashMap<String, Object>();
+            payload.put("urls", appriseTarget);
+            payload.put("title", notification.getSubject());
+            payload.put("body", notification.getContent());
+            payload.put("type", "info");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<java.util.Map<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            String endpoint = appriseApiUrl + "/notify";
+            restTemplate.postForEntity(endpoint, request, String.class);
+
+            log.info("Successfully sent Apprise notification to target: {}", appriseTarget);
+
+        } catch (RestClientException e) {
+            log.error("Failed to send Apprise notification to target {}: {}",
+                    appriseTarget, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error sending Apprise notification: {}", e.getMessage());
+        }
+    }
+
+    private String getAppriseTargetFromHabit(Habit habit) {
+        String json = habit.getReminderCustom();
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+        try {
+            NotificationFrequencyDTO frequencyDTO =
+                    mapper.readValue(json, NotificationFrequencyDTO.class);
+            return frequencyDTO.getAppriseTarget();
+        } catch (JsonProcessingException e) {
+            log.warn("Could not parse reminderCustom for habit {}", habit.getUuid(), e);
+            return null;
         }
     }
 }

@@ -12,7 +12,7 @@ export interface ApiHabitRead {
     isChallengeHabit?: boolean;
     synchronizedSharedHabitId?: number;
     sortPosition: number;
-    notificationFrequency: NotificationFrequency | null;
+    notificationFrequency: NotificationConfig | null;
 }
 
 export interface ApiAccountRead {
@@ -180,10 +180,11 @@ export interface JWTTokenPair {
     refreshToken: string;
 }
 
-export interface NotificationFrequency {
+export interface NotificationConfig {
     frequency: 'daily' | 'weekly';
     weekdays: string[];
     time: string;
+    appriseTarget?: string;
 }
 
 // API service functions
@@ -293,7 +294,7 @@ export const habitApi = {
 };
 
 export const notificationApi = {
-    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationFrequency): Promise<void> => {
+    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationConfig): Promise<void> => {
         const response = await authenticatedFetch(`${BACKEND_BASE_URL}/notifications/habit/${habitUuid}`, {
             method: 'PUT',
             body: JSON.stringify(frequency),

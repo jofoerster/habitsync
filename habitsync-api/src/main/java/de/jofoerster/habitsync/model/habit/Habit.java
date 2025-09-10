@@ -75,6 +75,7 @@ public class Habit {
     private Integer targetDays;
 
     @JsonProperty("reminder_custom")
+    @Column(columnDefinition = "TEXT")
     private String reminderCustom;
 
     @JsonProperty("reminder_quest")

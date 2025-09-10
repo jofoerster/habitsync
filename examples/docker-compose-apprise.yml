@@ -1,0 +1,47 @@
+services:
+  habitsync:
+    image: ghcr.io/jofoerster/habitsync:latest
+    environment:
+      - BASE_URL=https://your-domain.com/
+      # Choose one or more of the following authentication methods:
+      # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), set BASE_URL/auth-callback as redirect
+      # more than one issuer can be configured
+      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
+      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
+      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_NEEDS-CONFIRMATION=true # New users need to to be 'let in' by other user, default: true
+      # Google: Use normal web client settings, set CLIENT-SECRET as workaround for Google
+      - APP_SECURITY_ISSUERS_GOOGLE_URL=https://accounts.google.com
+      - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-ID=<client-id>
+      - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-SECRET=<client-secret> # ONLY AS WORKAROUND FOR GOOGLE, PUBLICALLY AVAILABLE TO CLIENTS!
+      # Login using username and password (basic auth), recommended for api access
+      # Create hash using: htpasswd -bnBC 10 "" password123 | tr -d ':\n' | sed 's/\$/\$\$/g'
+      # $ get replaced with $$ to work in env variables. This might be different in other environments
+      - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash>
+      # Mail setup for notifications
+      - SPRING_MAIL_HOST=<mail-host>
+      - SPRING_MAIL_USERNAME=<mail-username>
+      - SPRING_MAIL_PASSWORD=<mail-password>
+      - SPRING_MAIL_PORT=587
+      # optional SHA-512 hash of your secret key, generate with `openssl rand -base64 64`. Needed to keep sessions across restarts
+      - JWT_SECRET=<your-jwt-secret>
+      - APPRISE_API_URL=http://apprise-api:8000/notify
+    volumes:
+      - <path-to-database-file-location>:/data #optional for direct access to database, user 6842:6842 needs access
+    user: "6842:6842" # optional, run as user with id 6842, same as the application user in the container
+    ports:
+      - "6842:6842" # Application accessible under this port
+      - "9092:9092" # For database access, optional
+  apprise-api:
+    image: lscr.io/linuxserver/apprise-api:latest
+    container_name: apprise-api
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - APPRISE_ATTACH_SIZE=0 #optional
+    volumes:
+      - /path/to/apprise-api/config:/config
+      - /path/to/apprise-api/attachments:/attachments #optional
+    ports:
+      - 8000:8000
+    restart: unless-stopped
