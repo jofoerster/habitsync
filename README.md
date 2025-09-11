@@ -22,7 +22,7 @@ Demo Server available under: [https://demo.habitsync.de](https://demo.habitsync.
 - Shared habits to compare progress with friends (monthly medals for top 3)
 - One monthly challenge to compete, including leaderboard and voting for the next challenge
 - SSO OIDC authentication (optional: require confirmation for new users, multiple issuers possible)
-- Email notifications as habit reminders
+- Email/Apprise notifications as habit reminders
 - Dark/Light mode support
 - Simple docker setup for deployment
 - React Native frontend, web app installable as pwa (mobile apps coming soon)
@@ -73,6 +73,7 @@ services:
       - SPRING_MAIL_PORT=587
        # optional SHA-512 hash of your secret key, generate with `openssl rand -base64 64`. Needed to keep sessions across restarts
       - JWT_SECRET=<your-jwt-secret>
+      - APPRISE_API_URL=<your-apprise-url> # optional, see Notifications section below
     volumes:
       - <path-to-database-file-location>:/data #optional for direct access to database, user 6842:6842 needs access
     user: "6842:6842" # optional, run as user with id 6842, same as the application user in the container
@@ -80,6 +81,13 @@ services:
       - "6842:6842" # Application accessible under this port
       - "9092:9092" # For database access, optional
 ```
+
+### Notifications (Apprise)
+To enable notifications via [Apprise Api](https://github.com/caronc/apprise-api), set the following environment variables:
+```
+- APPRISE_API_URL=<your-apprise-url> # e.g. http://apprise-api:8000
+```
+For a complete example, see `examples/docker-compose-apprise.yml`.
 
 ## Development Setup
 
