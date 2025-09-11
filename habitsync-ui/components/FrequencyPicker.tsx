@@ -50,7 +50,7 @@ const FrequencyPicker: React.FC<Props> = ({
                 setWeekdays([]);
             }
         }
-    }, [notificationConfigRule])
+    }, [])
 
     useEffect(() => {
         const utcTime = convertLocalTimeToUTC(hour, minute);

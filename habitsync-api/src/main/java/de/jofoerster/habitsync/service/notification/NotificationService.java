@@ -155,7 +155,7 @@ public class NotificationService {
                                             .createNotification(account, Optional.empty(), sharedHabit, null, rule,
                                                     templateEngine, notificationRuleService,
                                                     new HabitRecordSupplier(habitRecordRepository), baseUrl, null,
-                                                    resourceLoader));
+                                                    resourceLoader, null));
                                 }
                             });
                 });
@@ -304,7 +304,7 @@ public class NotificationService {
         Notification notification =
                 notificationTemplate.createNotification(receiverAccount, Optional.of(senderAccount), sharedHabit, null,
                         notificationRule, templateEngine, notificationRuleService,
-                        new HabitRecordSupplier(habitRecordRepository), baseUrl, null, resourceLoader);
+                        new HabitRecordSupplier(habitRecordRepository), baseUrl, null, resourceLoader, null);
         notificationRepository.save(notification);
         sendNotificationViaMail(notification); //TODO check that notification is not being sent multiple times
     }

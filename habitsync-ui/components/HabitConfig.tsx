@@ -745,7 +745,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         habitUuid={habit.uuid}
                         currentConfig={notificationFrequency}
                         showAppriseField={showAppriseField}
-                        onConfigUpdate={setNotificationFrequency}
                     />
                 )}
 

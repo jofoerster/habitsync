@@ -4,14 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.NotificationConfigDTO;
 import de.jofoerster.habitsync.dto.NotificationConfigRuleDTO;
+import de.jofoerster.habitsync.dto.NotificationTypeEnum;
 import de.jofoerster.habitsync.model.habit.Habit;
-import de.jofoerster.habitsync.model.notification.Notification;
-import de.jofoerster.habitsync.model.notification.NotificationStatus;
-import de.jofoerster.habitsync.model.notification.NotificationTemplate;
-import de.jofoerster.habitsync.model.notification.NotificationType;
+import de.jofoerster.habitsync.model.notification.*;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
+import de.jofoerster.habitsync.repository.notification.NotificationRuleStatusRepository;
 import de.jofoerster.habitsync.service.habit.HabitService;
+import de.jofoerster.habitsync.service.habit.SharedHabitService;
 import jakarta.annotation.PostConstruct;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
@@ -24,6 +24,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -31,8 +32,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -48,6 +49,8 @@ public class NotificationServiceNew {
     private final JavaMailSender emailSender;
     private final ResourceLoader resourceLoader;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final NotificationRuleStatusRepository notificationRuleStatusRepository;
+    private final SharedHabitService sharedHabitService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -60,10 +63,108 @@ public class NotificationServiceNew {
     @Value("${apprise.api.url:}")
     String appriseApiUrl;
 
+    private final List<Habit> habitsWithCustomReminders = new ArrayList<>();
+    private final List<Habit> habitsWithoutUpdates = new ArrayList<>();
+    private Map<String, Boolean> habitRuleNotificationStatusMap = new HashMap<String, Boolean>();
+
     @PostConstruct
     public void init() {
         log.info("Scheduling user notification jobs");
-        habitService.getHabitsWithReminders().forEach(this::scheduleAllNotificationJobsForHabit);
+        List<Habit> habitsWithReminders = habitService.getHabitsWithReminders();
+        habitsWithReminders.forEach(this::scheduleAllNotificationJobsForHabit);
+        habitsWithCustomReminders.addAll(habitsWithReminders);
+        habitRuleNotificationStatusMap = notificationRuleStatusRepository.findAll().stream()
+                .collect(Collectors.toMap(NotificationRuleStatus::getRuleIdentifier,
+                        NotificationRuleStatus::isActive));
+    }
+
+    @Scheduled(cron = "0 0 * * * *") // Do not change -> see isFirstCheckToday
+    public void checkNotificationRules() {
+        log.info("Checking notification rules for all habits with reminders");
+        habitsWithCustomReminders.forEach(habit -> {
+            List<NotificationConfigRuleDTO> rules = habitService.getNotificationConfig(habit).getRules();
+            rules.forEach(rule -> {
+                this.checkAndExecuteRule(habit, rule);
+            });
+            if (!habitsWithoutUpdates.contains(habit)) {
+                habitsWithoutUpdates.add(habit);
+            }
+        });
+    }
+
+    public void markHabitAsUpdated(Habit habit) {
+        habitsWithoutUpdates.remove(habit);
+    }
+
+    private void checkAndExecuteRule(Habit habit, NotificationConfigRuleDTO rule) {
+        switch (rule.getType()) {
+            case NotificationTypeEnum.fixed -> {
+                return; // Fixed time notifications are handled by scheduled jobs
+            }
+            case NotificationTypeEnum.threshold -> {
+                if (!rule.isEnabled() || rule.getThreshold() == null ||
+                        (habitsWithoutUpdates.contains(habit) && !isFirstCheckToday())) {
+                    return;
+                }
+                String ruleIdentifier = "THRESHOLD_" + habit.getUuid();
+                boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
+                boolean isActive =
+                        habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
+                                < rule.getThreshold();
+                if (!wasActive && isActive) {
+                    log.debug("Threshold rule triggered for habit {}", habit.getUuid());
+                    sendCustomReminderNotifications(rule, habit);
+                    return;
+                }
+                if (wasActive && !isActive) {
+                    log.debug("Threshold rule deactivated for habit {}", habit.getUuid());
+                    this.updateState(ruleIdentifier, false);
+                }
+                return;
+            }
+            case NotificationTypeEnum.overtake -> {
+                if (!rule.isEnabled()) {
+                    return;
+                }
+                sharedHabitService.getSharedHabitsByHabit(habit).forEach(sh -> {
+                    sh.getHabits().forEach(ch -> {
+                        boolean overtaken = checkAndExecuteOvertakeRule(habit, ch, rule);
+                        if (overtaken) {
+                            return;
+                        }
+                    });
+                });
+            }
+        }
+    }
+
+    private boolean checkAndExecuteOvertakeRule(Habit habit, Habit ch, NotificationConfigRuleDTO rule) {
+        if (habitsWithoutUpdates.contains(habit) && habitsWithoutUpdates.contains(ch) && !isFirstCheckToday()) {
+            return false;
+        }
+        String ruleIdentifier = "OVERTAKE_" + habit.getUuid() + "_" + ch.getUuid();
+        boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
+        boolean isActive =
+                habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
+                        < ch.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository));
+        if (!wasActive && isActive) {
+            log.debug("Overtake rule triggered for habit {}", habit.getUuid());
+            sendCustomReminderNotifications(rule, habit);
+            return true;
+        }
+        if (wasActive && !isActive) {
+            log.debug("Overtake rule deactivated for habit {}", habit.getUuid());
+            this.updateState(ruleIdentifier, false);
+        }
+        return false;
+    }
+
+    private void updateState(String ruleIdentifier, boolean newState) {
+        habitRuleNotificationStatusMap.put(ruleIdentifier, newState);
+        notificationRuleStatusRepository.save(NotificationRuleStatus.builder()
+                .ruleIdentifier(ruleIdentifier)
+                .isActive(newState)
+                .build());
     }
 
     private void scheduleAllNotificationJobsForHabit(Habit habit) {
@@ -76,6 +177,9 @@ public class NotificationServiceNew {
         try {
             habit.setReminderCustom(mapper.writeValueAsString(frequency));
             habit = habitService.saveHabit(habit);
+            if (!habitsWithCustomReminders.contains(habit)) {
+                habitsWithCustomReminders.add(habit);
+            }
             scheduleAllNotificationJobsForHabit(habit);
             return true;
         } catch (JsonProcessingException e) {
@@ -91,7 +195,32 @@ public class NotificationServiceNew {
         return true;
     }
 
-    public void sendPushNotifications(String id) {
+    public void sendCustomReminderNotifications(NotificationConfigRuleDTO rule, Habit habit) {
+        log.info("Sending custom reminder notifications");
+        NotificationType type = switch (rule.getType()) {
+            case NotificationTypeEnum.threshold -> NotificationType.THRESHOLD_PUSH_NOTIFICATION_HABIT;
+            case NotificationTypeEnum.overtake -> NotificationType.OVERTAKE_PUSH_NOTIFICATION_HABIT;
+            default -> null;
+        };
+        if (type == null) {
+            log.warn("Could not determine notification type for rule {}", rule);
+            return;
+        }
+        NotificationTemplate notificationTemplate =
+                notificationTemplateService.getNotificationTemplateByNotificationType(
+                        type);
+        Notification notification =
+                notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
+                        templateEngine,
+                        notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, rule);
+        sendNotificationViaApprise(notification, habit);
+        if (habit.getAccount().isSendNotificationsViaEmail()) {
+            sendNotificationViaMail(notification);
+        }
+    }
+
+    public void sendFixedTimePushNotifications(String id) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(id);
         if (habitOpt.isEmpty()) {
             log.warn("Could not find habit with id {}", id);
@@ -99,15 +228,15 @@ public class NotificationServiceNew {
         }
         NotificationTemplate notificationTemplate =
                 notificationTemplateService.getNotificationTemplateByNotificationType(
-                        NotificationType.PUSH_NOTIFICATION_HABIT);
+                        NotificationType.FIXED_TIME_PUSH_NOTIFICATION_HABIT);
         Habit habit = habitOpt.get();
         Notification notification =
                 notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
                         templateEngine,
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader);
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, null);
         sendNotificationViaApprise(notification, habit);
-        if (habit.getAccount().isSendNotificationsViaEmail()){
+        if (habit.getAccount().isSendNotificationsViaEmail()) {
             sendNotificationViaMail(notification);
         }
     }
@@ -198,5 +327,10 @@ public class NotificationServiceNew {
             log.warn("Could not parse reminderCustom for habit {}", habit.getUuid(), e);
             return null;
         }
+    }
+
+    private boolean isFirstCheckToday() {
+        Calendar now = Calendar.getInstance();
+        return now.get(Calendar.HOUR_OF_DAY) == 0;
     }
 }

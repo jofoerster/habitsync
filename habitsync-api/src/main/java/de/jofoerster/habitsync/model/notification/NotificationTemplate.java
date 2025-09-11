@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.model.notification;
 
+import de.jofoerster.habitsync.dto.NotificationConfigRuleDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
@@ -46,13 +47,15 @@ public class NotificationTemplate {
                                            NotificationRule rule, TemplateEngine templateEngine,
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                            String baseUrl, NotificationStatus notificationStatus,
-                                           ResourceLoader resourceLoader) {
+                                           ResourceLoader resourceLoader,
+                                           NotificationConfigRuleDTO notificationConfigRule) {
         String subject =
                 getSubjectContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
-                        recordSupplier);
+                        recordSupplier, notificationConfigRule);
         return Notification.builder()
-                .content(getNotificationPlainContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
-                        recordSupplier, resourceLoader))
+                .content(getNotificationPlainContent(sender, receiver, sharedHabit, habit, rule, templateEngine,
+                        ruleService,
+                        recordSupplier, resourceLoader, notificationConfigRule))
                 .htmlContent(
                         getNotificationHtmlContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                                 recordSupplier, baseUrl, subject))
@@ -131,25 +134,27 @@ public class NotificationTemplate {
 
     private String getSubjectContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit, Habit habit,
                                      NotificationRule rule, TemplateEngine templateEngine,
-                                     NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
+                                     NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
+                                     NotificationConfigRuleDTO notificationConfigRule) {
         return getPlainContent(subjectTemplate, sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
-                recordSupplier);
+                recordSupplier, notificationConfigRule);
     }
 
     private String getNotificationPlainContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
                                                Habit habit,
                                                NotificationRule rule, TemplateEngine templateEngine,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                               ResourceLoader resourceLoader) {
+                                               ResourceLoader resourceLoader, NotificationConfigRuleDTO notificationConfigRule) {
         return getPlainContent(getContentTemplateString(resourceLoader), sender, receiver, sharedHabit, habit, rule,
                 templateEngine, ruleService,
-                recordSupplier);
+                recordSupplier, notificationConfigRule);
     }
 
     private String getPlainContent(String template, Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
                                    Habit habit,
                                    NotificationRule rule, TemplateEngine templateEngine,
-                                   NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
+                                   NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
+                                   NotificationConfigRuleDTO notificationConfigRule) {
         Map<String, String> parameters = new HashMap<>();
         if (sharedHabit != null) {
             parameters.put("sharedHabitName", sharedHabit.getTitle());
@@ -167,6 +172,9 @@ public class NotificationTemplate {
         }
         if (habit != null && recordSupplier != null) {
             parameters.put("percentage", String.valueOf(Math.round(habit.getCompletionPercentage(recordSupplier))));
+        }
+        if (notificationConfigRule != null && notificationConfigRule.getThreshold() != null) {
+            parameters.put("threshold", String.valueOf(notificationConfigRule.getThreshold()));
         }
 
         parameters.put("receiver", receiver.getDisplayName());

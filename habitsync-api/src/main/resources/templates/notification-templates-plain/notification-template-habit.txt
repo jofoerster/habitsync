@@ -1,1 +1,0 @@
-It's time to work on your habit: ${habitName}. Your current percentage is ${percentage}%.

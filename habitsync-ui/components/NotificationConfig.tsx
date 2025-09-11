@@ -1,26 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
+import {ActivityIndicator, Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {useTheme} from "@/context/ThemeContext";
+import {createThemedStyles} from "@/constants/styles";
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
-    Modal,
-    Switch,
-    ActivityIndicator
-} from 'react-native';
-import { useTheme } from "@/context/ThemeContext";
-import { createThemedStyles } from "@/constants/styles";
-import {
+    FixedTimeNotificationConfigRule,
+    notificationApi,
     NotificationConfig as NotificationConfigType,
     NotificationConfigRule,
-    FixedTimeNotificationConfigRule,
-    ThresholdNotificationConfigRule,
     OvertakeNotificationConfigRule,
-    notificationApi
+    ThresholdNotificationConfigRule
 } from "@/services/api";
 import FrequencyPicker from "./FrequencyPicker";
 import alert from "@/services/alert";
+import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 
 const NOTIFICATION_TYPES = [
     {
@@ -31,14 +23,14 @@ const NOTIFICATION_TYPES = [
     },
     {
         type: 'threshold' as const,
-        name: 'Progress Notifications',
-        description: 'Get notified when your habit progress reaches a certain percentage threshold.',
+        name: 'Threshold Notifications',
+        description: 'Get notified when your habit progress falls below a certain percentage threshold.',
         icon: '📊'
     },
     {
         type: 'overtake' as const,
         name: 'Overtake Notifications',
-        description: 'Get notified when someone overtakes your progress in shared habits or challenges.',
+        description: 'Get notified when someone overtakes you in shared habits.',
         icon: '🏃'
     }
 ];
@@ -47,16 +39,14 @@ type NotificationConfigProps = {
     habitUuid: string;
     currentConfig: NotificationConfigType | null;
     showAppriseField: boolean;
-    onConfigUpdate: (config: NotificationConfigType | null) => void;
 };
 
 const NotificationConfig: React.FC<NotificationConfigProps> = ({
-    habitUuid,
-    currentConfig,
-    showAppriseField,
-    onConfigUpdate
-}) => {
-    const { theme } = useTheme();
+                                                                   habitUuid,
+                                                                   currentConfig,
+                                                                   showAppriseField,
+                                                               }) => {
+    const {theme} = useTheme();
     const styles = createStyles(theme);
 
     const [loading, setLoading] = useState(false);
@@ -84,12 +74,13 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         return rules.find(rule => rule.type === type);
     };
 
-    const updateRule = (updatedRule: NotificationConfigRule) => {
+    const updateRule = (updatedRule: NotificationConfigRule) : NotificationConfigRule[] => {
         const newRules = rules.filter(rule => rule.type !== updatedRule.type);
         if (updatedRule.enabled) {
             newRules.push(updatedRule);
         }
         setRules(newRules);
+        return newRules;
     };
 
     const toggleRule = async (type: 'fixed' | 'threshold' | 'overtake', active: boolean) => {
@@ -98,8 +89,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         if (!active) {
             // Deactivate rule
             if (existingRule) {
-                updateRule({ ...existingRule, enabled: false });
-                await saveConfig();
+                const rule = updateRule({...existingRule, enabled: false});
+                await saveConfig(rule);
             }
             return;
         }
@@ -111,8 +102,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 type: 'overtake',
                 enabled: true
             };
-            updateRule(overtakeRule);
-            await saveConfig();
+            const rules = updateRule(overtakeRule);
+            await saveConfig(rules);
         } else if (type === 'fixed') {
             // Open config modal for fixed time
             setTempFixedConfig(existingRule as FixedTimeNotificationConfigRule || {
@@ -154,6 +145,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
     };
 
     const saveRuleConfig = async () => {
+        let rules;
         if (configType === 'fixed') {
             const fixedRule: FixedTimeNotificationConfigRule = {
                 type: 'fixed',
@@ -163,21 +155,21 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 time: tempFixedConfig.time || '08:00',
                 triggerIfFulfilled: tempFixedConfig.triggerIfFulfilled || false
             };
-            updateRule(fixedRule);
+            rules = updateRule(fixedRule);
         } else if (configType === 'threshold') {
             const thresholdRule: ThresholdNotificationConfigRule = {
                 type: 'threshold',
                 enabled: true,
                 thresholdPercentage: tempThresholdConfig.thresholdPercentage || 80
             };
-            updateRule(thresholdRule);
+            rules = updateRule(thresholdRule);
         }
 
         setConfigModalVisible(false);
-        await saveConfig();
+        await saveConfig(rules || []);
     };
 
-    const saveConfig = async () => {
+    const saveConfig = async (rules : NotificationConfigRule[]) => {
         try {
             setLoading(true);
 
@@ -187,7 +179,6 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
             };
 
             await notificationApi.updateNotificationForHabit(habitUuid, config);
-            onConfigUpdate(config);
         } catch {
             alert('Error', 'Failed to update notification settings');
         } finally {
@@ -201,7 +192,6 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
             await notificationApi.deleteNotificationForHabit(habitUuid);
             setRules([]);
             setAppriseUrl('');
-            onConfigUpdate(null);
         } catch {
             alert('Error', 'Failed to delete notification settings');
         } finally {
@@ -221,7 +211,9 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         switch (type) {
             case 'fixed':
                 const fixedRule = rule as FixedTimeNotificationConfigRule;
-                return `${fixedRule.frequency === 'daily' ? 'Daily' : 'Weekly'} at ${fixedRule.time}`;
+                const {hour: utcHour, minute: utcMinute} = parseTime(fixedRule.time);
+                const localTime = convertUTCToLocalTime(utcHour, utcMinute);
+                return `${fixedRule.frequency === 'daily' ? 'Daily' : 'Weekly'} at ${localTime.hour}:${localTime.minute.toString().padStart(2, '0')}`;
             case 'threshold':
                 const thresholdRule = rule as ThresholdNotificationConfigRule;
                 return `At ${thresholdRule.thresholdPercentage}% progress`;
@@ -248,7 +240,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                         placeholderTextColor={theme.textTertiary}
                         autoCapitalize="none"
                         autoCorrect={false}
-                        onBlur={saveConfig}
+                        onBlur={() => saveConfig(rules)}
                     />
                 </View>
             )}
@@ -284,7 +276,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                     <Switch
                                         value={isActive}
                                         onValueChange={(value) => toggleRule(notificationType.type, value)}
-                                        trackColor={{ false: theme.disabled, true: theme.primaryLight }}
+                                        trackColor={{false: theme.disabled, true: theme.primaryLight}}
                                         thumbColor={isActive ? theme.primary : theme.surface}
                                         disabled={loading}
                                     />
@@ -312,7 +304,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                     disabled={loading}
                 >
                     {loading ? (
-                        <ActivityIndicator size="small" color="#fff" />
+                        <ActivityIndicator size="small" color="#fff"/>
                     ) : (
                         <Text style={styles.deleteButtonText}>Delete All Notifications</Text>
                     )}
@@ -355,7 +347,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                         {configType === 'fixed' && (
                             <View style={styles.configContent}>
                                 <FrequencyPicker
-                                    onChange={(config) => setTempFixedConfig(prev => ({ ...prev, ...config }))}
+                                    onChange={(config) => setTempFixedConfig(prev => ({...prev, ...config}))}
                                     hideFrequency={false}
                                     hideWeekdays={false}
                                     notificationConfigRule={tempFixedConfig as FixedTimeNotificationConfigRule}
@@ -365,8 +357,11 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                     <Text style={styles.switchLabel}>Notify even if fulfilled</Text>
                                     <Switch
                                         value={tempFixedConfig.triggerIfFulfilled || false}
-                                        onValueChange={(value) => setTempFixedConfig(prev => ({ ...prev, triggerIfFulfilled: value }))}
-                                        trackColor={{ false: theme.disabled, true: theme.primaryLight }}
+                                        onValueChange={(value) => setTempFixedConfig(prev => ({
+                                            ...prev,
+                                            triggerIfFulfilled: value
+                                        }))}
+                                        trackColor={{false: theme.disabled, true: theme.primaryLight}}
                                         thumbColor={tempFixedConfig.triggerIfFulfilled ? theme.primary : theme.surface}
                                     />
                                 </View>
@@ -383,7 +378,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                         onChangeText={(text) => {
                                             const value = parseInt(text.replace(/[^0-9]/g, ''));
                                             if (!isNaN(value) && value >= 0 && value <= 100) {
-                                                setTempThresholdConfig(prev => ({ ...prev, thresholdPercentage: value }));
+                                                setTempThresholdConfig(prev => ({...prev, thresholdPercentage: value}));
                                             }
                                         }}
                                         placeholder="80"
@@ -510,7 +505,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         width: 32,
         height: 32,
         borderRadius: 8,
-        backgroundColor: theme.primaryLight,
         justifyContent: 'center',
         alignItems: 'center',
     },

@@ -2,13 +2,16 @@ package de.jofoerster.habitsync.controller;
 
 import de.jofoerster.habitsync.dto.HabitRecordReadDTO;
 import de.jofoerster.habitsync.dto.HabitRecordWriteDTO;
+import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.habit.HabitRecordService;
 import de.jofoerster.habitsync.service.habit.HabitService;
+import de.jofoerster.habitsync.service.notification.NotificationServiceNew;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToEdit;
 import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToRead;
@@ -20,12 +23,14 @@ public class HabitRecordController {
     private final HabitService habitService;
     private final AccountService accountService;
     private final HabitRecordService habitRecordService;
+    private final NotificationServiceNew notificationServiceNew;
 
     public HabitRecordController(HabitService habitService, AccountService accountService,
-                                 HabitRecordService habitRecordService) {
+                                 HabitRecordService habitRecordService, NotificationServiceNew notificationServiceNew) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.habitRecordService = habitRecordService;
+        this.notificationServiceNew = notificationServiceNew;
     }
 
     /** * Returns a list of all records for a specific habit.
@@ -50,7 +55,9 @@ public class HabitRecordController {
     @PostMapping("/{habitUuid}")
     public ResponseEntity<HabitRecordReadDTO> createRecord(@PathVariable String habitUuid,
                                                            @RequestBody HabitRecordWriteDTO recordWrite) {
-        checkIfisAllowedToEdit(habitService.getHabitByUuid(habitUuid).orElse(null), accountService.getCurrentAccount());
+        Optional<Habit> habitOpt = habitService.getHabitByUuid(habitUuid);
+        checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
+        habitOpt.ifPresent(notificationServiceNew::markHabitAsUpdated);
         return ResponseEntity.ok(habitRecordService.createRecord(habitUuid, recordWrite));
     }
 }

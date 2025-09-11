@@ -1,7 +1,5 @@
 package de.jofoerster.habitsync.service.habit;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
@@ -177,7 +175,7 @@ public class HabitService {
                 .sortPosition(habit.getSortPosition())
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
-                .notificationFrequency(this.getNotificationFrequency(habit))
+                .notificationFrequency(this.getNotificationConfig(habit))
                 .build();
 
     }
@@ -253,7 +251,7 @@ public class HabitService {
         return habitRepository.findByReminderCustomIsNotEmptyAndStatus(1);
     }
 
-    public NotificationConfigDTO getNotificationFrequency(Habit habit) {
+    public NotificationConfigDTO getNotificationConfig(Habit habit) {
         String frequency = habit.getReminderCustom();
         if (frequency == null || frequency.isEmpty()) {
             return null;
@@ -267,17 +265,17 @@ public class HabitService {
     }
 
     public List<NotificationConfigRuleDTO> getFixedTimeNotificationRules (Habit habit) {
-        String frequency = habit.getReminderCustom();
-        if (frequency == null || frequency.isEmpty()) {
+        String reminderCustom = habit.getReminderCustom();
+        if (reminderCustom == null || reminderCustom.isEmpty()) {
             return new ArrayList<>();
         }
         try {
-            NotificationConfigDTO configDTO = mapper.readValue(frequency, NotificationConfigDTO.class);
+            NotificationConfigDTO configDTO = mapper.readValue(reminderCustom, NotificationConfigDTO.class);
             return configDTO.getRules().stream().filter(r -> r.getType() == NotificationTypeEnum.fixed).toList();
         } catch (Exception e){
             try {
                 DeprecatedNotificationFrequencyDTO configDTO =
-                        mapper.readValue(frequency, DeprecatedNotificationFrequencyDTO.class);
+                        mapper.readValue(reminderCustom, DeprecatedNotificationFrequencyDTO.class);
                 return List.of(NotificationConfigRuleDTO.builder()
                         .type(NotificationTypeEnum.fixed)
                         .enabled(true)
@@ -287,8 +285,8 @@ public class HabitService {
                         .time(configDTO.time)
                         .build());
             } catch (Exception ex) {
-                log.warn("Could not parse notification frequency: {}", frequency, e);
-                return null;
+                log.warn("Could not parse notification reminderCustom: {}", reminderCustom, e);
+                return new ArrayList<>();
             }
         }
     }

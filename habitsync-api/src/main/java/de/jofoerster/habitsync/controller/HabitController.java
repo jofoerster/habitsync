@@ -8,6 +8,7 @@ import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.habit.HabitService;
+import de.jofoerster.habitsync.service.notification.NotificationServiceNew;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,10 +24,13 @@ public class HabitController {
 
     private final HabitService habitService;
     private final AccountService accountService;
+    private final NotificationServiceNew notificationServiceNew;
 
-    public HabitController(HabitService habitService, AccountService accountService) {
+    public HabitController(HabitService habitService, AccountService accountService,
+                           NotificationServiceNew notificationServiceNew) {
         this.habitService = habitService;
         this.accountService = accountService;
+        this.notificationServiceNew = notificationServiceNew;
     }
 
     /**
@@ -77,7 +81,9 @@ public class HabitController {
     @PutMapping("/{uuid}")
     public ResponseEntity<HabitReadDTO> updateHabit(@PathVariable String uuid,
                                                     @RequestBody HabitWriteDTO habitWriteDTO) {
-        checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
+        Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
+        checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
+        habitOpt.ifPresent(notificationServiceNew::markHabitAsUpdated);
         return ResponseEntity.ok(habitService.updateHabit(uuid, habitWriteDTO));
     }
 
