@@ -158,7 +158,7 @@ public class AccountService {
 
     public Account updateAccount(Account account) {
         log.info("Updating account {}", getCurrentAccountUsername());
-        if (account.isSendNotificationsViaEmail()) {
+        if (account.isSendNotificationsViaEmail() || !account.getAppriseTargetUrls().isEmpty()) {
             log.info("Scheduling notification job for account {}", account.getAuthenticationId());
             notificationService.scheduleNotificationJob(account);
         } else {
@@ -197,6 +197,7 @@ public class AccountService {
                 .isEmailNotificationsEnabled(account.isSendNotificationsViaEmail())
                 .isPushNotificationsEnabled(false) // Push notifications not implemented
                 .dailyNotificationHour(account.getNotificationCreationHour())
+                .appriseTarget(account.getAppriseTargetUrls())
                 .build();
     }
 
@@ -208,6 +209,7 @@ public class AccountService {
                 settings.getIsEmailNotificationsEnabled() == null || settings.getIsEmailNotificationsEnabled());
         account.setNotificationCreationHour(settings.getDailyNotificationHour());
         account.setEnableInternalHabitTracker(true); // legacy feature, always enabled
+        account.setAppriseTargetUrls(settings.getAppriseTarget());
         account = updateAccount(account);
         return this.getProfileSettings(account);
     }

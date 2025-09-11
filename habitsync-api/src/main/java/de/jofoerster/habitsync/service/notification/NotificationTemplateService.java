@@ -32,6 +32,7 @@ public class NotificationTemplateService {
                 case PUSH_NOTIFICATION_HABIT -> {
                     template.setHtmlTemplateName(
                             "notification-templates/notification-template-habit");
+                    template.setContentTemplateName("notification-templates-plain/notification-template-habit");
                 }
                 default -> {
                     template.setHtmlTemplateName(

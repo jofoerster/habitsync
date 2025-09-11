@@ -12,7 +12,7 @@ export interface ApiHabitRead {
     isChallengeHabit?: boolean;
     synchronizedSharedHabitId?: number;
     sortPosition: number;
-    notificationFrequency: NotificationFrequency | null;
+    notificationFrequency: NotificationConfig | null;
 }
 
 export interface ApiAccountRead {
@@ -27,6 +27,7 @@ export interface ApiAccountSettingsReadWrite {
     authenticationId: string; // identifier, cannot be changed
     isEmailNotificationsEnabled: boolean;
     isPushNotificationsEnabled: boolean;
+    appriseTarget?: string;
     dailyNotificationHour: number;
 }
 
@@ -180,10 +181,15 @@ export interface JWTTokenPair {
     refreshToken: string;
 }
 
-export interface NotificationFrequency {
+export interface NotificationConfig {
     frequency: 'daily' | 'weekly';
     weekdays: string[];
     time: string;
+    appriseTarget?: string;
+}
+
+export interface ServerConfig {
+    appriseActive: boolean;
 }
 
 // API service functions
@@ -293,7 +299,7 @@ export const habitApi = {
 };
 
 export const notificationApi = {
-    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationFrequency): Promise<void> => {
+    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationConfig): Promise<void> => {
         const response = await authenticatedFetch(`${BACKEND_BASE_URL}/notifications/habit/${habitUuid}`, {
             method: 'PUT',
             body: JSON.stringify(frequency),
@@ -557,6 +563,14 @@ export const authApi = {
         return response.json();
     }
 };
+
+export const serverConfigApi = {
+    getServerConfig: async (): Promise<ServerConfig> => {
+        const response = await authenticatedFetch(`${BACKEND_BASE_URL}/config`);
+        if (!response.ok) throw new Error('Failed to fetch server config');
+        return response.json();
+    }
+}
 
 const getAuthHeaders = async (): Promise<HeadersInit> => {
     const accessToken = await auth.getAccessToken();

@@ -19,7 +19,8 @@ import {
     ChallengeComputationType,
     FrequencyTypeDTO,
     notificationApi,
-    NotificationFrequency
+    NotificationConfig,
+    serverConfigApi
 } from "@/services/api";
 import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
@@ -116,8 +117,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const [isAsMuchAsPossibleChallenge, setIsAsMuchAsPossibleChallenge] = useState(false);
 
-        const [notificationFrequency, setNotificationFrequency] = useState<NotificationFrequency | null>(null);
-        const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationFrequency | null>(null);
+        const [notificationFrequency, setNotificationFrequency] = useState<NotificationConfig | null>(null);
+        const [notificationFrequencyNew, setNotificationFrequencyNew] = useState<NotificationConfig | null>(null);
+
+        const [showAppriseField, setShowAppriseField] = useState(false);
+        const [appriseUrl, setAppriseUrl] = useState('');
 
         const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
 
@@ -194,6 +198,9 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
                             && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
+                        if (habit.notificationFrequency?.appriseTarget) {
+                            setAppriseUrl(habit.notificationFrequency.appriseTarget);
+                        }
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -216,6 +223,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
             readHabit();
         }, [habit?.uuid, configType, navigation]);
+
+        useEffect(() => {
+            const loadConfig = async () => {
+                const config = await serverConfigApi.getServerConfig();
+                setShowAppriseField(config.appriseActive);
+            }
+            loadConfig();
+        }, []);
 
         const switchNumericalBooleanHabit = (value: boolean) => {
             setIsNumericalHabit(value);
@@ -243,8 +258,13 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const handleNotificationSettingsUpdate = async () => {
             if (habit && notificationFrequencyNew) {
                 try {
-                    await notificationApi.updateNotificationForHabit(habit.uuid, notificationFrequencyNew);
-                    setNotificationFrequency(notificationFrequencyNew);
+                    const updatedNotification: NotificationConfig = {
+                        ...notificationFrequencyNew,
+                        appriseTarget: appriseUrl.trim() || undefined
+                    };
+
+                    await notificationApi.updateNotificationForHabit(habit.uuid, updatedNotification);
+                    setNotificationFrequency(updatedNotification);
                     setNotificationModalVisible(false);
                 } catch {
                     alert('Error', 'Failed to update notification settings');
@@ -258,6 +278,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     await notificationApi.deleteNotificationForHabit(habit.uuid);
                     setNotificationFrequency(null);
                     setNotificationFrequencyNew(null);
+                    setAppriseUrl('');
                     setNotificationModalVisible(false);
                 } catch {
                     alert('Error', 'Failed to delete notification settings');
@@ -516,6 +537,24 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 notificationFrequency={notificationFrequency || undefined}
                             />
 
+                            {showAppriseField && (
+                                <View
+                                    style={[styles.inputContainer, {marginLeft: 15, marginRight: 15, marginBottom: 5}]}>
+                                    <View style={styles.labelRow}>
+                                        <Text style={styles.label}>Apprise URL (Optional)</Text>
+                                    </View>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={appriseUrl}
+                                        onChangeText={setAppriseUrl}
+                                        placeholder="e.g., service://token/chat_id"
+                                        placeholderTextColor="#999"
+                                        autoCapitalize="none"
+                                        autoCorrect={false}
+                                    />
+                                </View>
+                            )}
+
                             <TouchableOpacity
                                 style={[styles.saveButton, {backgroundColor: '#4ECDC4'}]}
                                 onPress={handleNotificationSettingsUpdate}
@@ -542,6 +581,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     </View>
                 </Modal>
+
 
                 {isSharedWithOthers && (
                     <View style={styles.syncInfoContainer}>
@@ -675,76 +715,76 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
                     {challengeType !== ChallengeComputationType.MAX_VALUE && (
 
-                    <View style={styles.row}>
-                        {isNumericalHabit && configType === ConfigType.CHALLENGE && (
-                            <View style={styles.halfInput}>
-                                <View style={styles.labelRow}>
-                                    <Text style={styles.label}>As much as possible</Text>
-                                    <HelpIcon tooltipKey="asMuchAsPossible"/>
-                                    {isFieldLocked() && <LockIcon/>}
-                                </View>
-                                <Switch
-                                    value={isAsMuchAsPossibleChallenge}
-                                    onValueChange={switchAsMuchAsPossibleChallenge}
-                                    disabled={isFieldLocked()}
-                                    trackColor={{false: theme.disabled, true: theme.primaryLight}}
-                                    thumbColor={isAsMuchAsPossibleChallenge ? theme.primary : theme.surface}
-                                />
-                            </View>
-                        )}
-
-                        {isNumericalHabit && !isAsMuchAsPossibleChallenge && (
-                            <View style={styles.halfInput}>
-                                <View style={styles.labelRow}>
-                                    <View style={styles.labelWithClickable}>
-                                        <TouchableOpacity
-                                            style={!isFieldLocked() && styles.clickableWord}
-                                            onPress={!isFieldLocked() ? rotateGoalType : () => {
-                                            }}
-                                            activeOpacity={0.7}
-                                        >
-                                            <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
-                                        </TouchableOpacity>
-                                        <Text style={styles.label}> Goal</Text>
+                        <View style={styles.row}>
+                            {isNumericalHabit && configType === ConfigType.CHALLENGE && (
+                                <View style={styles.halfInput}>
+                                    <View style={styles.labelRow}>
+                                        <Text style={styles.label}>As much as possible</Text>
+                                        <HelpIcon tooltipKey="asMuchAsPossible"/>
+                                        {isFieldLocked() && <LockIcon/>}
                                     </View>
-                                    <HelpIcon tooltipKey="maxDailyValue"/>
-                                    {isFieldLocked() && <LockIcon/>}
+                                    <Switch
+                                        value={isAsMuchAsPossibleChallenge}
+                                        onValueChange={switchAsMuchAsPossibleChallenge}
+                                        disabled={isFieldLocked()}
+                                        trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                                        thumbColor={isAsMuchAsPossibleChallenge ? theme.primary : theme.surface}
+                                    />
                                 </View>
-                                <TextInput
-                                    style={[styles.input, isFieldLocked() && styles.lockedInput]}
-                                    value={dailyReachableValue}
-                                    onChangeText={isFieldLocked() ? undefined : (text) => {
-                                        const numericValue = text.replace(/[^0-9.]/g, '');
-                                        setDailyReachableValue(numericValue);
-                                    }}
-                                    placeholder="0"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                    editable={!isFieldLocked()}
-                                />
-                            </View>
-                        )}
+                            )}
 
-                        {configType !== ConfigType.CHALLENGE && isNumericalHabit && (
-                            <View style={styles.halfInput}>
-                                <View style={styles.labelRow}>
-                                    <Text style={styles.label}>Default Value</Text>
-                                    <HelpIcon tooltipKey="dailyGoal"/>
+                            {isNumericalHabit && !isAsMuchAsPossibleChallenge && (
+                                <View style={styles.halfInput}>
+                                    <View style={styles.labelRow}>
+                                        <View style={styles.labelWithClickable}>
+                                            <TouchableOpacity
+                                                style={!isFieldLocked() && styles.clickableWord}
+                                                onPress={!isFieldLocked() ? rotateGoalType : () => {
+                                                }}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
+                                            </TouchableOpacity>
+                                            <Text style={styles.label}> Goal</Text>
+                                        </View>
+                                        <HelpIcon tooltipKey="maxDailyValue"/>
+                                        {isFieldLocked() && <LockIcon/>}
+                                    </View>
+                                    <TextInput
+                                        style={[styles.input, isFieldLocked() && styles.lockedInput]}
+                                        value={dailyReachableValue}
+                                        onChangeText={isFieldLocked() ? undefined : (text) => {
+                                            const numericValue = text.replace(/[^0-9.]/g, '');
+                                            setDailyReachableValue(numericValue);
+                                        }}
+                                        placeholder="0"
+                                        placeholderTextColor="#999"
+                                        keyboardType="numeric"
+                                        editable={!isFieldLocked()}
+                                    />
                                 </View>
-                                <TextInput
-                                    style={styles.input}
-                                    value={dailyGoal}
-                                    onChangeText={(text) => {
-                                        const numericValue = text.replace(/[^0-9.]/g, '');
-                                        setDailyGoal(numericValue);
-                                    }}
-                                    placeholder="0"
-                                    placeholderTextColor="#999"
-                                    keyboardType="numeric"
-                                />
-                            </View>
-                        )}
-                    </View>
+                            )}
+
+                            {configType !== ConfigType.CHALLENGE && isNumericalHabit && (
+                                <View style={styles.halfInput}>
+                                    <View style={styles.labelRow}>
+                                        <Text style={styles.label}>Default Value</Text>
+                                        <HelpIcon tooltipKey="dailyGoal"/>
+                                    </View>
+                                    <TextInput
+                                        style={styles.input}
+                                        value={dailyGoal}
+                                        onChangeText={(text) => {
+                                            const numericValue = text.replace(/[^0-9.]/g, '');
+                                            setDailyGoal(numericValue);
+                                        }}
+                                        placeholder="0"
+                                        placeholderTextColor="#999"
+                                        keyboardType="numeric"
+                                    />
+                                </View>
+                            )}
+                        </View>
                     )}
 
                     {(isNumericalHabit || challengeType === ChallengeComputationType.MAX_VALUE) && (

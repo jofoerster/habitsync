@@ -2,8 +2,6 @@ import React, {useEffect, useState} from 'react';
 import {
     ActivityIndicator,
     Alert,
-    FlatList,
-    Modal,
     ScrollView,
     StyleSheet,
     Switch,
@@ -12,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {ApiAccountSettingsReadWrite, userApi} from "@/services/api";
+import {ApiAccountSettingsReadWrite, serverConfigApi, userApi} from "@/services/api";
 import alert from "@/services/alert";
 import {AuthService} from "@/services/auth";
 import {Link} from 'expo-router';
@@ -29,15 +27,20 @@ const UserSettingsComponent = () => {
     const [settings, setSettings] = useState<ApiAccountSettingsReadWrite | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [showHourPicker, setShowHourPicker] = useState(false);
     const [displayName, setDisplayName] = useState('');
     const [email, setEmail] = useState('');
     const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(false);
     const [isPushNotificationsEnabled, setIsPushNotificationsEnabled] = useState(false);
-    const [dailyNotificationHour, setDailyNotificationHour] = useState(9);
+    const [appriseTargetUrl, setAppriseTargetUrl] = useState("");
+    const [showAppriseField, setShowAppriseField] = useState(false);
 
     useEffect(() => {
         loadSettings();
+        const loadConfig = async () => {
+            const config = await serverConfigApi.getServerConfig();
+            setShowAppriseField(config.appriseActive);
+        }
+        loadConfig();
     }, []);
 
     const loadSettings = async () => {
@@ -49,7 +52,7 @@ const UserSettingsComponent = () => {
             setEmail(userSettings.email);
             setIsEmailNotificationsEnabled(userSettings.isEmailNotificationsEnabled);
             setIsPushNotificationsEnabled(userSettings.isPushNotificationsEnabled);
-            setDailyNotificationHour(userSettings.dailyNotificationHour);
+            setAppriseTargetUrl(userSettings.appriseTarget || "");
         } catch (error) {
             Alert.alert('Error', 'Failed to load settings');
         } finally {
@@ -68,7 +71,7 @@ const UserSettingsComponent = () => {
                 email,
                 isEmailNotificationsEnabled,
                 isPushNotificationsEnabled,
-                dailyNotificationHour,
+                appriseTarget: appriseTargetUrl,
             };
 
             await userApi.updateUserSettings(updatedSettings);
@@ -83,30 +86,6 @@ const UserSettingsComponent = () => {
     const handleLogout = async () => {
         await AuthService.getInstance().logout();
     };
-
-    const handleHourChange = (hour: React.SetStateAction<number>) => {
-        setDailyNotificationHour(hour);
-        setShowHourPicker(false);
-    };
-
-    const hours = Array.from({length: 24}, (_, i) => i);
-
-    const renderHourItem = ({item}: {item: number}) => (
-        <TouchableOpacity
-            style={[
-                styles.hourItem,
-                item === dailyNotificationHour && styles.selectedHourItem
-            ]}
-            onPress={() => handleHourChange(item)}
-        >
-            <Text style={[
-                styles.hourText,
-                item === dailyNotificationHour && styles.selectedHourText
-            ]}>
-                {item.toString().padStart(2, '0')}:00
-            </Text>
-        </TouchableOpacity>
-    );
 
     if (loading) {
         return (
@@ -128,7 +107,7 @@ const UserSettingsComponent = () => {
 
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Theme Settings Section */}
-                <ThemeToggle />
+                <ThemeToggle/>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account Information</Text>
@@ -163,36 +142,35 @@ const UserSettingsComponent = () => {
                     </View>
                 </View>
 
-                {/*<View style={styles.section}>*/}
-                {/*    <Text style={styles.sectionTitle}>Notifications</Text>*/}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Notifications</Text>
 
-                {/*    <View style={styles.switchField}>*/}
-                {/*        <Text style={styles.label}>Email Notifications</Text>*/}
-                {/*        <Switch*/}
-                {/*            value={isEmailNotificationsEnabled}*/}
-                {/*            onValueChange={setIsEmailNotificationsEnabled}*/}
-                {/*            trackColor={{ false: theme.disabled, true: theme.primaryLight }}*/}
-                {/*            thumbColor={isEmailNotificationsEnabled ? theme.primary : theme.surface}*/}
-                {/*        />*/}
-                {/*    </View>*/}
+                    <View style={styles.switchField}>
+                        <Text style={styles.label}>Email Notifications</Text>
+                        <Switch
+                            value={isEmailNotificationsEnabled}
+                            onValueChange={setIsEmailNotificationsEnabled}
+                            trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                            thumbColor={theme.text}
+                        />
+                    </View>
 
-                {/*    <View style={styles.field}>*/}
-                {/*        <Text style={styles.label}>Daily Notification Hour</Text>*/}
-                {/*        <TouchableOpacity*/}
-                {/*            style={styles.hourSelector}*/}
-                {/*            onPress={() => setShowHourPicker(true)}*/}
-                {/*        >*/}
-                {/*            <Text style={styles.hourSelectorText}>*/}
-                {/*                {dailyNotificationHour.toString().padStart(2, '0')}:00*/}
-                {/*            </Text>*/}
-                {/*            <MaterialCommunityIcons*/}
-                {/*                name="chevron-down"*/}
-                {/*                size={20}*/}
-                {/*                color={theme.textSecondary}*/}
-                {/*            />*/}
-                {/*        </TouchableOpacity>*/}
-                {/*    </View>*/}
-                {/*</View>*/}
+                    {showAppriseField && (
+                        <View style={styles.field}>
+                            <Text style={styles.label}>Apprise Target URL</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={appriseTargetUrl}
+                                onChangeText={setAppriseTargetUrl}
+                                placeholder="Enter Apprise target URL (optional)"
+                                placeholderTextColor={theme.textTertiary}
+                                autoCapitalize="none"
+                                multiline={true}
+                                numberOfLines={3}
+                            />
+                        </View>
+                    )}
+                </View>
 
                 <TouchableOpacity
                     style={[styles.saveButton, saving && styles.saveButtonDisabled]}
@@ -231,31 +209,6 @@ const UserSettingsComponent = () => {
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
             </ScrollView>
-
-            <Modal
-                visible={showHourPicker}
-                transparent={true}
-                animationType="fade"
-                onRequestClose={() => setShowHourPicker(false)}
-            >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Select Hour</Text>
-                            <TouchableOpacity onPress={() => setShowHourPicker(false)}>
-                                <Text style={styles.closeButton}>Done</Text>
-                            </TouchableOpacity>
-                        </View>
-                        <FlatList
-                            data={hours}
-                            renderItem={renderHourItem}
-                            keyExtractor={(item) => item.toString()}
-                            showsVerticalScrollIndicator={false}
-                            style={styles.hourList}
-                        />
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 };
@@ -349,20 +302,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         borderWidth: 1,
         borderColor: theme.borderSecondary,
     },
-    hourSelector: {
-        borderWidth: 1,
-        borderColor: theme.border,
-        borderRadius: 8,
-        padding: 12,
-        backgroundColor: theme.surface,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    hourSelectorText: {
-        fontSize: 16,
-        color: theme.text,
-    },
     saveButton: {
         backgroundColor: theme.primary,
         borderRadius: 12,
@@ -422,55 +361,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     logoutButtonText: {
         color: theme.textInverse,
         fontSize: 16,
-        fontWeight: '600',
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        backgroundColor: theme.surface,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: '50%',
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.border,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: theme.text,
-    },
-    closeButton: {
-        fontSize: 16,
-        color: theme.primary,
-        fontWeight: '600',
-    },
-    hourList: {
-        maxHeight: 300,
-    },
-    hourItem: {
-        padding: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: theme.borderSecondary,
-        alignItems: 'center',
-    },
-    selectedHourItem: {
-        backgroundColor: theme.primary,
-    },
-    hourText: {
-        fontSize: 16,
-        color: theme.text,
-    },
-    selectedHourText: {
-        color: theme.textInverse,
         fontWeight: '600',
     },
 }));

@@ -7,7 +7,6 @@ const isWeb = Platform.OS === 'web';
 
 class SecureStorage {
     async getItem(key: string): Promise<string | null> {
-        console.log("Try to load by key ", key);
         if (isWebSSR()) return null;
 
         if (isWeb) {

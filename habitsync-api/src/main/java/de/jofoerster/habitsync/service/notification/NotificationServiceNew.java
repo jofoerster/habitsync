@@ -17,11 +17,21 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -36,6 +46,8 @@ public class NotificationServiceNew {
     private final NotificationRuleService notificationRuleService;
     private final HabitRecordRepository habitRecordRepository;
     private final JavaMailSender emailSender;
+    private final ResourceLoader resourceLoader;
+    private final RestTemplate restTemplate = new RestTemplate();
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -44,6 +56,9 @@ public class NotificationServiceNew {
 
     @Value("${base.url}")
     String baseUrl;
+
+    @Value("${apprise.api.url:}")
+    String appriseApiUrl;
 
     @PostConstruct
     public void init() {
@@ -86,11 +101,17 @@ public class NotificationServiceNew {
                 notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
                         templateEngine,
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION);
-        sendNotificationViaMail(notification);
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader);
+        sendNotificationViaApprise(notification, habit);
+        if (habit.getAccount().isSendNotificationsViaEmail()){
+            sendNotificationViaMail(notification);
+        }
     }
 
     public void sendNotificationViaMail(Notification notification) {
+        if (notification.getReceiverAccount() == null || notification.getReceiverAccount().getEmail() == null) {
+            return;
+        }
         MimeMessage mimeMessage = emailSender.createMimeMessage();
 
         try {
@@ -99,10 +120,79 @@ public class NotificationServiceNew {
             helper.setTo(notification.getReceiverAccount()
                     .getEmail());
             helper.setSubject(notification.getSubject());
-            helper.setText(notification.getContent(), true); // true = isHtml
+            helper.setText(notification.getHtmlContent(), true); // true = isHtml
 
             emailSender.send(mimeMessage);
         } catch (MessagingException ignored) {
+        }
+    }
+
+    public void sendNotificationViaApprise(Notification notification, Habit habit) {
+        if (!isAppriseActive()) {
+            log.debug("No Apprise target specified for notification {}", notification.getId());
+            return;
+        }
+
+        if (habit == null) {
+            log.debug("Could not find habit for notification with id {}. Cannot send apprise notification",
+                    notification.getId());
+            return;
+        }
+        String appriseTarget = this.getAppriseTargetFromHabit(habit);
+
+        if (appriseApiUrl == null || appriseApiUrl.isEmpty()) {
+            log.debug("Apprise API URL not configured");
+            return;
+        }
+
+        try {
+            MultiValueMap<String, Object> payload = new LinkedMultiValueMap<>();
+            payload.add("urls", appriseTarget);
+            payload.add("title", notification.getSubject());
+            payload.add("body", notification.getContent());
+            payload.add("type", "info");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(payload, headers);
+
+            String endpoint = appriseApiUrl + "/notify";
+            restTemplate.postForEntity(endpoint, request, String.class);
+
+            log.info("Successfully sent Apprise notification to target: {}", appriseTarget);
+
+        } catch (RestClientException e) {
+            log.error("Failed to send Apprise notification to target {}: {}",
+                    appriseTarget, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unexpected error sending Apprise notification: {}", e.getMessage());
+        }
+    }
+
+    public boolean isAppriseActive() {
+        return appriseApiUrl != null && !appriseApiUrl.isEmpty();
+    }
+
+    private String getAppriseTargetFromHabit(Habit habit) {
+        String json = habit.getReminderCustom();
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+        try {
+            NotificationFrequencyDTO frequencyDTO =
+                    mapper.readValue(json, NotificationFrequencyDTO.class);
+            String target = frequencyDTO.getAppriseTarget();
+            if (target == null || target.isEmpty()) {
+                if (!habit.getAccount().getAppriseTargetUrls().isEmpty()) {
+                    return habit.getAccount().getAppriseTargetUrls();
+                }
+                return null;
+            }
+            return target;
+        } catch (JsonProcessingException e) {
+            log.warn("Could not parse reminderCustom for habit {}", habit.getUuid(), e);
+            return null;
         }
     }
 }

@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,8 @@ public class NotificationService {
     private HabitRecordRepository habitRecordRepository;
     @Autowired
     private NotificationTemplateService notificationTemplateService;
+    @Autowired
+    private ResourceLoader resourceLoader;
 
     @Value("${spring.mail.username}")
     private String mailSender;
@@ -151,7 +154,8 @@ public class NotificationService {
                                     notificationRepository.save(rule.getNotificationTemplate()
                                             .createNotification(account, Optional.empty(), sharedHabit, null, rule,
                                                     templateEngine, notificationRuleService,
-                                                    new HabitRecordSupplier(habitRecordRepository), baseUrl, null));
+                                                    new HabitRecordSupplier(habitRecordRepository), baseUrl, null,
+                                                    resourceLoader));
                                 }
                             });
                 });
@@ -205,7 +209,7 @@ public class NotificationService {
             helper.setTo(notification.getReceiverAccount()
                     .getEmail());
             helper.setSubject(notification.getSubject());
-            helper.setText(notification.getContent(), true); // true = isHtml
+            helper.setText(notification.getHtmlContent(), true); // true = isHtml
 
             emailSender.send(mimeMessage);
         } catch (MessagingException ignored) {
@@ -300,7 +304,7 @@ public class NotificationService {
         Notification notification =
                 notificationTemplate.createNotification(receiverAccount, Optional.of(senderAccount), sharedHabit, null,
                         notificationRule, templateEngine, notificationRuleService,
-                        new HabitRecordSupplier(habitRecordRepository), baseUrl, null);
+                        new HabitRecordSupplier(habitRecordRepository), baseUrl, null, resourceLoader);
         notificationRepository.save(notification);
         sendNotificationViaMail(notification); //TODO check that notification is not being sent multiple times
     }

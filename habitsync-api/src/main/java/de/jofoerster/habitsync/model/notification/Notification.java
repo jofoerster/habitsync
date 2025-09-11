@@ -27,6 +27,8 @@ public class Notification {
     @Column(columnDefinition = "TEXT")
     private String content;
     @Column(columnDefinition = "TEXT")
+    private String htmlContent;
+    @Column(columnDefinition = "TEXT")
     private String htmlContentShade;
     @Column(columnDefinition = "TEXT")
     private String htmlContentShadeMinimal;
