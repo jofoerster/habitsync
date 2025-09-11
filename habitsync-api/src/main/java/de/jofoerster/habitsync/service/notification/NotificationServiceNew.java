@@ -64,7 +64,7 @@ public class NotificationServiceNew {
     String appriseApiUrl;
 
     private final List<Habit> habitsWithCustomReminders = new ArrayList<>();
-    private final List<Habit> habitsWithoutUpdates = new ArrayList<>();
+    private final List<String> habitsWithoutUpdates = new ArrayList<>();
     private Map<String, Boolean> habitRuleNotificationStatusMap = new HashMap<String, Boolean>();
 
     @PostConstruct
@@ -86,14 +86,14 @@ public class NotificationServiceNew {
             rules.forEach(rule -> {
                 this.checkAndExecuteRule(habit, rule);
             });
-            if (!habitsWithoutUpdates.contains(habit)) {
-                habitsWithoutUpdates.add(habit);
+            if (!habitsWithoutUpdates.contains(habit.getUuid())) {
+                habitsWithoutUpdates.add(habit.getUuid());
             }
         });
     }
 
     public void markHabitAsUpdated(Habit habit) {
-        habitsWithoutUpdates.remove(habit);
+        habitsWithoutUpdates.remove(habit.getUuid());
     }
 
     private void checkAndExecuteRule(Habit habit, NotificationConfigRuleDTO rule) {
@@ -102,15 +102,15 @@ public class NotificationServiceNew {
                 return; // Fixed time notifications are handled by scheduled jobs
             }
             case NotificationTypeEnum.threshold -> {
-                if (!rule.isEnabled() || rule.getThreshold() == null ||
-                        (habitsWithoutUpdates.contains(habit) && !isFirstCheckToday())) {
+                if (!rule.isEnabled() || rule.getThresholdPercentage() == null ||
+                        (habitsWithoutUpdates.contains(habit.getUuid()) && !isFirstCheckToday())) {
                     return;
                 }
                 String ruleIdentifier = "THRESHOLD_" + habit.getUuid();
                 boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
                 boolean isActive =
                         habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
-                                < rule.getThreshold();
+                                < rule.getThresholdPercentage();
                 if (!wasActive && isActive) {
                     log.debug("Threshold rule triggered for habit {}", habit.getUuid());
                     sendCustomReminderNotifications(rule, habit);
@@ -139,7 +139,7 @@ public class NotificationServiceNew {
     }
 
     private boolean checkAndExecuteOvertakeRule(Habit habit, Habit ch, NotificationConfigRuleDTO rule) {
-        if (habitsWithoutUpdates.contains(habit) && habitsWithoutUpdates.contains(ch) && !isFirstCheckToday()) {
+        if (habitsWithoutUpdates.contains(habit.getUuid()) && habitsWithoutUpdates.contains(ch.getUuid()) && !isFirstCheckToday()) {
             return false;
         }
         String ruleIdentifier = "OVERTAKE_" + habit.getUuid() + "_" + ch.getUuid();

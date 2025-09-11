@@ -13,9 +13,9 @@ public enum NotificationType {
             "${sharedHabitName}: ${customText}"), PERIODICALLY("Periodically", "${sharedHabitName}: ${customText}"),
     FIXED_TIME_PUSH_NOTIFICATION_HABIT("Habit Reminder", "Habit Reminder: ${habitName}"),
     THRESHOLD_PUSH_NOTIFICATION_HABIT("Threshold Reminder",
-            "Threshold Reminder: Progress in ${habitName} has fallen below ${threshold}%"),
+            "Threshold Reminder for ${habitName}"),
     OVERTAKE_PUSH_NOTIFICATION_HABIT("Overtake Reminder",
-            "Overtake Reminder: You have been overtaken in ${habitName}");
+            "Overtake Reminder for ${habitName}");
 
     public final String label;
     public final String template;

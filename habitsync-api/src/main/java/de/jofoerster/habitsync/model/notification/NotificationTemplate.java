@@ -173,8 +173,8 @@ public class NotificationTemplate {
         if (habit != null && recordSupplier != null) {
             parameters.put("percentage", String.valueOf(Math.round(habit.getCompletionPercentage(recordSupplier))));
         }
-        if (notificationConfigRule != null && notificationConfigRule.getThreshold() != null) {
-            parameters.put("threshold", String.valueOf(notificationConfigRule.getThreshold()));
+        if (notificationConfigRule != null && notificationConfigRule.getThresholdPercentage() != null) {
+            parameters.put("threshold", String.valueOf(notificationConfigRule.getThresholdPercentage()));
         }
 
         parameters.put("receiver", receiver.getDisplayName());
