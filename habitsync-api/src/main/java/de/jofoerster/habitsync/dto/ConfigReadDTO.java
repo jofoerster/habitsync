@@ -6,5 +6,5 @@ import lombok.Data;
 @Builder
 @Data
 public class ConfigReadDTO {
-    private boolean isAppriseConfigured;
+    private boolean appriseActive;
 }

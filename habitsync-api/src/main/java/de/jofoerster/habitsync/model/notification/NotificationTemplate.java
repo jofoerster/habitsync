@@ -7,20 +7,28 @@ import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.*;
 
 @Data
 @Entity
+@Slf4j
 public class NotificationTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
     @Column(columnDefinition = "TEXT")
     String subjectTemplate;
+
+    String contentTemplateName;
 
     String htmlTemplateName;
 
@@ -37,12 +45,17 @@ public class NotificationTemplate {
                                            Habit habit,
                                            NotificationRule rule, TemplateEngine templateEngine,
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                           String baseUrl, NotificationStatus notificationStatus) {
+                                           String baseUrl, NotificationStatus notificationStatus,
+                                           ResourceLoader resourceLoader) {
         String subject =
-                getSubjectContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService, recordSupplier);
+                getSubjectContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
+                        recordSupplier);
         return Notification.builder()
-                .content(getNotificationContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
-                        recordSupplier, baseUrl, subject))
+                .content(getNotificationPlainContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
+                        recordSupplier, resourceLoader))
+                .htmlContent(
+                        getNotificationHtmlContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
+                                recordSupplier, baseUrl, subject))
                 .htmlContentShade(
                         getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
                                 recordSupplier, baseUrl, subject))
@@ -77,9 +90,9 @@ public class NotificationTemplate {
                 .orElse(0));
     }
 
-    private String getNotificationContent(TemplateEngine templateEngine, Account receiver, Optional<Account> sender,
-                                          SharedHabit sharedHabit, Habit habit, NotificationRuleService ruleService,
-                                          HabitRecordSupplier recordSupplier, String baseurl, String subject) {
+    private String getNotificationHtmlContent(TemplateEngine templateEngine, Account receiver, Optional<Account> sender,
+                                              SharedHabit sharedHabit, Habit habit, NotificationRuleService ruleService,
+                                              HabitRecordSupplier recordSupplier, String baseurl, String subject) {
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
@@ -119,6 +132,24 @@ public class NotificationTemplate {
     private String getSubjectContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit, Habit habit,
                                      NotificationRule rule, TemplateEngine templateEngine,
                                      NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
+        return getPlainContent(subjectTemplate, sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
+                recordSupplier);
+    }
+
+    private String getNotificationPlainContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
+                                               Habit habit,
+                                               NotificationRule rule, TemplateEngine templateEngine,
+                                               NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
+                                               ResourceLoader resourceLoader) {
+        return getPlainContent(getContentTemplateString(resourceLoader), sender, receiver, sharedHabit, habit, rule,
+                templateEngine, ruleService,
+                recordSupplier);
+    }
+
+    private String getPlainContent(String template, Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
+                                   Habit habit,
+                                   NotificationRule rule, TemplateEngine templateEngine,
+                                   NotificationRuleService ruleService, HabitRecordSupplier recordSupplier) {
         Map<String, String> parameters = new HashMap<>();
         if (sharedHabit != null) {
             parameters.put("sharedHabitName", sharedHabit.getTitle());
@@ -134,12 +165,15 @@ public class NotificationTemplate {
             Integer percentageForN = rule.getPercentageOfGoalForNotificationTrigger();
             parameters.put("percentage", String.valueOf(percentageForN));
         }
+        if (habit != null && recordSupplier != null) {
+            parameters.put("percentage", String.valueOf(Math.round(habit.getCompletionPercentage(recordSupplier))));
+        }
 
         parameters.put("receiver", receiver.getDisplayName());
         parameters.put("senderName", sender.isPresent() ? sender.get()
                 .getDisplayName() : "");
-        if (subjectTemplate == null) return "";
-        return renderTemplate(subjectTemplate, parameters);
+        if (template == null) return "";
+        return renderTemplate(template, parameters);
     }
 
     private Map<String, Object> getNotificationVariables(Account receiver, Optional<Account> sender,
@@ -176,5 +210,15 @@ public class NotificationTemplate {
             }
         }
         return rendered;
+    }
+
+    private String getContentTemplateString(ResourceLoader resourceLoader) {
+        try {
+            Resource resource = resourceLoader.getResource("classpath:templates/" + contentTemplateName + ".txt");
+            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            log.error("Failed to load template: " + contentTemplateName, e);
+        }
+        return "";
     }
 }

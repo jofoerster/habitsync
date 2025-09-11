@@ -45,6 +45,7 @@ logging:
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    de.jofoerster: DEBUG
 
 jwt.secret: T0M8xk85GC3/oOtdEcK++ZYtKKQL7ftrlXDtR4t09dBTqmnxCM+xoEEIdfAwIdEXRLiyGVCx2Z0utBYZcnLR6A==
 

@@ -27,6 +27,8 @@ public class Account {
     private boolean sendNotificationsViaEmail = false;
     private List<NotificationStatus> allowedNotifications;
 
+    private String appriseTargetUrls;
+
     private AccountStatus accountStatus = AccountStatus.AWAITING_APPROVAL;
 
     public String getDisplayName() {

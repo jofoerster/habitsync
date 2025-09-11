@@ -15,4 +15,6 @@ public class AccountSettingsReadWriteDTO {
     private Boolean isPushNotificationsEnabled;
 
     private Integer dailyNotificationHour;
+
+    private String appriseTarget;
 }

@@ -27,6 +27,7 @@ export interface ApiAccountSettingsReadWrite {
     authenticationId: string; // identifier, cannot be changed
     isEmailNotificationsEnabled: boolean;
     isPushNotificationsEnabled: boolean;
+    appriseTarget?: string;
     dailyNotificationHour: number;
 }
 
@@ -188,7 +189,7 @@ export interface NotificationConfig {
 }
 
 export interface ServerConfig {
-    isAppriseConfigured: boolean;
+    appriseActive: boolean;
 }
 
 // API service functions

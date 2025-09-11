@@ -13,7 +13,7 @@ public class ConfigurationService {
 
     public ConfigReadDTO getConfiguration() {
         return ConfigReadDTO.builder()
-                .isAppriseConfigured(notificationService.isAppriseActive())
+                .appriseActive(notificationService.isAppriseActive())
                 .build();
     }
 }

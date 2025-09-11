@@ -17,12 +17,15 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
@@ -43,6 +46,7 @@ public class NotificationServiceNew {
     private final NotificationRuleService notificationRuleService;
     private final HabitRecordRepository habitRecordRepository;
     private final JavaMailSender emailSender;
+    private final ResourceLoader resourceLoader;
     private final RestTemplate restTemplate = new RestTemplate();
 
     ObjectMapper mapper = new ObjectMapper();
@@ -97,12 +101,17 @@ public class NotificationServiceNew {
                 notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
                         templateEngine,
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION);
-        sendNotificationViaMail(notification);
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader);
         sendNotificationViaApprise(notification, habit);
+        if (habit.getAccount().isSendNotificationsViaEmail()){
+            sendNotificationViaMail(notification);
+        }
     }
 
     public void sendNotificationViaMail(Notification notification) {
+        if (notification.getReceiverAccount() == null || notification.getReceiverAccount().getEmail() == null) {
+            return;
+        }
         MimeMessage mimeMessage = emailSender.createMimeMessage();
 
         try {
@@ -111,7 +120,7 @@ public class NotificationServiceNew {
             helper.setTo(notification.getReceiverAccount()
                     .getEmail());
             helper.setSubject(notification.getSubject());
-            helper.setText(notification.getContent(), true); // true = isHtml
+            helper.setText(notification.getHtmlContent(), true); // true = isHtml
 
             emailSender.send(mimeMessage);
         } catch (MessagingException ignored) {
@@ -137,16 +146,16 @@ public class NotificationServiceNew {
         }
 
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("urls", appriseTarget);
-            payload.put("title", notification.getSubject());
-            payload.put("body", notification.getContent());
-            payload.put("type", "info");
+            MultiValueMap<String, Object> payload = new LinkedMultiValueMap<>();
+            payload.add("urls", appriseTarget);
+            payload.add("title", notification.getSubject());
+            payload.add("body", notification.getContent());
+            payload.add("type", "info");
 
             HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
+            HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(payload, headers);
 
             String endpoint = appriseApiUrl + "/notify";
             restTemplate.postForEntity(endpoint, request, String.class);
@@ -173,7 +182,14 @@ public class NotificationServiceNew {
         try {
             NotificationFrequencyDTO frequencyDTO =
                     mapper.readValue(json, NotificationFrequencyDTO.class);
-            return frequencyDTO.getAppriseTarget();
+            String target = frequencyDTO.getAppriseTarget();
+            if (target == null || target.isEmpty()) {
+                if (!habit.getAccount().getAppriseTargetUrls().isEmpty()) {
+                    return habit.getAccount().getAppriseTargetUrls();
+                }
+                return null;
+            }
+            return target;
         } catch (JsonProcessingException e) {
             log.warn("Could not parse reminderCustom for habit {}", habit.getUuid(), e);
             return null;
