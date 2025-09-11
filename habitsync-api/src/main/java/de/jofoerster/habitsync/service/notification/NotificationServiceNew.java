@@ -2,7 +2,8 @@ package de.jofoerster.habitsync.service.notification;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
+import de.jofoerster.habitsync.dto.NotificationConfigDTO;
+import de.jofoerster.habitsync.dto.NotificationConfigRuleDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.notification.Notification;
 import de.jofoerster.habitsync.model.notification.NotificationStatus;
@@ -30,8 +31,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -63,16 +63,20 @@ public class NotificationServiceNew {
     @PostConstruct
     public void init() {
         log.info("Scheduling user notification jobs");
-        habitService.getHabitsWithReminders().forEach(h -> {
-            schedulingService.scheduleNotificationJob(h.getUuid(), habitService.getNotificationFrequency(h));
-        });
+        habitService.getHabitsWithReminders().forEach(this::scheduleAllNotificationJobsForHabit);
     }
 
-    public boolean createOrUpdateNotificationForHabit(Habit habit, NotificationFrequencyDTO frequency) {
+    private void scheduleAllNotificationJobsForHabit(Habit habit) {
+        List<NotificationConfigRuleDTO> fixedTimeRules = habitService.getFixedTimeNotificationRules(habit);
+        fixedTimeRules.forEach(rule ->
+                schedulingService.scheduleNotificationJob(habit.getUuid(), rule));
+    }
+
+    public boolean createOrUpdateNotificationsForHabit(Habit habit, NotificationConfigDTO frequency) {
         try {
             habit.setReminderCustom(mapper.writeValueAsString(frequency));
-            habitService.saveHabit(habit);
-            schedulingService.scheduleNotificationJob(habit.getUuid(), frequency);
+            habit = habitService.saveHabit(habit);
+            scheduleAllNotificationJobsForHabit(habit);
             return true;
         } catch (JsonProcessingException e) {
             log.warn("Could not set reminderCustom for habit {}", habit.getUuid(), e);
@@ -180,8 +184,8 @@ public class NotificationServiceNew {
             return null;
         }
         try {
-            NotificationFrequencyDTO frequencyDTO =
-                    mapper.readValue(json, NotificationFrequencyDTO.class);
+            NotificationConfigDTO frequencyDTO =
+                    mapper.readValue(json, NotificationConfigDTO.class);
             String target = frequencyDTO.getAppriseTarget();
             if (target == null || target.isEmpty()) {
                 if (!habit.getAccount().getAppriseTargetUrls().isEmpty()) {
