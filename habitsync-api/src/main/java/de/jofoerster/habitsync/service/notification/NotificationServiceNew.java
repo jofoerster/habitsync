@@ -27,6 +27,8 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -134,7 +136,7 @@ public class NotificationServiceNew {
         }
 
         try {
-            var payload = new java.util.HashMap<String, Object>();
+            Map<String, Object> payload = new HashMap<>();
             payload.put("urls", appriseTarget);
             payload.put("title", notification.getSubject());
             payload.put("body", notification.getContent());
@@ -143,7 +145,7 @@ public class NotificationServiceNew {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<java.util.Map<String, Object>> request = new HttpEntity<>(payload, headers);
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
             String endpoint = appriseApiUrl + "/notify";
             restTemplate.postForEntity(endpoint, request, String.class);
