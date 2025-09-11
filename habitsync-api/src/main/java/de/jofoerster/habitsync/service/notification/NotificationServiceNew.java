@@ -119,16 +119,17 @@ public class NotificationServiceNew {
     }
 
     public void sendNotificationViaApprise(Notification notification, Habit habit) {
+        if (!isAppriseActive()) {
+            log.debug("No Apprise target specified for notification {}", notification.getId());
+            return;
+        }
+
         if (habit == null) {
             log.debug("Could not find habit for notification with id {}. Cannot send apprise notification",
                     notification.getId());
             return;
         }
         String appriseTarget = this.getAppriseTargetFromHabit(habit);
-        if (appriseTarget == null || appriseTarget.isEmpty()) {
-            log.debug("No Apprise target specified for notification {}", notification.getId());
-            return;
-        }
 
         if (appriseApiUrl == null || appriseApiUrl.isEmpty()) {
             log.debug("Apprise API URL not configured");
@@ -158,6 +159,10 @@ public class NotificationServiceNew {
         } catch (Exception e) {
             log.error("Unexpected error sending Apprise notification: {}", e.getMessage());
         }
+    }
+
+    public boolean isAppriseActive() {
+        return appriseApiUrl != null && !appriseApiUrl.isEmpty();
     }
 
     private String getAppriseTargetFromHabit(Habit habit) {

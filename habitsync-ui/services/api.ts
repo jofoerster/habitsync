@@ -187,6 +187,10 @@ export interface NotificationConfig {
     appriseTarget?: string;
 }
 
+export interface ServerConfig {
+    isAppriseConfigured: boolean;
+}
+
 // API service functions
 
 // User API
@@ -558,6 +562,14 @@ export const authApi = {
         return response.json();
     }
 };
+
+export const serverConfigApi = {
+    getServerConfig: async (): Promise<ServerConfig> => {
+        const response = await authenticatedFetch(`${BACKEND_BASE_URL}/config`);
+        if (!response.ok) throw new Error('Failed to fetch server config');
+        return response.json();
+    }
+}
 
 const getAuthHeaders = async (): Promise<HeadersInit> => {
     const accessToken = await auth.getAccessToken();
