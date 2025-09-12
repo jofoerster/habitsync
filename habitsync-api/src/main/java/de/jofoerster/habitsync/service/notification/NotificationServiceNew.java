@@ -114,6 +114,7 @@ public class NotificationServiceNew {
                 if (!wasActive && isActive) {
                     log.debug("Threshold rule triggered for habit {}", habit.getUuid());
                     sendCustomReminderNotifications(rule, habit);
+                    this.updateState(ruleIdentifier, true);
                     return;
                 }
                 if (wasActive && !isActive) {
@@ -151,6 +152,7 @@ public class NotificationServiceNew {
         if (!wasActive && isActive) {
             log.debug("Overtake rule triggered for habit {}", habit.getUuid());
             sendCustomReminderNotifications(rule, habit);
+            this.updateState(ruleIdentifier, true);
             return true;
         }
         if (wasActive && !isActive) {
