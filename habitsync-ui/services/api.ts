@@ -605,7 +605,7 @@ const getAuthHeaders = async (): Promise<HeadersInit> => {
     return headers;
 };
 
-const authenticatedFetch = async (url: string, options: RequestInit = {}, alreadyRetried = false): Promise<Response> => {
+const authenticatedFetch = async (url: string, options: RequestInit = {}, retries = 0): Promise<Response> => {
     const headers = await getAuthHeaders();
     const response = await fetch(url, {
         ...options,
@@ -616,15 +616,15 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}, alread
         },
     });
 
-    if (response.status === 401 && !alreadyRetried) {
+    if (!response.ok && retries <= 3) {
         console.log('Unauthorized, attempting token refresh');
 
         const refreshSuccess = await auth.refresh();
         if (refreshSuccess) {
             console.log('Token refreshed successfully, retrying request');
-            return await authenticatedFetch(url, options, true);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return await authenticatedFetch(url, options, retries++);
         }
     }
-
     return response;
 };
