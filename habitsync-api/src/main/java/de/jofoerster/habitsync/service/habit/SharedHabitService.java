@@ -66,10 +66,10 @@ public class SharedHabitService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 0 1 * *")
+    @Scheduled(cron = "0 0 0 2 * *")
     public void createSharedHabitResultsForMonth() {
         LocalDate date = LocalDate.now()
-                .minusDays(1)
+                .minusDays(3)
                 .withDayOfMonth(1);
         List<SharedHabit> sharedHabits = sharedHabitRepository.findAllByHabitsIsNotEmpty();
         List<SharedHabitResult> sharedHabitResults = new ArrayList<>();
