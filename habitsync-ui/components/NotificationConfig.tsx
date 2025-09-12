@@ -355,7 +355,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
                         {configType === 'threshold' && (
                             <View style={styles.configContent}>
-                                <Text style={styles.inputLabel}>Notify when progress reaches:</Text>
+                                <Text style={styles.inputLabel}>Notify when progress falls below:</Text>
                                 <View style={styles.thresholdInputContainer}>
                                     <TextInput
                                         style={styles.thresholdInput}
