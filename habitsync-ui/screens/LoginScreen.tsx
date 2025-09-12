@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
 import {useAuth} from '@/context/AuthContext';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
@@ -104,7 +104,7 @@ const LoginScreen = () => {
         return (
             <View style={styles.container}>
                 <View style={styles.logoContainer}>
-                    <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={80} color="#2196F3"/>
+                    <Image source={require('../assets/images/logo-transparent.png')} style={styles.logo} />
                     <Text style={styles.appName}>HabitSync</Text>
                 </View>
                 <View style={styles.loadingContainer}>
@@ -124,7 +124,7 @@ const LoginScreen = () => {
     return (
         <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
             <View style={styles.logoContainer}>
-                <MaterialCommunityIcons name="checkbox-marked-circle-outline" size={80} color="#2196F3"/>
+                <Image source={require('../assets/images/logo-transparent.png')} style={styles.logo} />
                 <Text style={styles.appName}>HabitSync</Text>
             </View>
 
@@ -244,10 +244,15 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         alignItems: 'center',
         marginBottom: 40,
     },
+    logo: {
+        width: 80,
+        height: 80,
+        resizeMode: 'contain',
+    },
     appName: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#2196F3',
+        color: theme.text,
         marginTop: 10,
     },
     titleContainer: {
