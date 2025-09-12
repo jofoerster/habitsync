@@ -31,18 +31,18 @@ public class NotificationTemplateService {
             switch (notificationType) {
                 case FIXED_TIME_PUSH_NOTIFICATION_HABIT -> {
                     template.setHtmlTemplateName(
-                            "notification-templates/notification-template-habit");
+                            "notification-templates/fixed-time-notification-template-habit");
                     template.setContentTemplateName("notification-templates-plain/fixed-time-notification-template-habit");
                 }
                 case THRESHOLD_PUSH_NOTIFICATION_HABIT -> {
                     template.setHtmlTemplateName(
-                            "notification-templates/notification-template-habit");
+                            "notification-templates/threshold-notification-template-habit");
                     template.setContentTemplateName(
                             "notification-templates-plain/threshold-notification-template-habit");
                 }
                 case OVERTAKE_PUSH_NOTIFICATION_HABIT -> {
                     template.setHtmlTemplateName(
-                            "notification-templates/notification-template-habit");
+                            "notification-templates/overtake-notification-template-habit");
                     template.setContentTemplateName(
                             "notification-templates-plain/overtake-notification-template-habit");
                 }

@@ -58,14 +58,14 @@ public class NotificationTemplate {
                         recordSupplier, resourceLoader, notificationConfigRule))
                 .htmlContent(
                         getNotificationHtmlContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
-                                recordSupplier, baseUrl, subject))
+                                recordSupplier, baseUrl, subject, notificationConfigRule))
                 .htmlContentShade(
                         getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
-                                recordSupplier, baseUrl, subject))
+                                recordSupplier, baseUrl, subject, notificationConfigRule))
                 .htmlContentShadeMinimal(
                         getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, habit,
                                 ruleService,
-                                recordSupplier, baseUrl, subject))
+                                recordSupplier, baseUrl, subject, notificationConfigRule))
                 .subject(subject)
                 .receiverAccount(receiver)
                 .senderAccount(getSenderAccount(sender))
@@ -95,25 +95,27 @@ public class NotificationTemplate {
 
     private String getNotificationHtmlContent(TemplateEngine templateEngine, Account receiver, Optional<Account> sender,
                                               SharedHabit sharedHabit, Habit habit, NotificationRuleService ruleService,
-                                              HabitRecordSupplier recordSupplier, String baseurl, String subject) {
+                                              HabitRecordSupplier recordSupplier, String baseurl, String subject,
+                                              NotificationConfigRuleDTO notificationConfigRule) {
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
-                        subject));
+                        subject, notificationConfigRule));
         return templateEngine.process(htmlTemplateName, context);
     }
 
     private String getNotificationShadeContent(TemplateEngine templateEngine, Account receiver,
                                                Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                               String baseurl, String subject) {
+                                               String baseurl, String subject,
+                                               NotificationConfigRuleDTO notificationConfigRule) {
         if (htmlShadeTemplateName == null || htmlShadeTemplateName.isEmpty()) {
             return "";
         }
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
-                        subject));
+                        subject, notificationConfigRule));
         return templateEngine.process(htmlShadeTemplateName, context);
     }
 
@@ -121,14 +123,15 @@ public class NotificationTemplate {
                                                       Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                       NotificationRuleService ruleService,
                                                       HabitRecordSupplier recordSupplier, String baseUrl,
-                                                      String subject) {
+                                                      String subject,
+                                                      NotificationConfigRuleDTO notificationConfigRule) {
         if (htmlShadeMinimalTemplateName == null || htmlShadeMinimalTemplateName.isEmpty()) {
             return "";
         }
         Context context = new Context();
         context.setVariables(
                 getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl,
-                        subject));
+                        subject, notificationConfigRule));
         return templateEngine.process(htmlShadeMinimalTemplateName, context);
     }
 
@@ -144,7 +147,8 @@ public class NotificationTemplate {
                                                Habit habit,
                                                NotificationRule rule, TemplateEngine templateEngine,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                               ResourceLoader resourceLoader, NotificationConfigRuleDTO notificationConfigRule) {
+                                               ResourceLoader resourceLoader,
+                                               NotificationConfigRuleDTO notificationConfigRule) {
         return getPlainContent(getContentTemplateString(resourceLoader), sender, receiver, sharedHabit, habit, rule,
                 templateEngine, ruleService,
                 recordSupplier, notificationConfigRule);
@@ -188,11 +192,15 @@ public class NotificationTemplate {
                                                          SharedHabit sharedHabit, Habit habit,
                                                          NotificationRuleService notificationRuleService,
                                                          HabitRecordSupplier habitRecordSupplier, String baseUrl,
-                                                         String subject) {
+                                                         String subject,
+                                                         NotificationConfigRuleDTO notificationConfigRule) {
         HashMap<String, Object> parameters = new HashMap<>();
         parameters.put("baseUrl", baseUrl);
         parameters.put("receiver", receiver);
         parameters.put("subject", subject);
+        if (notificationConfigRule != null && notificationConfigRule.getThresholdPercentage() != null) {
+            parameters.put("threshold", notificationConfigRule.getThresholdPercentage());
+        }
         if (sharedHabit != null) {
             parameters.put("sharedHabits", List.of(sharedHabit));
             int maxProgress = (int) Math.round(sharedHabit.getHabits()
