@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Habit Reminder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .habit-name {
+            color: #2c3e50;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .reminder-text {
+            color: #555;
+            font-size: 16px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .track-button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 16px;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        .track-button:hover {
+            background-color: #2980b9;
+        }
+        .button-container {
+            text-align: center;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #888;
+            font-size: 14px;
+        }
+        .emoji {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="emoji">🎯</div>
+            <h1>Habit Reminder</h1>
+        </div>
+
+        <div class="reminder-text">
+            <p>Hi there! 👋</p>
+            <p>It's time to work on your habit:</p>
+        </div>
+
+        <div class="habit-name" th:text="${habit.name}">
+            Habit Name
+        </div>
+
+        <div class="reminder-text">
+            <p>Don't forget to track your progress today!</p>
+        </div>
+
+        <div class="button-container">
+            <a th:href="${baseUrl + '/habit/' + habit.uuid + '?isOwnHabit=true'}" class="track-button">
+                Track Now ✓
+            </a>
+        </div>
+
+        <div class="footer">
+            <p><small>This is an automated reminder from HabitSync. Disable in habit settings.</small></p>
+        </div>
+    </div>
+</body>
+</html>
+

@@ -29,10 +29,22 @@ public class NotificationTemplateService {
             }
             template.setNotificationType(notificationType);
             switch (notificationType) {
-                case PUSH_NOTIFICATION_HABIT -> {
+                case FIXED_TIME_PUSH_NOTIFICATION_HABIT -> {
                     template.setHtmlTemplateName(
-                            "notification-templates/notification-template-habit");
-                    template.setContentTemplateName("notification-templates-plain/notification-template-habit");
+                            "notification-templates/fixed-time-notification-template-habit");
+                    template.setContentTemplateName("notification-templates-plain/fixed-time-notification-template-habit");
+                }
+                case THRESHOLD_PUSH_NOTIFICATION_HABIT -> {
+                    template.setHtmlTemplateName(
+                            "notification-templates/threshold-notification-template-habit");
+                    template.setContentTemplateName(
+                            "notification-templates-plain/threshold-notification-template-habit");
+                }
+                case OVERTAKE_PUSH_NOTIFICATION_HABIT -> {
+                    template.setHtmlTemplateName(
+                            "notification-templates/overtake-notification-template-habit");
+                    template.setContentTemplateName(
+                            "notification-templates-plain/overtake-notification-template-habit");
                 }
                 default -> {
                     template.setHtmlTemplateName(

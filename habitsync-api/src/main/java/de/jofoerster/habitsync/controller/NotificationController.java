@@ -1,6 +1,6 @@
 package de.jofoerster.habitsync.controller;
 
-import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
+import de.jofoerster.habitsync.dto.NotificationConfigDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.habit.HabitService;
@@ -24,13 +24,13 @@ public class NotificationController {
 
     @PutMapping("/habit/{habitUuid}")
     public ResponseEntity<Void> scheduleNotificationForHabit(@PathVariable String habitUuid, @RequestBody
-    NotificationFrequencyDTO frequencyDTO) {
+    NotificationConfigDTO frequencyDTO) {
         Optional<Habit> habit = habitService.getHabitByUuid(habitUuid);
         if (habit.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
         checkIfisAllowedToEdit(habit.orElse(null), accountService.getCurrentAccount());
-        boolean result = notificationServiceNew.createOrUpdateNotificationForHabit(habit.get(), frequencyDTO);
+        boolean result = notificationServiceNew.createOrUpdateNotificationsForHabit(habit.get(), frequencyDTO);
         if (!result) {
             return ResponseEntity.badRequest().build();
         }

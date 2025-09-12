@@ -3,7 +3,7 @@ import {StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {NotificationConfig} from "@/services/api";
+import {FixedTimeNotificationConfigRule, NotificationConfig} from "@/services/api";
 import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime} from "@/services/timezone";
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
@@ -11,15 +11,15 @@ const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 type Props = {
     hideFrequency?: boolean;
     hideWeekdays?: boolean;
-    onChange?: (value: NotificationConfig) => void;
-    notificationFrequency?: NotificationConfig;
+    onChange?: (value: Partial<FixedTimeNotificationConfigRule>) => void;
+    notificationConfigRule?: FixedTimeNotificationConfigRule;
 };
 
 const FrequencyPicker: React.FC<Props> = ({
                                               hideFrequency = false,
                                               hideWeekdays = false,
                                               onChange,
-                                              notificationFrequency,
+                                              notificationConfigRule,
                                           }) => {
     const [frequency, setFrequency] = useState<'daily' | 'weekly'>('daily');
     const [weekdays, setWeekdays] = useState<string[]>([]);
@@ -38,19 +38,19 @@ const FrequencyPicker: React.FC<Props> = ({
     };
 
     useEffect(() => {
-        if (notificationFrequency) {
-            setFrequency(notificationFrequency.frequency);
-            const {hour: utcHour, minute: utcMinute} = parseTime(notificationFrequency.time);
+        if (notificationConfigRule) {
+            setFrequency(notificationConfigRule.frequency);
+            const {hour: utcHour, minute: utcMinute} = parseTime(notificationConfigRule.time);
             const localTime = convertUTCToLocalTime(utcHour, utcMinute);
             setHour(localTime.hour);
             setMinute(localTime.minute);
-            if (notificationFrequency.frequency === 'weekly' && notificationFrequency.weekdays) {
-                setWeekdays(notificationFrequency.weekdays);
+            if (notificationConfigRule.frequency === 'weekly' && notificationConfigRule.weekdays) {
+                setWeekdays(notificationConfigRule.weekdays);
             } else {
                 setWeekdays([]);
             }
         }
-    }, [notificationFrequency])
+    }, [])
 
     useEffect(() => {
         const utcTime = convertLocalTimeToUTC(hour, minute);

@@ -11,7 +11,11 @@ public enum NotificationType {
             "${sharedHabitName}: You did not submit any records for ${noRecordsForDays} days"), PING_FROM_OTHER_USER(
             "Ping", "${sharedHabitName}: Ping from ${senderName}"), CUSTOM("Custom",
             "${sharedHabitName}: ${customText}"), PERIODICALLY("Periodically", "${sharedHabitName}: ${customText}"),
-    PUSH_NOTIFICATION_HABIT("Habit Reminder", "Habit Reminder: ${habitName}");
+    FIXED_TIME_PUSH_NOTIFICATION_HABIT("Habit Reminder", "Habit Reminder: ${habitName}"),
+    THRESHOLD_PUSH_NOTIFICATION_HABIT("Threshold Reminder",
+            "Threshold Reminder for ${habitName}"),
+    OVERTAKE_PUSH_NOTIFICATION_HABIT("Overtake Reminder",
+            "Overtake Reminder for ${habitName}");
 
     public final String label;
     public final String template;

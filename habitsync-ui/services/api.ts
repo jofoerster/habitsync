@@ -182,11 +182,33 @@ export interface JWTTokenPair {
 }
 
 export interface NotificationConfig {
+    appriseTarget?: string;
+    rules: NotificationConfigRule[]
+}
+
+export interface BaseNotificationConfigRule {
+    type: 'fixed' | 'threshold' | 'overtake';
+    enabled: boolean;
+}
+
+export interface FixedTimeNotificationConfigRule extends BaseNotificationConfigRule {
+    type: 'fixed';
     frequency: 'daily' | 'weekly';
     weekdays: string[];
     time: string;
-    appriseTarget?: string;
+    triggerIfFulfilled: boolean;
 }
+
+export interface ThresholdNotificationConfigRule extends BaseNotificationConfigRule {
+    type: 'threshold';
+    thresholdPercentage: number;
+}
+
+export interface OvertakeNotificationConfigRule extends BaseNotificationConfigRule {
+    type: 'overtake';
+}
+
+export type NotificationConfigRule = FixedTimeNotificationConfigRule | ThresholdNotificationConfigRule | OvertakeNotificationConfigRule;
 
 export interface ServerConfig {
     appriseActive: boolean;
@@ -299,10 +321,10 @@ export const habitApi = {
 };
 
 export const notificationApi = {
-    updateNotificationForHabit: async (habitUuid: string, frequency: NotificationConfig): Promise<void> => {
+    updateNotificationForHabit: async (habitUuid: string, config: NotificationConfig): Promise<void> => {
         const response = await authenticatedFetch(`${BACKEND_BASE_URL}/notifications/habit/${habitUuid}`, {
             method: 'PUT',
-            body: JSON.stringify(frequency),
+            body: JSON.stringify(config),
         });
         if (!response.ok) throw new Error('Failed to update notification for habit');
     },

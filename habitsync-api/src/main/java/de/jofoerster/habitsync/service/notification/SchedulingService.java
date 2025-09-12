@@ -1,7 +1,7 @@
 package de.jofoerster.habitsync.service.notification;
 
-import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
-import de.jofoerster.habitsync.model.account.Account;
+import de.jofoerster.habitsync.dto.NotificationConfigDTO;
+import de.jofoerster.habitsync.dto.NotificationConfigRuleDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -14,8 +14,7 @@ public class SchedulingService {
 
     private final Scheduler scheduler;
 
-
-    public void scheduleNotificationJob(String id, NotificationFrequencyDTO frequency) {
+    public void scheduleNotificationJob(String id, NotificationConfigRuleDTO notificationRuleConfig) {
         log.debug("Schedule notification job for habit {}", id);
         JobKey jobKey = JobKey.jobKey("notifyJob_" + id, "notifications");
         TriggerKey triggerKey =
@@ -25,7 +24,7 @@ public class SchedulingService {
                 log.debug("Job {} already exists", jobKey);
                 Trigger newTrigger = TriggerBuilder.newTrigger()
                         .withIdentity(triggerKey)
-                        .withSchedule(getScheduleFromFrequency(frequency))
+                        .withSchedule(getScheduleFromFrequency(notificationRuleConfig))
                         .forJob(jobKey)
                         .build();
 
@@ -39,7 +38,7 @@ public class SchedulingService {
 
                 Trigger trigger = TriggerBuilder.newTrigger()
                         .withIdentity(triggerKey)
-                        .withSchedule(getScheduleFromFrequency(frequency))
+                        .withSchedule(getScheduleFromFrequency(notificationRuleConfig))
                         .forJob(jobDetail)
                         .build();
 
@@ -63,7 +62,7 @@ public class SchedulingService {
         }
     }
 
-    public CronScheduleBuilder getScheduleFromFrequency(NotificationFrequencyDTO frequency) {
+    public CronScheduleBuilder getScheduleFromFrequency(NotificationConfigRuleDTO frequency) {
         if (frequency == null || frequency.getTime() == null) {
             throw new IllegalArgumentException("Frequency and time cannot be null");
         }

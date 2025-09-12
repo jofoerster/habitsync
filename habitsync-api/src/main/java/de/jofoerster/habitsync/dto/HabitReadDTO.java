@@ -23,5 +23,5 @@ public class HabitReadDTO {
 
     private Long synchronizedSharedHabitId; // share code of the shared habit if this habit is syncronized with a shared habit
 
-    private NotificationFrequencyDTO notificationFrequency;
+    private NotificationConfigDTO notificationFrequency;
 }

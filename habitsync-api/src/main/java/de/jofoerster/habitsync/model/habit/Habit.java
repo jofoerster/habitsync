@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import de.jofoerster.habitsync.dto.ComputationReadWriteDTO;
 import de.jofoerster.habitsync.dto.FrequencyTypeDTO;
 import de.jofoerster.habitsync.dto.HabitWriteDTO;
-import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;

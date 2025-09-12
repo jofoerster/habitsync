@@ -1,9 +1,7 @@
 package de.jofoerster.habitsync.service.habit;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import de.jofoerster.habitsync.dto.HabitReadDTO;
-import de.jofoerster.habitsync.dto.HabitWriteDTO;
-import de.jofoerster.habitsync.dto.NotificationFrequencyDTO;
+import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
@@ -177,7 +175,7 @@ public class HabitService {
                 .sortPosition(habit.getSortPosition())
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
-                .notificationFrequency(this.getNotificationFrequency(habit))
+                .notificationFrequency(this.getNotificationConfig(habit))
                 .build();
 
     }
@@ -253,16 +251,43 @@ public class HabitService {
         return habitRepository.findByReminderCustomIsNotEmptyAndStatus(1);
     }
 
-    public NotificationFrequencyDTO getNotificationFrequency(Habit habit) {
+    public NotificationConfigDTO getNotificationConfig(Habit habit) {
         String frequency = habit.getReminderCustom();
         if (frequency == null || frequency.isEmpty()) {
             return null;
         }
         try {
-            return mapper.readValue(frequency, NotificationFrequencyDTO.class);
+            return mapper.readValue(frequency, NotificationConfigDTO.class);
         } catch (Exception e){
             log.warn("Could not parse notification frequency: {}", frequency, e);
             return null;
+        }
+    }
+
+    public List<NotificationConfigRuleDTO> getFixedTimeNotificationRules (Habit habit) {
+        String reminderCustom = habit.getReminderCustom();
+        if (reminderCustom == null || reminderCustom.isEmpty()) {
+            return new ArrayList<>();
+        }
+        try {
+            NotificationConfigDTO configDTO = mapper.readValue(reminderCustom, NotificationConfigDTO.class);
+            return configDTO.getRules().stream().filter(r -> r.getType() == NotificationTypeEnum.fixed).toList();
+        } catch (Exception e){
+            try {
+                DeprecatedNotificationFrequencyDTO configDTO =
+                        mapper.readValue(reminderCustom, DeprecatedNotificationFrequencyDTO.class);
+                return List.of(NotificationConfigRuleDTO.builder()
+                        .type(NotificationTypeEnum.fixed)
+                        .enabled(true)
+                        .triggerIfFulfilled(false)
+                        .weekdays(configDTO.weekdays)
+                        .frequency(configDTO.frequency)
+                        .time(configDTO.time)
+                        .build());
+            } catch (Exception ex) {
+                log.warn("Could not parse notification reminderCustom: {}", reminderCustom, e);
+                return new ArrayList<>();
+            }
         }
     }
 
@@ -290,5 +315,18 @@ public class HabitService {
             }
         }
         return "";
+    }
+
+    public boolean hasHabitBeenCompletedToday(Habit habit, HabitRecordSupplier habitRecordSupplier) {
+        return habitRecordSupplier.getHabitRecordsInRange(habit, LocalDate.now(), LocalDate.now())
+                .stream()
+                .anyMatch(r -> r.getRecordValue() != null && r.getRecordValue() != 0);
+    }
+
+    private class DeprecatedNotificationFrequencyDTO {
+        private FrequencyEnum frequency;
+        private String[] weekdays; // MO, TU, WE, TH, FR, SA, SU
+        private String time;
+        private String appriseTarget; // optional, only for custom target
     }
 }

@@ -8,7 +8,6 @@ import de.jofoerster.habitsync.model.account.AccountStatus;
 import de.jofoerster.habitsync.repository.account.AccountRepository;
 import de.jofoerster.habitsync.service.auth.TokenService;
 import de.jofoerster.habitsync.service.notification.NotificationService;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -144,7 +143,9 @@ public class AccountService {
 
     private Account createAccount() {
         return createAccount(true);
-    };
+    }
+
+    ;
 
     private Account createAccount(boolean needsConfirmation) {
         log.info("Creating account {}", getCurrentAccountUsername());
@@ -158,7 +159,8 @@ public class AccountService {
 
     public Account updateAccount(Account account) {
         log.info("Updating account {}", getCurrentAccountUsername());
-        if (account.isSendNotificationsViaEmail() || !account.getAppriseTargetUrls().isEmpty()) {
+        if (account.isSendNotificationsViaEmail() ||
+                (account.getAppriseTargetUrls() != null && !account.getAppriseTargetUrls().isEmpty())) {
             log.info("Scheduling notification job for account {}", account.getAuthenticationId());
             notificationService.scheduleNotificationJob(account);
         } else {

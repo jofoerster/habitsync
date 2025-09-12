@@ -1,0 +1,1 @@
+Someone has beaten your percentage of ${percentage}% in ${habitName}.
