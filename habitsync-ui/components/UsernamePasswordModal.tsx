@@ -1,6 +1,7 @@
 import React, {useState} from 'react';
 import {
     ActivityIndicator,
+    Image,
     KeyboardAvoidingView,
     Modal,
     Platform,
@@ -97,11 +98,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
 
                             <View style={styles.content}>
                                 <View style={styles.logoContainer}>
-                                    <MaterialCommunityIcons
-                                        name="checkbox-marked-circle-outline"
-                                        size={60}
-                                        color="#2196F3"
-                                    />
+                                    <Image source={require('../assets/images/logo-transparent.png')} style={styles.logo} />
                                     <Text style={styles.appName}>HabitSync</Text>
                                 </View>
 
@@ -239,10 +236,15 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         alignItems: 'center',
         marginBottom: 30,
     },
+    logo: {
+        width: 100,
+        height: 100,
+        resizeMode: 'contain',
+    },
     appName: {
         fontSize: 24,
         fontWeight: 'bold',
-        color: '#2196F3',
+        color: theme.text,
         marginTop: 8,
     },
     formContainer: {
