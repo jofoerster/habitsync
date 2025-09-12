@@ -196,7 +196,7 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
 
                             {showStopwatch && (
                                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                    <Text style={{fontSize: 18, fontWeight: 'bold', marginLeft: 10}}> or </Text>
+                                    <Text style={{fontSize: 18, fontWeight: 'bold'}}> or </Text>
                                     <TouchableOpacity onPress={onUseTimer}>
                                         <Text style={{color: '#d36666', fontSize: 18, fontWeight: 'bold'}}>
                                             Start Stopwatch <MaterialCommunityIcons style={{fontSize: 18}} name={"timer"}/>

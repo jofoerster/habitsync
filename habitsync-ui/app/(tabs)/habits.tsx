@@ -1,6 +1,6 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useCallback, useState} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useCallback, useState, useRef, useEffect} from 'react';
+import {FlatList, StyleSheet, Text, TouchableOpacity, View, Animated, Easing} from 'react-native';
 import {ApiHabitRead, habitApi} from '@/services/api';
 import {Link, useFocusEffect} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
@@ -54,6 +54,45 @@ const HabitTrackerScreen = () => {
     const [loading, setLoading] = useState(true);
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
 
+    const rotateAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        let animationRef: Animated.CompositeAnimation | null = null;
+
+        if (loading) {
+            const startRotation = () => {
+                rotateAnim.setValue(0);
+                animationRef = Animated.timing(rotateAnim, {
+                    toValue: 1,
+                    duration: 5000,
+                    easing: Easing.linear,
+                    useNativeDriver: true,
+                });
+                animationRef.start(() => {
+                    if (loading) {
+                        startRotation();
+                    }
+                });
+            };
+            startRotation();
+        } else {
+            if (animationRef) {
+                animationRef.stop();
+            }
+        }
+
+        return () => {
+            if (animationRef) {
+                animationRef.stop();
+            }
+        };
+    }, [rotateAnim, loading]);
+
+    const rotateInterpolate = rotateAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0deg', '360deg'],
+    });
+
     useFocusEffect(
         useCallback(() => {
             loadHabits();
@@ -89,13 +128,6 @@ const HabitTrackerScreen = () => {
         }));
     };
 
-    if (loading) {
-        return (
-            <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading your habits...</Text>
-            </View>
-        );
-    }
 
     const handleDragEnd = ({data}: { data: ApiHabitRead[] }) => {
         setHabits(data);
@@ -147,7 +179,16 @@ const HabitTrackerScreen = () => {
     return (
         <View style={styles.container}>
             <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                <Text style={styles.header}>HabitSync</Text>
+                <View style={styles.headerContainer}>
+                    <Animated.Image
+                        source={require('@/assets/images/logo-transparent.png')}
+                        style={[
+                            styles.logo,
+                            loading && { transform: [{ rotate: rotateInterpolate }] }
+                        ]}
+                    />
+                    <Text style={styles.header}>HabitSync</Text>
+                </View>
                 <MaterialCommunityIcons.Button
                     name="pencil"
                     backgroundColor={theme.background}
@@ -158,7 +199,11 @@ const HabitTrackerScreen = () => {
                 />
             </View>
             <DateHeader/>
-            {habits.length === 0 ? (
+            {loading ? (
+                <View style={styles.emptyState}>
+                    <Text style={styles.emptyStateText}>Loading your habits...</Text>
+                </View>
+            ) : habits.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="target" size={64} color="#ccc"/>
                     <Text style={styles.emptyStateText}>No habits yet</Text>
@@ -233,8 +278,17 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         marginBottom: 13,
-        marginTop: 16,
+        marginTop: 13,
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         paddingLeft: 16,
+    },
+    logo: {
+        width: 32,
+        height: 32,
+        marginRight: 8,
     },
     scrollView: {
         flex: 1,
