@@ -412,15 +412,17 @@ const SharedHabitDetailsScreen = () => {
                 )}
 
             {/* Allow editing of all */}
-            <View style={styles.descriptionSection}>
-                <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
-                <Switch
-                    value={allowEditingOfAllUsers}
-                    onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
-                    trackColor={{false: theme.surfaceTertiary, true: theme.primaryLight}}
-                    thumbColor={isEditing ? theme.primary : theme.textTertiary}>
-                </Switch>
-            </View>
+            {(!isEditing || currentUser?.authenticationId === sharedHabit.owner.authenticationId) && (
+                <View style={styles.descriptionSection}>
+                    <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
+                    <Switch
+                        value={allowEditingOfAllUsers}
+                        onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
+                        trackColor={{false: theme.surfaceTertiary, true: theme.primaryLight}}
+                        thumbColor={isEditing ? theme.primary : theme.textTertiary}>
+                    </Switch>
+                </View>
+            )}
 
             {/* Participants Section */}
             <View style={styles.participantsSection}>
