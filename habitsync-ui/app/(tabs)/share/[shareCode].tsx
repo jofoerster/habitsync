@@ -412,15 +412,17 @@ const SharedHabitDetailsScreen = () => {
                 )}
 
             {/* Allow editing of all */}
-            <View style={styles.descriptionSection}>
-                <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
-                <Switch
-                    value={allowEditingOfAllUsers}
-                    onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
-                    trackColor={{false: theme.surfaceTertiary, true: theme.primaryLight}}
-                    thumbColor={isEditing ? theme.primary : theme.textTertiary}>
-                </Switch>
-            </View>
+            {(!isEditing || currentUser?.authenticationId === sharedHabit.owner.authenticationId) && (
+                <View style={styles.descriptionSection}>
+                    <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
+                    <Switch
+                        value={allowEditingOfAllUsers}
+                        onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
+                        trackColor={{false: theme.surfaceTertiary, true: theme.primaryLight}}
+                        thumbColor={isEditing ? theme.primary : theme.textTertiary}>
+                    </Switch>
+                </View>
+            )}
 
             {/* Participants Section */}
             <View style={styles.participantsSection}>
@@ -675,7 +677,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginLeft: 5,
     },
     buttonText: {
-        color: '#FFFFFF',
+        color: theme.text,
         fontSize: 16,
         fontWeight: '600',
         marginLeft: 5,
@@ -692,7 +694,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         zIndex: 1000,
     },
     modalContent: {
-        backgroundColor: '#FFFFFF',
+        backgroundColor: theme.surfaceSecondary,
         margin: 20,
         padding: 20,
         borderRadius: 10,
@@ -702,18 +704,18 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     modalTitle: {
         fontSize: 20,
         fontWeight: 'bold',
-        color: '#333',
+        color: theme.text,
         marginBottom: 10,
         textAlign: 'center',
     },
     modalDescription: {
         fontSize: 16,
-        color: '#666',
+        color: theme.textSecondary,
         textAlign: 'center',
         marginBottom: 20,
     },
     modalButton: {
-        backgroundColor: '#F5F5F5',
+        backgroundColor: theme.surfaceTertiary,
         flexDirection: 'row',
         alignItems: 'center',
         padding: 15,
@@ -722,14 +724,14 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     modalButtonText: {
         fontSize: 16,
-        color: '#333',
+        color: theme.text,
         marginLeft: 10,
         fontWeight: '500',
     },
     modalSectionTitle: {
         fontSize: 16,
         fontWeight: '600',
-        color: '#333',
+        color: theme.text,
         marginTop: 20,
         marginBottom: 10,
     },

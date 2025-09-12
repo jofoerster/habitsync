@@ -18,11 +18,12 @@ interface DayButtonProps {
     onPress: () => void,
     onLongPress: () => void,
     disabled?: boolean,
-    hideDates?: boolean
+    hideDates?: boolean,
+    showCheckMarkIcon?: boolean
 }
 
-const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, onLongPress, disabled, hideDates}) => {
-    const {theme} = useTheme();
+const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, onLongPress, disabled, hideDates, showCheckMarkIcon}) => {
+    const {theme, isDark} = useTheme();
 
     const getButtonStyle = () => {
         switch (completion) {
@@ -38,7 +39,9 @@ const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, o
                 };
             case 'PARTIALLY_COMPLETED':
                 return {
-                    backgroundColor: '#f6ddb1', borderColor: '#f6ddb1', shadowColor: '#f6ddb1',
+                    backgroundColor: '#f6ddb1',
+                    borderColor: '#f6ddb1',
+                    shadowColor: '#f6ddb1',
                     shadowOffset: {width: 0, height: 0},
                     shadowOpacity: 0.7,
                     shadowRadius: 8,
@@ -54,7 +57,9 @@ const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, o
                 };
             default:
                 return {
-                    backgroundColor: '#e0e0e0', borderColor: '#e0e0e0', shadowColor: '#e0e0e0',
+                    backgroundColor: isDark ? '#4a4a4a' : '#e0e0e0',
+                    borderColor: isDark ? '#4a4a4a' : '#e0e0e0',
+                    shadowColor: isDark ? '#4a4a4a' : '#e0e0e0',
                     shadowOffset: {width: 0, height: 0},
                     shadowOpacity: 0.7,
                     shadowRadius: 8,
@@ -77,7 +82,7 @@ const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, o
             onPress={disabled ? undefined : onPress}
             onLongPress={disabled ? undefined : onLongPress}
         >
-            {value == 0 || value == 1 ? (<Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
+            {value == 0 || (value == 1 && showCheckMarkIcon) ? (<Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
                 {getIcon(completion)}
             </Text>) : (
                 <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
@@ -262,7 +267,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
                     <View style={{paddingRight: 10}}>
                         {!hideProgressRing && (
-                        <ProgressRing color={habitColor} percentage={percentage}/>)}
+                            <ProgressRing color={habitColor} percentage={percentage}/>)}
                     </View>
                     <View style={{flex: 1}}>
                         <Link href={{
@@ -340,7 +345,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                             {!hideDates && (<Text key={day.key + record.id}
                                                                   style={{
                                                                       fontSize: 10,
-                                                                      color: '#666',
+                                                                      color: theme.textSecondary,
                                                                       textAlign: 'center'
                                                                   }}>
                                                 {day.label}
@@ -354,6 +359,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                 onLongPress={() => handleDayLongPress(day.epochDay)}
                                                 disabled={isConnectedHabitView}
                                                 hideDates={hideDates}
+                                                showCheckMarkIcon={habit.progressComputation.dailyReachableValue === 1}
                                             />
                                         </View>
                                     );

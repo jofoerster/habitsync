@@ -9,12 +9,14 @@ import de.jofoerster.habitsync.model.sharedHabit.SharedHabitResult;
 import de.jofoerster.habitsync.repository.habit.*;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
 
+@Slf4j
 @Service
 public class SharedHabitService {
     private final SharedHabitRepository sharedHabitRepository;
@@ -64,10 +66,10 @@ public class SharedHabitService {
     }
 
     @Transactional
-    @Scheduled(cron = "0 0 0 1 * *")
+    @Scheduled(cron = "0 0 0 2 * *")
     public void createSharedHabitResultsForMonth() {
         LocalDate date = LocalDate.now()
-                .minusDays(1)
+                .minusDays(3)
                 .withDayOfMonth(1);
         List<SharedHabit> sharedHabits = sharedHabitRepository.findAllByHabitsIsNotEmpty();
         List<SharedHabitResult> sharedHabitResults = new ArrayList<>();
@@ -216,7 +218,12 @@ public class SharedHabitService {
 
         sharedHabit.setTitle(sharedHabitWrite.getTitle());
         sharedHabit.setDescription(sharedHabitWrite.getDescription());
-        sharedHabit.setAllowEditingOfAllUsers(sharedHabitWrite.getAllowEditingOfAllUsers());
+        if (currentAccount.equals(sharedHabit.getOwner())) {
+            sharedHabit.setAllowEditingOfAllUsers(sharedHabitWrite.getAllowEditingOfAllUsers());
+        } else if (sharedHabitWrite.getAllowEditingOfAllUsers() != sharedHabit.getAllowEditingOfAllUsers()) {
+            log.warn("User {} tried to change allowEditingOfAllUsers of shared habit {} but is not the owner",
+                    currentAccount.getAuthenticationId(), sharedHabit.getId());
+        }
 
         Optional<NotificationRule> ruleOpt =
                 notificationRuleService.getNotificationRuleById(sharedHabit.getMainNotificationRuleId());

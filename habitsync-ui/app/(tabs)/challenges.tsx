@@ -21,6 +21,8 @@ import {useTheme} from "@/context/ThemeContext";
 import {AuthService} from "@/services/auth";
 import {MAX_INTEGER} from "@/constants/numbers";
 
+type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
+
 const ChallengesScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
@@ -105,7 +107,7 @@ const ChallengesScreen = () => {
     useFocusEffect(
         useCallback(() => {
             fetchData();
-        }, [])
+        }, [fetchData])
     );
 
     const handleVote = async (item: ApiChallengeRead, vote: boolean) => {
@@ -183,6 +185,36 @@ const ChallengesScreen = () => {
         }
     };
 
+    const getChallengesByTab = () => {
+        if (!challengeOverview) return [];
+
+        switch (activeTab) {
+            case 'active':
+                return challengeOverview.activeChallenge ? [challengeOverview.activeChallenge] : [];
+            case 'proposed':
+                return challengeOverview.proposedChallenges;
+            case 'created':
+                return challengeOverview.createdChallenges;
+            default:
+                return [];
+        }
+    };
+
+    const getTabCounts = () => {
+        if (!challengeOverview) return {active: 0, proposed: 0, created: 0};
+
+        return {
+            active: challengeOverview.activeChallenge ? 1 : 0,
+            proposed: challengeOverview.proposedChallenges.length,
+            created: challengeOverview.createdChallenges.length
+        };
+    };
+
+    const shouldShowResultsBanner = () => {
+        const now = new Date();
+        const utcDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
+        return utcDate.getUTCDate() === 1;
+    };
     const renderChallengeItem = ({item}: { item: ApiChallengeRead }) => {
         const isProposed = item.status === ChallengeStatus.PROPOSED;
         const isActive = item.status === ChallengeStatus.ACTIVE;
@@ -226,7 +258,6 @@ const ChallengesScreen = () => {
 
                 <View style={styles.goalSection}>
                     <View style={styles.goalHeader}>
-                        <MaterialCommunityIcons name="target" size={18} color="#2196F3"/>
                         <Text style={styles.goalTitle}>Progress Computation</Text>
                     </View>
 
@@ -361,9 +392,8 @@ const ChallengesScreen = () => {
 
                                 <View style={styles.participantInfo}>
                                     <View style={styles.participantDetails}>
-                                        <Link href={{
-                                            pathname: challengeProgress.linkToHabit + (challengeProgress.account.authenticationId === currentUser?.authenticationId ? '?isOwnHabit=true' : ''),
-                                        }}>
+                                        <Link
+                                            href={challengeProgress.linkToHabit + (challengeProgress.account.authenticationId === currentUser?.authenticationId ? '?isOwnHabit=true' : '') as any}>
                                             <Pressable>
                                                 <Text
                                                     style={styles.participantName}>{challengeProgress.account.displayName}</Text></Pressable></Link>
@@ -413,60 +443,201 @@ const ChallengesScreen = () => {
             );
         }
         return null;
-    }, [activeTab, challengeHabit, challengeOverview, fetchData]);
+    }, [activeTab, challengeHabit, challengeOverview, fetchData, currentUser?.authenticationId]);
 
-    const renderTabContent = () => {
+    const renderSegmentedControl = () => {
+        const counts = getTabCounts();
+
+        return (
+            <View style={styles.segmentedControl}>
+                <TouchableOpacity
+                    style={[styles.segment, activeTab === 'active' && styles.activeSegment]}
+                    onPress={() => setActiveTab('active')}
+                >
+                    <MaterialCommunityIcons
+                        name="trophy"
+                        size={16}
+                        color={activeTab === 'active' ? '#FFFFFF' : theme.textSecondary}
+                    />
+                    <Text style={[styles.segmentText, activeTab === 'active' && styles.activeSegmentText]}>
+                        Active
+                    </Text>
+                    {counts.active > 0 && (
+                        <View style={styles.segmentBadge}>
+                            <Text style={styles.segmentBadgeText}>{counts.active}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.segment, activeTab === 'proposed' && styles.activeSegment]}
+                    onPress={() => setActiveTab('proposed')}
+                >
+                    <MaterialCommunityIcons
+                        name="vote"
+                        size={16}
+                        color={activeTab === 'proposed' ? '#FFFFFF' : theme.textSecondary}
+                    />
+                    <Text style={[styles.segmentText, activeTab === 'proposed' && styles.activeSegmentText]}>
+                        Proposed
+                    </Text>
+                    {counts.proposed > 0 && (
+                        <View style={styles.segmentBadge}>
+                            <Text style={styles.segmentBadgeText}>{counts.proposed}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.segment, activeTab === 'created' && styles.activeSegment]}
+                    onPress={() => setActiveTab('created')}
+                >
+                    <MaterialCommunityIcons
+                        name="pencil"
+                        size={16}
+                        color={activeTab === 'created' ? '#FFFFFF' : theme.textSecondary}
+                    />
+                    <Text style={[styles.segmentText, activeTab === 'created' && styles.activeSegmentText]}>
+                        Created
+                    </Text>
+                    {counts.created > 0 && (
+                        <View style={styles.segmentBadge}>
+                            <Text style={styles.segmentBadgeText}>{counts.created}</Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
+        );
+    };
+
+    const renderEmptyState = () => {
+        const getEmptyStateContent = () => {
+            switch (activeTab) {
+                case 'active':
+                    return {
+                        icon: 'trophy-outline' as IconName,
+                        title: 'No Active Challenge',
+                        description: 'A new challenge will start at the beginning of each month.',
+                        primaryAction: {
+                            text: 'Vote on Proposals',
+                            icon: 'vote' as IconName,
+                            onPress: () => setActiveTab('proposed')
+                        },
+                        secondaryAction: {
+                            text: 'Create Challenge',
+                            icon: 'plus' as IconName,
+                            onPress: () => router.push('/challenge/edit/new')
+                        }
+                    };
+                case 'proposed':
+                    return {
+                        icon: 'vote-outline' as IconName,
+                        title: 'No Proposed Challenges',
+                        description: 'Propose one of your created challenges or create a new one!',
+                        primaryAction: {
+                            text: 'Create Challenge',
+                            icon: 'plus' as IconName,
+                            onPress: () => router.push('/challenge/edit/new')
+                        },
+                        secondaryAction: {
+                            text: 'View Created',
+                            icon: 'pencil' as IconName,
+                            onPress: () => setActiveTab('created')
+                        }
+                    };
+                case 'created':
+                    return {
+                        icon: 'pencil-outline' as IconName,
+                        title: 'No Created Challenges',
+                        description: 'Create a challenge and propose it to others',
+                        primaryAction: {
+                            text: 'Create Challenge',
+                            icon: 'plus' as IconName,
+                            onPress: () => router.push('/challenge/edit/new')
+                        },
+                        secondaryAction: {
+                            text: 'Vote on Proposals',
+                            icon: 'vote' as IconName,
+                            onPress: () => setActiveTab('proposed')
+                        }
+                    };
+                default:
+                    return null;
+            }
+        };
+
+        const content = getEmptyStateContent();
+        if (!content) return null;
+
+        return (
+            <View style={styles.emptyStateContainer}>
+                <MaterialCommunityIcons
+                    name={content.icon}
+                    size={64}
+                    color={theme.textSecondary}
+                    style={styles.emptyStateIcon}
+                />
+                <Text style={styles.emptyStateTitle}>{content.title}</Text>
+                <Text style={styles.emptyStateDescription}>{content.description}</Text>
+
+                <View style={styles.emptyStateActions}>
+                    <TouchableOpacity
+                        style={styles.primaryActionButton}
+                        onPress={content.primaryAction.onPress}
+                    >
+                        <MaterialCommunityIcons
+                            name={content.primaryAction.icon}
+                            size={20}
+                            color="#FFFFFF"
+                        />
+                        <Text style={styles.primaryActionText}>{content.primaryAction.text}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.secondaryActionButton}
+                        onPress={content.secondaryAction.onPress}
+                    >
+                        <MaterialCommunityIcons
+                            name={content.secondaryAction.icon}
+                            size={18}
+                            color={theme.primary}
+                        />
+                        <Text style={styles.secondaryActionText}>{content.secondaryAction.text}</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        );
+    };
+
+    const renderContent = () => {
         if (!challengeOverview) return null;
 
-        let data: ApiChallengeRead[] = [];
+        const challenges = getChallengesByTab();
 
-        switch (activeTab) {
-            case 'active':
-                data = challengeOverview.activeChallenge ? [challengeOverview.activeChallenge] : [];
-                break;
-            case 'proposed':
-                data = challengeOverview.proposedChallenges;
-                break;
-            case 'created':
-                data = challengeOverview.createdChallenges;
-                break;
-        }
-
-        if (data.length === 0) {
-            return (
-                <View style={styles.emptyContainer}>
-                    <Text style={styles.emptyText}>No {activeTab} challenges found</Text>
-                </View>
-            );
+        if (challenges.length === 0) {
+            return renderEmptyState();
         }
 
         return (
             <FlatList
-                data={data}
+                data={challenges}
                 renderItem={renderChallengeItem}
                 keyExtractor={item => item.id.toString()}
                 refreshing={refreshing}
+                onRefresh={fetchData}
                 contentContainerStyle={styles.listContent}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>No {activeTab} challenges found</Text>
-                    </View>
-                }
                 ListFooterComponent={renderFooter}
+                showsVerticalScrollIndicator={false}
             />
         );
     };
 
-    const shouldShowResultsBanner = () => {
-        const now = new Date();
-        const utcDate = new Date(now.getTime() + (now.getTimezoneOffset() * 60000));
-        return utcDate.getUTCDate() === 1;
-    };
 
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#2196F3"/>
+                <ActivityIndicator size="large" color={theme.primary}/>
+                <Text style={styles.loadingText}>Loading challenges...</Text>
             </View>
         );
     }
@@ -477,57 +648,15 @@ const ChallengesScreen = () => {
                 <View style={styles.resultsBanner}>
                     <MaterialCommunityIcons name="information" size={20} color="#2196F3"/>
                     <Text style={styles.bannerText}>
-                        If last month's challenge was active, results will be published tomorrow! (UTC). Last chance to
+                        If last month&apos;s challenge was active, results will be published tomorrow! (UTC). Last
+                        chance to
                         log challenge progress today!
                     </Text>
                 </View>
             )}
 
-            <View style={styles.tabContainer}>
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'active' && styles.activeTab]}
-                    onPress={() => setActiveTab('active')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'active' && styles.activeTabText]}>Active</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'proposed' && styles.activeTab]}
-                    onPress={() => setActiveTab('proposed')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'proposed' && styles.activeTabText]}>Proposed</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    style={[styles.tab, activeTab === 'created' && styles.activeTab]}
-                    onPress={() => setActiveTab('created')}
-                >
-                    <Text style={[styles.tabText, activeTab === 'created' && styles.activeTabText]}>Created</Text>
-                </TouchableOpacity>
-            </View>
-
-            {renderTabContent()}
-
-
-            <View style={styles.buttonContainer}>
-                {activeTab !== 'proposed' && (
-                    <TouchableOpacity style={[styles.primaryButton, styles.flexButton]}
-                                      onPress={() => router.push(`/challenge/edit/new`)}>
-                        <MaterialCommunityIcons name="plus" size={20} color="#FFFFFF"/>
-                        <Text style={styles.buttonText}>Create challenge</Text>
-                    </TouchableOpacity>
-                )}
-
-                {activeTab !== 'proposed' && (
-                    <TouchableOpacity style={[styles.primaryButton, styles.flexButton]}
-                                      onPress={() => setActiveTab('proposed')}>
-                        <MaterialCommunityIcons name="vote" size={20} color="#FFFFFF"/>
-                        <Text style={styles.buttonText}>Vote</Text>
-                    </TouchableOpacity>
-                )}
-
-            </View>
-
+            {renderSegmentedControl()}
+            {renderContent()}
         </View>
     );
 };
@@ -543,59 +672,75 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         alignItems: 'center',
         backgroundColor: theme.background,
     },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingTop: 20,
-        paddingBottom: 10,
-        backgroundColor: theme.background,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: theme.text,
-    },
-    addButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        backgroundColor: theme.background,
-        elevation: 2,
-    },
-    tab: {
-        flex: 1,
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    activeTab: {
-        borderBottomWidth: 2,
-        borderBottomColor: '#2196F3',
-    },
-    tabText: {
-        fontSize: 14,
+    loadingText: {
+        marginTop: 8,
+        fontSize: 16,
         color: theme.textSecondary,
     },
-    activeTabText: {
-        color: '#2196F3',
+    // Segmented Control Styles
+    segmentedControl: {
+        flexDirection: 'row',
+        backgroundColor: theme.surface,
+        borderRadius: 12,
+        margin: 16,
+        padding: 4,
+        elevation: 2,
+        shadowColor: theme.shadow,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    segment: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 8,
+        borderRadius: 8,
+        position: 'relative',
+        gap: 6,
+    },
+    activeSegment: {
+        backgroundColor: theme.primary,
+    },
+    segmentText: {
+        fontSize: 14,
+        color: theme.textSecondary,
         fontWeight: '500',
     },
-    listContent: {
-        padding: 12,
+    activeSegmentText: {
+        color: '#FFFFFF',
+        fontWeight: '600',
     },
+    segmentBadge: {
+        backgroundColor: theme.primary,
+        borderRadius: 10,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginLeft: 4,
+    },
+    segmentBadgeText: {
+        fontSize: 10,
+        color: '#FFFFFF',
+        fontWeight: 'bold',
+    },
+    // List and Content Styles
+    listContent: {
+        paddingHorizontal: 16,
+        paddingBottom: 20,
+    },
+    // Challenge Card Styles
     challengeCard: {
         backgroundColor: theme.surfaceSecondary,
-        borderRadius: 8,
+        borderRadius: 12,
         padding: 16,
-        marginBottom: 12,
+        marginBottom: 16,
         elevation: 2,
+        shadowColor: theme.shadow,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
     },
     challengeHeader: {
         marginBottom: 12,
@@ -611,26 +756,32 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         flex: 1,
+        marginRight: 8,
     },
     statusBadge: {
         paddingHorizontal: 8,
         paddingVertical: 4,
-        backgroundColor: theme.surfaceTertiary,
-        borderRadius: 4,
+        backgroundColor: theme.surfaceSecondary,
+        borderRadius: 6,
     },
     statusText: {
         fontSize: 12,
-        fontWeight: '500',
+        fontWeight: '600',
         color: theme.textSecondary,
+        textTransform: 'capitalize',
     },
+    challengeDescription: {
+        fontSize: 14,
+        color: theme.textSecondary,
+        lineHeight: 20,
+    },
+    // Time and Date Styles
     timeRemainingBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
+        padding: 5,
         backgroundColor: theme.surfaceTertiary,
         borderRadius: 6,
-        marginTop: 4,
         alignSelf: 'flex-start',
     },
     urgentBadge: {
@@ -651,9 +802,10 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     expiredText: {
         color: '#F44336',
     },
+    // Goal Section Styles
     goalSection: {
-        padding: 6,
-        marginTop: 5,
+        backgroundColor: theme.surfaceSecondary,
+        marginVertical: 20,
     },
     goalHeader: {
         flexDirection: 'row',
@@ -679,57 +831,43 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginLeft: 6,
         flex: 1,
     },
-    challengeDescription: {
-        fontSize: 14,
-        color: theme.text,
-        marginBottom: 12,
-    },
-    challengeDates: {
-        marginBottom: 12,
-        backgroundColor: theme.surfaceTertiary,
-    },
-    dateText: {
-        fontSize: 12,
-        color: theme.text,
-    },
+    // Action and Voting Styles
     challengeFooter: {
-        marginTop: 8,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
     },
     votingSection: {
         flexDirection: 'row',
+        gap: 8,
     },
     voteButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 8,
-        marginRight: 12,
-        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        borderRadius: 8,
+        backgroundColor: theme.surfaceSecondary,
     },
     activeUpvote: {
-        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        backgroundColor: 'rgba(76, 175, 80, 0.2)',
     },
     activeDownvote: {
-        backgroundColor: 'rgba(244, 67, 54, 0.1)',
-    },
-    voteCount: {
-        marginLeft: 4,
-        fontSize: 14,
-        color: theme.textSecondary,
+        backgroundColor: 'rgba(244, 67, 54, 0.2)',
     },
     actionButtons: {
         flexDirection: 'row',
+        gap: 8,
     },
     actionButton: {
-        paddingVertical: 6,
-        paddingHorizontal: 10,
-        borderRadius: 4,
-        marginLeft: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 6,
+        minWidth: 60,
+        alignItems: 'center',
     },
     proposeButton: {
-        backgroundColor: '#2196F3',
+        backgroundColor: '#4CAF50',
     },
     editButton: {
         backgroundColor: '#FF9800',
@@ -740,97 +878,99 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     actionButtonText: {
         fontSize: 12,
         color: '#FFFFFF',
-        fontWeight: '500',
+        fontWeight: '600',
     },
-    emptyContainer: {
-        padding: 40,
-        alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 16,
-        color: theme.textSecondary,
-    },
-    progressSection: {
-        padding: 20,
-    },
-    progressCard: {
-        backgroundColor: theme.surfaceSecondary,
-        borderRadius: 16,
-        padding: 20,
-        shadowColor: theme.shadow,
-        shadowOffset: {width: 0, height: 2},
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 4,
-    },
-    progressContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 16,
-    },
-    progressDetails: {
+    // Empty State Styles
+    emptyStateContainer: {
         flex: 1,
-    },
-    progressDetailItem: {
-        flexDirection: 'row',
+        justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 12,
+        paddingHorizontal: 32,
+        paddingVertical: 48,
     },
-    progressDetailText: {
-        fontSize: 14,
-        color: theme.textSecondary,
-        marginLeft: 8,
+    emptyStateIcon: {
+        marginBottom: 16,
+        opacity: 0.6,
     },
-    sectionTitle: {
+    emptyStateTitle: {
         fontSize: 20,
         fontWeight: 'bold',
         color: theme.text,
-        marginBottom: 4,
+        marginBottom: 8,
+        textAlign: 'center',
     },
-    primaryButton: {
-        backgroundColor: '#2196F3',
+    emptyStateDescription: {
+        fontSize: 16,
+        color: theme.textSecondary,
+        textAlign: 'center',
+        lineHeight: 22,
+        marginBottom: 32,
+    },
+    emptyStateActions: {
+        flexDirection: 'column',
+        gap: 12,
+        width: '100%',
+        maxWidth: 280,
+    },
+    primaryActionButton: {
+        backgroundColor: theme.primary,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         paddingVertical: 14,
         borderRadius: 12,
-        marginBottom: 12,
+        elevation: 2,
+        shadowColor: theme.shadow,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
     },
-    buttonText: {
+    primaryActionText: {
         color: '#FFFFFF',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
         marginLeft: 8,
     },
-    buttonContainer: {
+    secondaryActionButton: {
+        backgroundColor: 'transparent',
         flexDirection: 'row',
-        gap: 12,
-        paddingHorizontal: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 14,
+        borderRadius: 12,
+        borderWidth: 2,
+        borderColor: theme.primary,
     },
-    flexButton: {
-        flex: 1,
+    secondaryActionText: {
+        color: theme.primary,
+        fontSize: 16,
+        fontWeight: '600',
+        marginLeft: 8,
+    },
+    // Progress and Participants Styles
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: theme.text,
+        marginBottom: 12,
     },
     participantsSection: {
         backgroundColor: theme.surfaceSecondary,
-        padding: 20,
-        borderRadius: 10,
+        padding: 16,
+        borderRadius: 12,
+        marginTop: 0,
+        elevation: 2,
         shadowColor: theme.shadow,
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
     },
     participantCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: theme.border,
     },
     participantInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
         flex: 1,
     },
     participantDetails: {
@@ -842,40 +982,28 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: theme.text,
         marginBottom: 8,
     },
-    participantHabitName: {
-        fontSize: 14,
-        color: theme.textSecondary,
-        marginTop: 2,
-    },
     progressContainer: {
         flex: 1,
     },
     progressBar: {
-        marginBottom: 4,
+        marginBottom: 6,
     },
     progressText: {
-        fontSize: 12,
-        color: theme.text,
+        fontSize: 13,
+        color: theme.textSecondary,
         fontWeight: '500',
     },
-    participantProgress: {
-        alignItems: 'center',
-    },
-    participantPercentage: {
-        fontSize: 12,
-        color: theme.text,
-        marginTop: 5,
-    },
+    // Leaderboard Styles
     leaderboardSection: {
-        backgroundColor: theme.surfaceSecondary,
-        padding: 20,
-        borderRadius: 10,
-        marginTop: 12,
+        backgroundColor: theme.surface,
+        padding: 16,
+        borderRadius: 12,
+        marginTop: 16,
+        elevation: 2,
         shadowColor: theme.shadow,
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,
         shadowRadius: 4,
-        elevation: 3,
     },
     leaderboardCard: {
         flexDirection: 'row',
@@ -911,22 +1039,25 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     leaderboardPoints: {
         fontSize: 14,
         fontWeight: '600',
-        color: '#2196F3',
+        color: theme.primary,
     },
+    // Banner Styles
     resultsBanner: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#E8F5E9',
-        padding: 12,
-        borderRadius: 8,
-        margin: 16,
-        elevation: 2,
+        backgroundColor: '#E3F2FD',
+        padding: 16,
+        marginHorizontal: 16,
+        marginTop: 16,
+        borderRadius: 12,
+        elevation: 1,
     },
     bannerText: {
         fontSize: 14,
-        color: '#2E7D32',
+        color: '#1565C0',
         marginLeft: 8,
         flex: 1,
+        lineHeight: 20,
     },
 }));
 
