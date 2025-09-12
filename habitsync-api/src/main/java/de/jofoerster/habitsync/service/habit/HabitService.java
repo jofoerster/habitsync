@@ -317,6 +317,12 @@ public class HabitService {
         return "";
     }
 
+    public boolean hasHabitBeenCompletedToday(Habit habit, HabitRecordSupplier habitRecordSupplier) {
+        return habitRecordSupplier.getHabitRecordsInRange(habit, LocalDate.now(), LocalDate.now())
+                .stream()
+                .anyMatch(r -> r.getRecordValue() != null && r.getRecordValue() != 0);
+    }
+
     private class DeprecatedNotificationFrequencyDTO {
         private FrequencyEnum frequency;
         private String[] weekdays; // MO, TU, WE, TH, FR, SA, SU

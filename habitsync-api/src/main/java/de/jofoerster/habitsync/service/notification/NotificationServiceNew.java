@@ -139,7 +139,8 @@ public class NotificationServiceNew {
     }
 
     private boolean checkAndExecuteOvertakeRule(Habit habit, Habit ch, NotificationConfigRuleDTO rule) {
-        if (habitsWithoutUpdates.contains(habit.getUuid()) && habitsWithoutUpdates.contains(ch.getUuid()) && !isFirstCheckToday()) {
+        if (habitsWithoutUpdates.contains(habit.getUuid()) && habitsWithoutUpdates.contains(ch.getUuid()) &&
+                !isFirstCheckToday()) {
             return false;
         }
         String ruleIdentifier = "OVERTAKE_" + habit.getUuid() + "_" + ch.getUuid();
@@ -226,6 +227,21 @@ public class NotificationServiceNew {
             log.warn("Could not find habit with id {}", id);
             return;
         }
+        List<NotificationConfigRuleDTO> fixedTimeRules = habitService.getFixedTimeNotificationRules(habitOpt.get());
+        if (fixedTimeRules == null || fixedTimeRules.isEmpty()) {
+            log.warn("Could not find notification config for habit with id {}", id);
+            return;
+        }
+        if (!fixedTimeRules.getFirst().getTriggerIfFulfilled()) {
+            if (habitService.hasHabitBeenCompletedToday(habitOpt.get(),
+                    new HabitRecordSupplier(habitRecordRepository))) {
+                log.debug("Habit {} has already been completed today. Not sending fixed time notification.",
+                        habitOpt.get().getUuid());
+                return;
+            }
+            ;
+        }
+
         NotificationTemplate notificationTemplate =
                 notificationTemplateService.getNotificationTemplateByNotificationType(
                         NotificationType.FIXED_TIME_PUSH_NOTIFICATION_HABIT);
