@@ -64,7 +64,7 @@ public class NotificationServiceNew {
     String appriseApiUrl;
 
     private final List<Habit> habitsWithCustomReminders = new ArrayList<>();
-    private final List<String> habitsWithoutUpdates = new ArrayList<>();
+    private final Set<String> habitsWithoutUpdates = new HashSet<>();
     private Map<String, Boolean> habitRuleNotificationStatusMap = new HashMap<String, Boolean>();
 
     @PostConstruct
@@ -86,9 +86,7 @@ public class NotificationServiceNew {
             rules.forEach(rule -> {
                 this.checkAndExecuteRule(habit, rule);
             });
-            if (!habitsWithoutUpdates.contains(habit.getUuid())) {
-                habitsWithoutUpdates.add(habit.getUuid());
-            }
+            habitsWithoutUpdates.add(habit.getUuid());
         });
     }
 
@@ -106,7 +104,7 @@ public class NotificationServiceNew {
                         (habitsWithoutUpdates.contains(habit.getUuid()) && !isFirstCheckToday())) {
                     return;
                 }
-                String ruleIdentifier = "THRESHOLD_" + habit.getUuid();
+                String ruleIdentifier = getIdentifierFromRule(rule, habit);
                 boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
                 boolean isActive =
                         habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
@@ -144,7 +142,7 @@ public class NotificationServiceNew {
                 !isFirstCheckToday()) {
             return false;
         }
-        String ruleIdentifier = "OVERTAKE_" + habit.getUuid() + "_" + ch.getUuid();
+        String ruleIdentifier = getIdentifierFromRule(rule, habit, ch);
         boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
         boolean isActive =
                 habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
@@ -183,11 +181,32 @@ public class NotificationServiceNew {
             if (!habitsWithCustomReminders.contains(habit)) {
                 habitsWithCustomReminders.add(habit);
             }
+            for (NotificationConfigRuleDTO r : frequency.getRules()) {
+                this.initializeNewRule(habit, r);
+            }
             scheduleAllNotificationJobsForHabit(habit);
             return true;
         } catch (JsonProcessingException e) {
             log.warn("Could not set reminderCustom for habit {}", habit.getUuid(), e);
             return false;
+        }
+    }
+
+    private void initializeNewRule(Habit habit, NotificationConfigRuleDTO rule) {
+        switch (rule.getType()) {
+            case NotificationTypeEnum.fixed -> {
+                return;
+            }
+            case NotificationTypeEnum.overtake -> {
+                sharedHabitService.getSharedHabitsByHabit(habit).forEach(sh -> {
+                    sh.getHabits().forEach(ch -> {
+                        updateState(getIdentifierFromRule(rule, habit, ch), true);
+                    });
+                });
+            }
+            case NotificationTypeEnum.threshold -> {
+                updateState(getIdentifierFromRule(rule, habit), true);
+            }
         }
     }
 
@@ -345,6 +364,18 @@ public class NotificationServiceNew {
             log.warn("Could not parse reminderCustom for habit {}", habit.getUuid(), e);
             return null;
         }
+    }
+
+    private String getIdentifierFromRule(NotificationConfigRuleDTO rule, Habit habit) {
+        return getIdentifierFromRule(rule, habit, null);
+    }
+
+    private String getIdentifierFromRule(NotificationConfigRuleDTO rule, Habit habit, Habit otherHabit) {
+        return switch (rule.getType()) {
+            case NotificationTypeEnum.threshold -> "THRESHOLD_" + habit.getUuid();
+            case NotificationTypeEnum.overtake -> "OVERTAKE_" + habit.getUuid() + "_" + otherHabit.getUuid();
+            default -> null;
+        };
     }
 
     private boolean isFirstCheckToday() {
