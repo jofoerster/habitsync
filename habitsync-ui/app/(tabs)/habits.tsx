@@ -147,7 +147,7 @@ const HabitTrackerScreen = () => {
     return (
         <View style={styles.container}>
             <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
-                <Text style={styles.header}>Habit Tracker</Text>
+                <Text style={styles.header}>HabitSync</Text>
                 <MaterialCommunityIcons.Button
                     name="pencil"
                     backgroundColor={theme.background}

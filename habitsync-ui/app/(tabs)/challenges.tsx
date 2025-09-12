@@ -258,7 +258,6 @@ const ChallengesScreen = () => {
 
                 <View style={styles.goalSection}>
                     <View style={styles.goalHeader}>
-                        <MaterialCommunityIcons name="target" size={18} color="#2196F3"/>
                         <Text style={styles.goalTitle}>Progress Computation</Text>
                     </View>
 
@@ -733,7 +732,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     // Challenge Card Styles
     challengeCard: {
-        backgroundColor: theme.surface,
+        backgroundColor: theme.surfaceSecondary,
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
@@ -775,15 +774,13 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontSize: 14,
         color: theme.textSecondary,
         lineHeight: 20,
-        marginBottom: 12,
     },
     // Time and Date Styles
     timeRemainingBadge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        backgroundColor: theme.surfaceSecondary,
+        padding: 5,
+        backgroundColor: theme.surfaceTertiary,
         borderRadius: 6,
         alignSelf: 'flex-start',
     },
@@ -808,9 +805,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     // Goal Section Styles
     goalSection: {
         backgroundColor: theme.surfaceSecondary,
-        borderRadius: 8,
-        padding: 12,
-        marginVertical: 8,
+        marginVertical: 20,
     },
     goalHeader: {
         flexDirection: 'row',
@@ -838,7 +833,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     // Action and Voting Styles
     challengeFooter: {
-        marginTop: 12,
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
@@ -961,10 +955,10 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginBottom: 12,
     },
     participantsSection: {
-        backgroundColor: theme.surface,
+        backgroundColor: theme.surfaceSecondary,
         padding: 16,
         borderRadius: 12,
-        marginTop: 16,
+        marginTop: 0,
         elevation: 2,
         shadowColor: theme.shadow,
         shadowOffset: {width: 0, height: 2},
