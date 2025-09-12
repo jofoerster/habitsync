@@ -17,7 +17,14 @@ interface NumberModalProps {
     currentRecordValue?: number | null;
 }
 
-const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, habit, showStopwatch = true, currentRecordValue = null}) => {
+const NumberModal: React.FC<NumberModalProps> = ({
+                                                     visible,
+                                                     onClose,
+                                                     onSubmit,
+                                                     habit,
+                                                     showStopwatch = true,
+                                                     currentRecordValue = null
+                                                 }) => {
     const {theme} = useTheme();
 
     const [inputValue, setInputValue] = useState<string>('');
@@ -42,11 +49,7 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
         try {
             const response = await habitNumberModalApi.getNumberModal(habit.uuid);
             const values = (response.values || []) as string[];
-            if (!currentRecordValue) {
-                setNumbers(values.filter((num) => !(num.startsWith("-") || num.startsWith("+"))));
-            } else {
-                setNumbers(values);
-            }
+            setNumbers(values);
         } catch (error) {
             console.error("Failed to fetch numbers:", error);
         }
@@ -199,7 +202,8 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                                     <Text style={{fontSize: 18, fontWeight: 'bold'}}> or </Text>
                                     <TouchableOpacity onPress={onUseTimer}>
                                         <Text style={{color: '#d36666', fontSize: 18, fontWeight: 'bold'}}>
-                                            Start Stopwatch <MaterialCommunityIcons style={{fontSize: 18}} name={"timer"}/>
+                                            Start Stopwatch <MaterialCommunityIcons style={{fontSize: 18}}
+                                                                                    name={"timer"}/>
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -308,7 +312,8 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                                             fontSize: 16,
                                             color: theme.text,
                                             backgroundColor: theme.background,
-                                            textAlign: 'center'
+                                            textAlign: 'center',
+                                            width: '100%'
                                         }}
                                         value={inputValue}
                                         onChangeText={setInputValue}
@@ -350,7 +355,7 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                             elevation: 5
                         }}>
                             {isDelayedStartActive ? (
-                                <View style={{ alignItems: 'center' }}>
+                                <View style={{alignItems: 'center'}}>
                                     <Text style={{
                                         fontSize: 48,
                                         fontWeight: '700',
@@ -370,7 +375,7 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                                     </Text>
                                 </View>
                             ) : (
-                                <View style={{ alignItems: 'center' }}>
+                                <View style={{alignItems: 'center'}}>
                                     <Text style={{
                                         fontSize: 42,
                                         fontWeight: '600',
@@ -446,7 +451,7 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                                         style={{
                                             backgroundColor: isDelayedStartActive ? '#ff6b35' : '#FF9800',
                                             borderRadius: 8,
-                                            padding: isDelayedStartActive ? 16 : 2,
+                                            padding: (isTimerRunning || timerTime === 0) ? 16 : 2,
                                             alignItems: 'center',
                                             flex: 1,
                                             margin: 4
@@ -476,44 +481,46 @@ const NumberModal: React.FC<NumberModalProps> = ({visible, onClose, onSubmit, ha
                                     </TouchableOpacity>
                                 )}
                             </View>
-                            {(!isTimerRunning && timerTime !== 0) && (
-                                <TouchableOpacity
-                                    style={{
-                                        backgroundColor: '#4998a7',
-                                        borderRadius: 8,
-                                        padding: 16,
-                                        alignItems: 'center',
-                                        flex: 1,
-                                        margin: 4
-                                    }}
-                                    onPress={() => handleSubmit(Math.floor(timerTime / 1000).toString())}
-                                >
-                                    <Text style={{
-                                        color: 'white',
-                                        fontSize: 16,
-                                        fontWeight: 'bold'
-                                    }}>Submit: {Math.floor(timerTime / 1000)}</Text>
-                                </TouchableOpacity>
-                            )}
-                            {(!isTimerRunning && timerTime >= 60000) && (
-                                <TouchableOpacity
-                                    style={{
-                                        backgroundColor: '#4998a7',
-                                        borderRadius: 8,
-                                        padding: 16,
-                                        alignItems: 'center',
-                                        flex: 1,
-                                        margin: 4
-                                    }}
-                                    onPress={() => handleSubmit(Math.floor(timerTime / 60000).toString())}
-                                >
-                                    <Text style={{
-                                        color: 'white',
-                                        fontSize: 16,
-                                        fontWeight: 'bold'
-                                    }}>Submit: {Math.floor(timerTime / 60000)}</Text>
-                                </TouchableOpacity>
-                            )}
+                            <View style={{flexDirection: 'column'}}>
+                                {(!isTimerRunning && timerTime !== 0) && (
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#4998a7',
+                                            borderRadius: 8,
+                                            padding: 10,
+                                            alignItems: 'center',
+                                            flex: 1,
+                                            margin: 4
+                                        }}
+                                        onPress={() => handleSubmit(Math.floor(timerTime / 1000).toString())}
+                                    >
+                                        <Text style={{
+                                            color: 'white',
+                                            fontSize: 16,
+                                            fontWeight: 'bold'
+                                        }}>Submit: {Math.floor(timerTime / 1000)}</Text>
+                                    </TouchableOpacity>
+                                )}
+                                {(!isTimerRunning && timerTime >= 60000) && (
+                                    <TouchableOpacity
+                                        style={{
+                                            backgroundColor: '#4998a7',
+                                            borderRadius: 8,
+                                            padding: 10,
+                                            alignItems: 'center',
+                                            flex: 1,
+                                            margin: 4
+                                        }}
+                                        onPress={() => handleSubmit(Math.floor(timerTime / 60000).toString())}
+                                    >
+                                        <Text style={{
+                                            color: 'white',
+                                            fontSize: 16,
+                                            fontWeight: 'bold'
+                                        }}>Submit: {Math.floor(timerTime / 60000)}</Text>
+                                    </TouchableOpacity>
+                                )}
+                            </View>
                         </View>
                     )}
 
