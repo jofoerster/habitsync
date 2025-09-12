@@ -296,21 +296,6 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 })}
             </View>
 
-            {/* Delete All Button */}
-            {rules.some(rule => rule.enabled) && (
-                <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={deleteAllNotifications}
-                    disabled={loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator size="small" color="#fff"/>
-                    ) : (
-                        <Text style={styles.deleteButtonText}>Delete All Notifications</Text>
-                    )}
-                </TouchableOpacity>
-            )}
-
             {/* Help Modal */}
             <Modal
                 animationType="fade"
