@@ -32,6 +32,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -65,6 +66,7 @@ public class NotificationServiceNew {
 
     private final List<Habit> habitsWithCustomReminders = new ArrayList<>();
     private final Set<String> habitsWithoutUpdates = new HashSet<>();
+    private final Set<String> habitsWithoutUpdatesTemp = new HashSet<>();
     private Map<String, Boolean> habitRuleNotificationStatusMap = new HashMap<String, Boolean>();
 
     @PostConstruct
@@ -78,16 +80,18 @@ public class NotificationServiceNew {
                         NotificationRuleStatus::isActive));
     }
 
-    @Scheduled(cron = "0 0 * * * *") // Do not change -> see isFirstCheckToday
+    @Scheduled(cron = "0 */10 * * * *") // Do not change -> see isFirstCheckToday
     public void checkNotificationRules() {
         log.info("Checking notification rules for all habits with reminders");
+        habitsWithoutUpdatesTemp.addAll(habitsWithoutUpdates);
         habitsWithCustomReminders.forEach(habit -> {
+            habitsWithoutUpdates.add(habit.getUuid());
             List<NotificationConfigRuleDTO> rules = habitService.getNotificationConfig(habit).getRules();
             rules.forEach(rule -> {
                 this.checkAndExecuteRule(habit, rule);
             });
-            habitsWithoutUpdates.add(habit.getUuid());
         });
+        habitsWithoutUpdatesTemp.clear();
     }
 
     public void markHabitAsUpdated(Habit habit) {
@@ -101,7 +105,7 @@ public class NotificationServiceNew {
             }
             case NotificationTypeEnum.threshold -> {
                 if (!rule.isEnabled() || rule.getThresholdPercentage() == null ||
-                        (habitsWithoutUpdates.contains(habit.getUuid()) && !isFirstCheckToday())) {
+                        (habitsWithoutUpdatesTemp.contains(habit.getUuid()) && !isFirstCheckToday())) {
                     return;
                 }
                 String ruleIdentifier = getIdentifierFromRule(rule, habit);
@@ -127,6 +131,7 @@ public class NotificationServiceNew {
                 }
                 sharedHabitService.getSharedHabitsByHabit(habit).forEach(sh -> {
                     sh.getHabits().forEach(ch -> {
+                        habitsWithoutUpdates.add(ch.getUuid());
                         boolean overtaken = checkAndExecuteOvertakeRule(habit, ch, rule);
                         if (overtaken) {
                             return;
@@ -138,7 +143,7 @@ public class NotificationServiceNew {
     }
 
     private boolean checkAndExecuteOvertakeRule(Habit habit, Habit ch, NotificationConfigRuleDTO rule) {
-        if (habitsWithoutUpdates.contains(habit.getUuid()) && habitsWithoutUpdates.contains(ch.getUuid()) &&
+        if (habitsWithoutUpdatesTemp.contains(habit.getUuid()) && habitsWithoutUpdatesTemp.contains(ch.getUuid()) &&
                 !isFirstCheckToday()) {
             return false;
         }
@@ -379,7 +384,7 @@ public class NotificationServiceNew {
     }
 
     private boolean isFirstCheckToday() {
-        Calendar now = Calendar.getInstance();
-        return now.get(Calendar.HOUR_OF_DAY) == 0;
+        LocalTime currentTime = LocalTime.now();
+        return currentTime.getHour() == 0 && currentTime.getMinute() <= 10;
     }
 }
