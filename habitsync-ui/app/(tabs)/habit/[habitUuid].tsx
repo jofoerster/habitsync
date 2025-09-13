@@ -6,9 +6,10 @@ import {
     ApiHabitRead,
     ApiHabitRecordRead,
     ApiSharedHabitMedalsRead,
-    ApiSharedHabitRead, FrequencyTypeDTO,
+    ApiSharedHabitRead,
+    FrequencyTypeDTO,
     habitApi,
-    habitRecordApi,
+    habitRecordApi, NotificationConfig as NotificationConfigType,
     sharedHabitApi
 } from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
@@ -23,6 +24,8 @@ import {AuthService} from "@/services/auth";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
+import NotificationConfigComponent from "@/components/NotificationConfig";
+
 
 const {width} = Dimensions.get('window');
 
@@ -48,6 +51,9 @@ const HabitDetailsScreen = () => {
 
     const [currentUser, setCurrentUser] = useState<ApiAccountRead | null>(null);
 
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+
     useEffect(() => {
         const getCurrentUser = async () => {
             try {
@@ -66,16 +72,13 @@ const HabitDetailsScreen = () => {
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
         && habitDetail.progressComputation.dailyGoal === 1;
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchData();
-        }, [habitUuid])
-    );
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             const habitData = await habitApi.getHabitByUuid(habitUuid);
             setHabitDetail(habitData);
+            setNotificationsEnabled((habitData.notificationFrequency !== null)
+                && (habitData.notificationFrequency.rules !== null) &&
+                habitData.notificationFrequency.rules.length > 0)
             const allSharedHabits = await sharedHabitApi.getAllUserSharedHabits();
             const filteredSharedHabits = allSharedHabits.filter(sh => sh.habits.map(h => h.uuid).includes(habitUuid));
             setSharedHabits(filteredSharedHabits);
@@ -95,7 +98,13 @@ const HabitDetailsScreen = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [habitUuid]);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [fetchData])
+    );
 
     const formatFrequency = (progressComputation: ApiComputationReadWrite) => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
@@ -136,10 +145,15 @@ const HabitDetailsScreen = () => {
 
     const createNewSharedHabit = async () => {
         try {
+            if (!habitDetail?.name || !habitDetail?.progressComputation) {
+                alert('Error', 'Habit details not available');
+                return;
+            }
+
             const response = await sharedHabitApi.createSharedHabit({
                 habitUuid: habitUuid,
-                title: habitDetail?.name,
-                progressComputation: habitDetail?.progressComputation,
+                title: habitDetail.name,
+                progressComputation: habitDetail.progressComputation,
             });
 
             router.push(`/share/${response.shareCode}`);
@@ -153,10 +167,6 @@ const HabitDetailsScreen = () => {
         await Clipboard.setStringAsync(`${UI_BASE_URL}/share/${sharedHabit.shareCode}`);
     };
 
-    const handleShareAgain = () => {
-        setShowShareModal(false);
-        createNewSharedHabit();
-    };
 
     const handleCancel = () => {
         setShowShareModal(false);
@@ -197,6 +207,11 @@ const HabitDetailsScreen = () => {
     );
 
     const handleDeleteHabit = () => {
+        if (!habitDetail?.uuid) {
+            alert('Error', 'Habit details not available');
+            return;
+        }
+
         alert(
             'Delete Habit',
             'Are you sure you want to delete this habit? This action cannot be undone.',
@@ -210,8 +225,8 @@ const HabitDetailsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await habitApi.deleteHabit(habitDetail.uuid);
-                            router.push(`/habits/`);
+                            await habitApi.deleteHabit(habitDetail!.uuid);
+                            router.push(`/(tabs)/habits` as any);
                         } catch (error) {
                             console.error('Error deleting habit:', error);
                             alert('Error', 'Failed to delete habit');
@@ -236,7 +251,7 @@ const HabitDetailsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await sharedHabitApi.leaveSharedHabit(sharedHabits[0].shareCode, habitUuid);
+                            await sharedHabitApi.leaveSharedHabit(sharedHabits[0].shareCode);
                             await fetchData();
                         } catch (error) {
                             console.error('Error leaving shared habit:', error);
@@ -282,6 +297,35 @@ const HabitDetailsScreen = () => {
         router.push(`/share/${sharedHabits[0].shareCode}?edit=true`);
     }
 
+    const handleNotificationPress = () => {
+        setShowNotificationModal(true);
+    };
+
+    const handleCloseNotificationModal = (notificationConfig: NotificationConfigType) => {
+        setShowNotificationModal(false);
+        setNotificationsEnabled(notificationConfig.rules.length >0);
+        setHabitDetail(prev => prev ? { ...prev, notificationFrequency: notificationConfig } : prev);
+    }
+
+    const NotificationModal = () => (
+        <Modal
+            visible={showNotificationModal}
+            transparent={true}
+            animationType="fade"
+        >
+            <TouchableOpacity
+                style={styles.modalOverlay}
+                activeOpacity={1}
+            >
+                <NotificationConfigComponent
+                    habitUuid={habitDetail!.uuid}
+                    currentConfig={habitDetail!.notificationFrequency}
+                    onModalClose={handleCloseNotificationModal}
+                />
+            </TouchableOpacity>
+        </Modal>
+    );
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -294,14 +338,33 @@ const HabitDetailsScreen = () => {
         <ScrollView style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <View style={styles.headerText}>
-                    <Text style={styles.habitName}>{habitDetail?.name}</Text>
-                    <Text style={styles.ownerName}>by {habitDetail?.account?.displayName}</Text>
-                    {isChallenge && (
-                        <View style={styles.challengeBadge}>
-                            <MaterialCommunityIcons name="trophy" size={16} color="#FFD700"/>
-                            <Text style={styles.challengeText}>Challenge</Text>
-                        </View>
+                <View style={styles.headerContent}>
+                    <View style={styles.headerText}>
+                        <Text style={styles.habitName}>{habitDetail?.name}</Text>
+                        <Text style={styles.ownerName}>by {habitDetail?.account?.displayName}</Text>
+                        {isChallenge && (
+                            <View style={styles.challengeBadge}>
+                                <MaterialCommunityIcons name="trophy" size={16} color="#FFD700"/>
+                                <Text style={styles.challengeText}>Challenge</Text>
+                            </View>
+                        )}
+                    </View>
+
+                    {/* Notification Button */}
+                    {isOwnHabit === "true" && (
+                        <TouchableOpacity
+                            style={styles.notificationButton}
+                            onPress={handleNotificationPress}
+                        >
+                            <MaterialCommunityIcons
+                                name={"bell-outline"}
+                                size={24}
+                                color={theme.textSecondary}
+                            />
+                            {notificationsEnabled && (
+                                <View style={styles.notificationIndicator}/>
+                            )}
+                        </TouchableOpacity>
                     )}
                 </View>
             </View>
@@ -323,11 +386,11 @@ const HabitDetailsScreen = () => {
 
                             <View style={styles.progressDetails}>
 
-                                {isCustomFrequency(habitDetail.progressComputation) && (
+                                {habitDetail?.progressComputation && isCustomFrequency(habitDetail.progressComputation) && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="calendar-clock" size={20} color="#FF9800"/>
                                         <Text style={styles.progressDetailText}>
-                                            {formatFrequency(habitDetail?.progressComputation)}
+                                            {habitDetail.progressComputation && formatFrequency(habitDetail.progressComputation)}
                                         </Text>
                                     </View>
                                 )}
@@ -336,7 +399,7 @@ const HabitDetailsScreen = () => {
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
-                                            {getFrequencyTypeText(habitDetail?.progressComputation)} Goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
+                                            {habitDetail.progressComputation && getFrequencyTypeText(habitDetail.progressComputation)} Goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
                                         </Text>
                                     </View>
                                 )}
@@ -426,6 +489,7 @@ const HabitDetailsScreen = () => {
 
             {/* Modals */}
             <ShareHabitModal/>
+            <NotificationModal/>
         </ScrollView>
     );
 };
@@ -443,12 +507,18 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
 
     header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: theme.text,
         marginBottom: 13,
         marginTop: 16,
-        paddingLeft: 16,
+        paddingHorizontal: 16,
+    },
+    headerContent: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        paddingRight: 8,
+    },
+    headerText: {
+        flex: 1,
     },
 
     habitName: {
@@ -800,6 +870,52 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: '#007AFF',
         fontSize: 16,
         fontWeight: '600',
+    },
+    notificationModalContent: {
+        backgroundColor: theme.surfaceTertiary,
+        borderRadius: 12,
+        padding: 20,
+        width: '90%',
+        maxWidth: 400,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    closeButton: {
+        padding: 8,
+    },
+    modalPlaceholder: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex: 1,
+    },
+    placeholderText: {
+        fontSize: 16,
+        color: theme.text,
+        textAlign: 'center',
+        marginTop: 8,
+    },
+    placeholderSubtext: {
+        fontSize: 14,
+        color: theme.textSecondary,
+        textAlign: 'center',
+        marginTop: 4,
+    },
+    notificationButton: {
+        padding: 8,
+        position: 'relative',
+    },
+    notificationIndicator: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#FF9800',
     },
 }));
 
