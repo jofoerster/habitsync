@@ -3,7 +3,7 @@ import {ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View,
 import {useAuth} from '@/context/AuthContext';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import {authApi, SupportedOIDCIssuer, SupportedOIDCIssuers} from '@/services/api';
+import {authApi, SupportedOIDCIssuer, LoginOptions} from '@/services/api';
 import UsernamePasswordModal from '../components/UsernamePasswordModal';
 import {capitalizeFirstLetter} from "@/util/util";
 import alert from "@/services/alert";
@@ -18,7 +18,7 @@ const LoginScreen = () => {
     const {loginWithOAuth2Provider, loginWithUsernamePassword, authState} = useAuth();
     const {redirectPath} = useLocalSearchParams<{ redirectPath?: string }>();
     const router = useRouter();
-    const [loginMethods, setLoginMethods] = useState<SupportedOIDCIssuers | null>(null);
+    const [loginMethods, setLoginMethods] = useState<LoginOptions | null>(null);
     const [loadingMethods, setLoadingMethods] = useState(true);
     const [showUsernamePasswordModal, setShowUsernamePasswordModal] = useState(false);
 
@@ -36,7 +36,7 @@ const LoginScreen = () => {
 
     const fetchLoginMethods = async () => {
         try {
-            const methods = await authApi.getSupportedOIDCIssuers();
+            const methods = await authApi.getLoginOptions();
             setLoginMethods(methods);
         } catch (error) {
             console.error('Failed to fetch login methods:', error);
@@ -131,6 +131,12 @@ const LoginScreen = () => {
             <View style={styles.titleContainer}>
                 <Text style={styles.title}>Track and share your habits</Text>
             </View>
+
+            {loginMethods?.loginScreenText && loginMethods?.loginScreenText !== "" && (
+                <View style={styles.customTextContainer}>
+                    <Text style={styles.subtitle}>{loginMethods?.loginScreenText}</Text>
+                </View>
+            )}
 
             {currentError && (
                 <View style={styles.errorContainer}>
@@ -242,7 +248,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     logoContainer: {
         alignItems: 'center',
-        marginBottom: 40,
+        marginBottom: 8,
     },
     logo: {
         width: 80,
@@ -256,17 +262,26 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginTop: 10,
     },
     titleContainer: {
+        marginBottom: 15,
+    },
+    customTextContainer: {
         marginBottom: 30,
+        maxWidth: 800,
+        alignSelf: 'center',
+        borderColor: theme.surfaceTertiary,
+        borderWidth: 3,
+        padding: 8,
+        borderRadius: 6,
     },
     title: {
-        fontSize: 24,
+        fontSize: 20,
         fontWeight: 'bold',
         marginBottom: 10,
         textAlign: 'center',
         color: theme.text,
     },
     subtitle: {
-        fontSize: 16,
+        fontSize: 12,
         color: theme.textSecondary,
         textAlign: 'center',
         lineHeight: 24,

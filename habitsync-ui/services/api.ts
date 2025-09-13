@@ -171,9 +171,10 @@ export interface SupportedOIDCIssuer {
     scopes?: string[];
 }
 
-export interface SupportedOIDCIssuers {
+export interface LoginOptions {
     supportedIssuers: SupportedOIDCIssuer[];
     allowBasicAuth: boolean;
+    loginScreenText?: string;
 }
 
 export interface JWTTokenPair {
@@ -541,8 +542,8 @@ export const authApi = {
         return response.json();
     },
 
-    getSupportedOIDCIssuers: async (): Promise<SupportedOIDCIssuers> => {
-        const response = await fetch(`${BACKEND_BASE_URL}/auth/supported-issuers`, {
+    getLoginOptions: async (): Promise<LoginOptions> => {
+        const response = await fetch(`${BACKEND_BASE_URL}/auth/login-options`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',

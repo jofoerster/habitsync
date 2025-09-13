@@ -1,10 +1,11 @@
 package de.jofoerster.habitsync.config;
 
 import de.jofoerster.habitsync.dto.SupportedIssuerDTO;
-import de.jofoerster.habitsync.dto.SupportedIssuersDTO;
+import de.jofoerster.habitsync.dto.LoginOptionsDTO;
 import lombok.Data;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -20,6 +21,9 @@ public class SecurityProperties {
 
     private Map<String, String> basicAuthUsers;
 
+    @Value("${login-screen.text:}")
+    private String loginScreenText;
+
     @Getter
     private Map<String, IssuerConfig> issuers = new HashMap<>();
 
@@ -29,8 +33,8 @@ public class SecurityProperties {
                 .toList();
     }
 
-    public SupportedIssuersDTO getDTO() {
-        SupportedIssuersDTO supportedIssuersDTO = SupportedIssuersDTO.builder()
+    public LoginOptionsDTO getDTO() {
+        LoginOptionsDTO loginOptionsDTO = LoginOptionsDTO.builder()
                 .supportedIssuers(
                         issuers.entrySet().stream()
                                 .map(entry -> SupportedIssuerDTO.builder()
@@ -43,9 +47,10 @@ public class SecurityProperties {
                                 .toList()
                 )
                 .allowBasicAuth(basicAuthUsers != null && !basicAuthUsers.isEmpty())
+                .loginScreenText(loginScreenText)
                 .build();
-        log.info("Returning supported issuers: {}", supportedIssuersDTO);
-        return supportedIssuersDTO;
+        log.info("Returning supported issuers: {}", loginOptionsDTO);
+        return loginOptionsDTO;
     }
 
 
