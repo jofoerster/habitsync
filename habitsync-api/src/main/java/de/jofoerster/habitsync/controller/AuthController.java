@@ -1,6 +1,6 @@
 package de.jofoerster.habitsync.controller;
 
-import de.jofoerster.habitsync.dto.SupportedIssuersDTO;
+import de.jofoerster.habitsync.dto.LoginOptionsDTO;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.auth.TokenService;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +28,10 @@ public class AuthController {
     private final AccountService accountService;
     private final TokenService tokenService;
 
-    @GetMapping("/supported-issuers")
-    public ResponseEntity<SupportedIssuersDTO> getSupportedIssuers() {
-        SupportedIssuersDTO supportedIssuers = accountService.getSupportedIssuers();
-        return ResponseEntity.ok(supportedIssuers);
+    @GetMapping("/login-options")
+    public ResponseEntity<LoginOptionsDTO> getLoginOptions() {
+        LoginOptionsDTO loginOptionsDTO = accountService.getLoginOptions();
+        return ResponseEntity.ok(loginOptionsDTO);
     }
 
     @GetMapping("/status")

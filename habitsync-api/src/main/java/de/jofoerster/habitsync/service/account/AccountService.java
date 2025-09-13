@@ -2,7 +2,7 @@ package de.jofoerster.habitsync.service.account;
 
 import de.jofoerster.habitsync.config.SecurityProperties;
 import de.jofoerster.habitsync.dto.AccountSettingsReadWriteDTO;
-import de.jofoerster.habitsync.dto.SupportedIssuersDTO;
+import de.jofoerster.habitsync.dto.LoginOptionsDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.account.AccountStatus;
 import de.jofoerster.habitsync.repository.account.AccountRepository;
@@ -159,14 +159,15 @@ public class AccountService {
 
     public Account updateAccount(Account account) {
         log.info("Updating account {}", getCurrentAccountUsername());
-        if (account.isSendNotificationsViaEmail() ||
-                (account.getAppriseTargetUrls() != null && !account.getAppriseTargetUrls().isEmpty())) {
-            log.info("Scheduling notification job for account {}", account.getAuthenticationId());
-            notificationService.scheduleNotificationJob(account);
-        } else {
-            log.info("Removing notification job for account {}", account.getAuthenticationId());
-            notificationService.removeNotificationJob(account);
-        }
+        // TODO remove not needed any more with new notification system
+//        if (account.isSendNotificationsViaEmail() ||
+//                (account.getAppriseTargetUrls() != null && !account.getAppriseTargetUrls().isEmpty())) {
+//            log.info("Scheduling notification job for account {}", account.getAuthenticationId());
+//            notificationService.scheduleNotificationJob(account);
+//        } else {
+//            log.info("Removing notification job for account {}", account.getAuthenticationId());
+//            notificationService.removeNotificationJob(account);
+//        }
         return accountRepository.save(account);
     }
 
@@ -216,8 +217,8 @@ public class AccountService {
         return this.getProfileSettings(account);
     }
 
-    public SupportedIssuersDTO getSupportedIssuers() {
-        log.info("Getting supported issuers");
+    public LoginOptionsDTO getLoginOptions() {
+        log.info("Getting login options");
         return securityProperties.getDTO();
     }
 

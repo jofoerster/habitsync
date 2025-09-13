@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View} from 'react-native';
+import {Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {
@@ -8,11 +8,13 @@ import {
     NotificationConfig as NotificationConfigType,
     NotificationConfigRule,
     OvertakeNotificationConfigRule,
+    serverConfigApi,
     ThresholdNotificationConfigRule
 } from "@/services/api";
 import FrequencyPicker from "./FrequencyPicker";
 import alert from "@/services/alert";
 import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 
 const NOTIFICATION_TYPES = [
     {
@@ -38,13 +40,13 @@ const NOTIFICATION_TYPES = [
 type NotificationConfigProps = {
     habitUuid: string;
     currentConfig: NotificationConfigType | null;
-    showAppriseField: boolean;
+    onModalClose: (notificationConfig: NotificationConfigType) => void;
 };
 
 const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                                                    habitUuid,
                                                                    currentConfig,
-                                                                   showAppriseField,
+                                                                   onModalClose
                                                                }) => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
@@ -52,6 +54,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
     const [loading, setLoading] = useState(false);
     const [appriseUrl, setAppriseUrl] = useState(currentConfig?.appriseTarget || '');
     const [rules, setRules] = useState<NotificationConfigRule[]>(currentConfig?.rules || []);
+    const [config, setConfig] = useState<NotificationConfigType | null>(currentConfig);
 
     // Modal states
     const [helpModalVisible, setHelpModalVisible] = useState(false);
@@ -63,6 +66,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
     const [tempFixedConfig, setTempFixedConfig] = useState<Partial<FixedTimeNotificationConfigRule>>({});
     const [tempThresholdConfig, setTempThresholdConfig] = useState<Partial<ThresholdNotificationConfigRule>>({});
 
+    const [showAppriseField, setShowAppriseField] = useState(false);
+
     useEffect(() => {
         if (currentConfig) {
             setAppriseUrl(currentConfig.appriseTarget || '');
@@ -70,11 +75,19 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         }
     }, [currentConfig]);
 
+    useEffect(() => {
+        const loadConfig = async () => {
+            const config = await serverConfigApi.getServerConfig();
+            setShowAppriseField(config.appriseActive);
+        }
+        loadConfig();
+    }, []);
+
     const getRuleByType = (type: 'fixed' | 'threshold' | 'overtake') => {
         return rules.find(rule => rule.type === type);
     };
 
-    const updateRule = (updatedRule: NotificationConfigRule) : NotificationConfigRule[] => {
+    const updateRule = (updatedRule: NotificationConfigRule): NotificationConfigRule[] => {
         const newRules = rules.filter(rule => rule.type !== updatedRule.type);
         if (updatedRule.enabled) {
             newRules.push(updatedRule);
@@ -169,7 +182,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         await saveConfig(rules || []);
     };
 
-    const saveConfig = async (rules : NotificationConfigRule[]) => {
+    const saveConfig = async (rules: NotificationConfigRule[]) => {
         try {
             setLoading(true);
 
@@ -177,23 +190,11 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 appriseTarget: appriseUrl.trim() || undefined,
                 rules: rules.filter(rule => rule.enabled)
             };
+            setConfig(config);
 
             await notificationApi.updateNotificationForHabit(habitUuid, config);
         } catch {
             alert('Error', 'Failed to update notification settings');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const deleteAllNotifications = async () => {
-        try {
-            setLoading(true);
-            await notificationApi.deleteNotificationForHabit(habitUuid);
-            setRules([]);
-            setAppriseUrl('');
-        } catch {
-            alert('Error', 'Failed to delete notification settings');
         } finally {
             setLoading(false);
         }
@@ -226,7 +227,17 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
     return (
         <View style={styles.container}>
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+
             <Text style={styles.title}>Notification Settings</Text>
+
+            <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => onModalClose(config)}
+            >
+                <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
+            </TouchableOpacity>
+            </View>
 
             {/* Apprise URL Field */}
             {showAppriseField && (
@@ -616,6 +627,9 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     cancelButton: {
         backgroundColor: theme.error,
+    },
+    closeButton: {
+        padding: 8,
     },
 }));
 

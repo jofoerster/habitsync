@@ -115,8 +115,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const [notificationFrequency, setNotificationFrequency] = useState<NotificationConfigType | null>(null);
 
-        const [showAppriseField, setShowAppriseField] = useState(false);
-
         const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
 
         const getFrequencyDisplay = () => {
@@ -235,14 +233,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
             readHabit();
         }, [habit?.uuid, configType, navigation]);
-
-        useEffect(() => {
-            const loadConfig = async () => {
-                const config = await serverConfigApi.getServerConfig();
-                setShowAppriseField(config.appriseActive);
-            }
-            loadConfig();
-        }, []);
 
         const switchNumericalBooleanHabit = (value: boolean) => {
             setIsNumericalHabit(value);
@@ -739,14 +729,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     )}
                 </View>
-
-                {configType !== ConfigType.CHALLENGE && habit?.uuid && (
-                    <NotificationConfigComponent
-                        habitUuid={habit.uuid}
-                        currentConfig={notificationFrequency}
-                        showAppriseField={showAppriseField}
-                    />
-                )}
 
                 {
                     showSaveButton && (
