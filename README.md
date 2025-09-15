@@ -1,31 +1,72 @@
+<div align="center">
+  <img src="images/logo-transparent.png" alt="HabitSync Logo" width="200"/>
+</div>
+
+<div align="center">
+
 # HabitSync
 
-A simple self hostable habit tracking application with social features, allowing users to track personal habits and participate in
-shared challenges with others.
+</div>
 
-Demo Server available under: [https://demo.habitsync.de](https://demo.habitsync.de) (very limited resources)
+<div align="center">
+  A powerful, self-hostable habit tracking platform with social features
+  
+  Transform your daily routines into lasting habits while connecting with friends through shared challenges and progress tracking.
+  
+   **Try the Demo: [https://demo.habitsync.de](https://demo.habitsync.de)** 
+  
+</div>
 
-<div>
+---
+
+<div align="center">
   <img src="images/1.gif" width="30%" style="margin: 5px;">
   <img src="images/2.gif" width="30%" style="margin: 5px;">
   <img src="images/3.gif" width="30%" style="margin: 5px;">
 </div>
-<div>
+<div align="center">
   <img src="images/4.gif" width="30%" style="margin: 5px;">
   <img src="images/5.gif" width="30%" style="margin: 5px;">
   <img src="images/6.gif" width="30%" style="margin: 5px;">
 </div>
 
-## Features
+---
 
-- Simple personal habit tracking with goals and progress visualization
-- Shared habits to compare progress with friends (monthly medals for top 3)
-- One monthly challenge to compete, including leaderboard and voting for the next challenge
-- SSO OIDC authentication (optional: require confirmation for new users, multiple issuers possible)
-- Email/Apprise notifications as habit reminders
-- Dark/Light mode support
-- Simple docker setup for deployment
-- React Native frontend, web app installable as pwa (mobile apps coming soon)
+## ✨ Key Features
+
+### 🚀 **Simple & Intuitive**
+- **Clean, user-friendly interface** designed like a "normal" habit tracker for daily use and quick habit logging
+- **Progressive Web App (PWA)** install directly from your browser
+- **📱 Mobile app builds coming soon**
+
+### 🎯 **Extensive Goal Configuration**
+- **Flexible habit tracking** with customizable goals and frequencies
+- **Variety of habit types**: daily, weekly, monthly, or custom intervals
+
+### 👥 **Social & Sharing Features**
+- **Shared habits** to track progress with friends and family
+- **Monthly challenges** with community voting and leaderboards
+- **Achievement system** with medals for top performers
+- **Progress comparison** to stay motivated together
+
+### 🔐 **Flexible Authentication, build for sharing**
+- **SSO OIDC integration** via public clients (PKCE flow)
+- **Multi-issuer support** (combine personal sso server with public provider for external users)
+- **Optional user approval** require approval for new users (per issuer)
+
+### 🔔 **Flexible Notification System**
+- **Apprise integration** - send notifications anywhere (Discord, Email, Signal, Home Assistant, and 80+ services)
+- **Custom notification schedules** configure days and times for reminders
+- **Smart triggers** with customizable conditions:
+    - ✅ **Scheduled reminders** if you haven't logged your habit
+    - 📈 **Threshold alerts** when you fall below a certain percentage
+   - 🏆 **Overtake notifications** when friends surpass your progress
+
+### 🌓 **Modern Experience**
+- **Dark/Light mode** support for comfortable viewing
+- **Responsive design** that works on all devices
+- **Easy Docker deployment** for quick setup
+- **API-first architecture** swagger docs available, ready for external integrations
 
 ## Deployment
 
@@ -131,11 +172,12 @@ For a complete example, see `examples/docker-compose-apprise.yml`.
 The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
 optionally can be mounted as a volume in production and can be backed up by copying the file.
 You can also connect to the database using a database client on port `9092`.
-To use a different database (not tested), set the appropriate Spring datasource environment variables.
+Support for PostgreSQL is planned and coming soon.
 
 ## API Documentation
 
-There is currently no official API documentation. The API is incomplete and may change.
+The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
+The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
 
 ## Contributing
 
