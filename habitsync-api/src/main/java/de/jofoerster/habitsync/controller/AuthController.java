@@ -98,7 +98,8 @@ public class AuthController {
     public RedirectView mobileCallback(HttpServletRequest request) {
         log.info("Mobile callback received with parameters: {}", request.getQueryString());
 
-        StringBuilder deepLink = new StringBuilder("habitsync://auth-callback");
+        // Build the mobile deep link with all query parameters (using 3-slash format like Immich)
+        StringBuilder deepLink = new StringBuilder("habitsync:///auth-callback");
 
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
