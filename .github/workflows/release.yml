@@ -16,37 +16,37 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up JDK 21
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-    
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: 'habitsync-ui/package-lock.json'
-    
-    - name: Install UI dependencies
-      run: |
-        cd habitsync-ui
-        npm ci
+      - uses: actions/checkout@v4
 
-    - name: Cache Maven packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.m2
-        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-        restore-keys: ${{ runner.os }}-m2
-    
-    - name: Run API tests
-      run: |
-        cd habitsync-api
-        mvn clean test
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'habitsync-ui/package-lock.json'
+
+      - name: Install UI dependencies
+        run: |
+          cd habitsync-ui
+          npm ci
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run API tests
+        run: |
+          cd habitsync-api
+          mvn clean test
 
   build-and-push:
     needs: test
@@ -56,143 +56,92 @@ jobs:
       packages: write
 
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Validate and set version
-      id: version
-      run: |
-        VERSION="${{ github.event.inputs.version }}"
-        
-        # Validate semantic version format
-        if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-          echo "ERROR: Invalid version format. Use semantic versioning (e.g., 1.2.3)"
-          exit 1
-        fi
-        
-        # Check if tag already exists
-        if git tag -l | grep -q "^v$VERSION$"; then
-          echo "ERROR: Tag v$VERSION already exists"
-          exit 1
-        fi
-        
-        echo "Version: v$VERSION"
-        echo "version=v$VERSION" >> $GITHUB_OUTPUT
-        echo "version_number=$VERSION" >> $GITHUB_OUTPUT
-
-    - name: Create and push tag
-      run: |
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git tag -a "${{ steps.version.outputs.version }}" -m "Release ${{ steps.version.outputs.version }}"
-        git push origin "${{ steps.version.outputs.version }}"
-
-    - name: Log in to Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ${{ env.REGISTRY }}
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Extract metadata
-      id: meta
-      uses: docker/metadata-action@v5
-      with:
-        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-        tags: |
-          type=raw,value=latest
-          type=raw,value=${{ steps.version.outputs.version_number }}
-
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v5
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-    
-    - name: Generate changelog
-      id: changelog
-      run: |
-        LATEST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
-        if [ -n "$LATEST_TAG" ]; then
-          CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | head -20)
-        else
-          CHANGELOG=$(git log --oneline --pretty=format:"- %s" | head -20)
-        fi
-        
-        {
-          echo 'changelog<<EOF'
-          echo "$CHANGELOG"
-          echo 'EOF'
-        } >> $GITHUB_OUTPUT
-
-    - name: Create GitHub Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: ${{ steps.version.outputs.version }}
-        name: Release ${{ steps.version.outputs.version }}
-        body: |
-          ## Changes
-          ${{ steps.changelog.outputs.changelog }}
+      - name: Validate and set version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
           
-          ## Docker Image
-          ```bash
-          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_number }}
-          ```
-        draft: false
-        prerelease: false
-        token: ${{ secrets.GITHUB_TOKEN }}
+          # Validate semantic version format
+          if ! [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "ERROR: Invalid version format. Use semantic versioning (e.g., 1.2.3)"
+            exit 1
+          fi
+          
+          # Check if tag already exists
+          if git tag -l | grep -q "^v$VERSION$"; then
+            echo "ERROR: Tag v$VERSION already exists"
+            exit 1
+          fi
+          
+          echo "Version: v$VERSION"
+          echo "version=v$VERSION" >> $GITHUB_OUTPUT
+          echo "version_number=$VERSION" >> $GITHUB_OUTPUT
 
-  build-android:
-    needs: test
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.version }}" -m "Release ${{ steps.version.outputs.version }}"
+          git push origin "${{ steps.version.outputs.version }}"
 
-    steps:
-    - uses: actions/checkout@v4
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-        cache-dependency-path: 'habitsync-ui/package-lock.json'
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.version.outputs.version_number }}
 
-    - name: Install dependencies and EAS CLI
-      run: |
-        cd habitsync-ui
-        npm ci
-        npm install -g eas-cli
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
-    - name: Update app version
-      run: |
-        cd habitsync-ui
-        sed -i 's/"version": ".*"/"version": "${{ github.event.inputs.version }}"/' app.json
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | head -20)
+          else
+            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | head -20)
+          fi
+          
+          {
+            echo 'changelog<<EOF'
+            echo "$CHANGELOG"
+            echo 'EOF'
+          } >> $GITHUB_OUTPUT
 
-    - name: Build and download Android APK
-      run: |
-        cd habitsync-ui
-        # Create minimal EAS config if it doesn't exist
-        echo '{"build":{"production":{"android":{"buildType":"apk"}}}}' > eas.json
-        
-        # Build and wait for completion
-        eas build --platform android --profile production --non-interactive --wait
-        
-        # Download the latest APK
-        eas build:download --platform android --profile production
-        
-        # Rename APK
-        mv *.apk "habitsync-${{ github.event.inputs.version }}.apk"
-      env:
-        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-
-    - name: Upload APK to Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ github.event.inputs.version }}
-        files: habitsync-ui/habitsync-${{ github.event.inputs.version }}.apk
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: |
+            ## Changes
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ## Docker Image
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version_number }}
+            ```
+          draft: false
+          prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
