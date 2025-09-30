@@ -221,19 +221,19 @@ export interface ServerConfig {
 // User API
 export const userApi = {
     getUserInfo: async (): Promise<ApiAccountRead> => {
-        const response = await authenticatedFetch(`/user/info`);
+        const response = await authenticatedFetch(`/api/user/info`);
         if (!response.ok) throw new Error('Failed to fetch user info');
         return response.json();
     },
 
     getUserSettings: async (): Promise<ApiAccountSettingsReadWrite> => {
-        const response = await authenticatedFetch(`/user/settings`);
+        const response = await authenticatedFetch(`/api/user/settings`);
         if (!response.ok) throw new Error('Failed to fetch user settings');
         return response.json();
     },
 
     updateUserSettings: async (settings: ApiAccountSettingsReadWrite): Promise<ApiAccountSettingsReadWrite> => {
-        const response = await authenticatedFetch(`/user/settings`, {
+        const response = await authenticatedFetch(`/api/user/settings`, {
             method: 'PUT',
             body: JSON.stringify(settings),
         });
@@ -242,13 +242,13 @@ export const userApi = {
     },
 
     getUnapprovedUsers: async (): Promise<ApiAccountRead[]> => {
-        const response = await authenticatedFetch(`/user/unapproved-accounts`);
+        const response = await authenticatedFetch(`/api/user/unapproved-accounts`);
         if (!response.ok) throw new Error('Failed to fetch unapproved users');
         return response.json();
     },
 
     approveUser: async (accountUuid: string): Promise<void> => {
-        const response = await authenticatedFetch(`/user/approve-account/${accountUuid}`, {
+        const response = await authenticatedFetch(`/api/user/approve-account/${accountUuid}`, {
             method: 'PUT',
         });
         if (!response.ok) throw new Error('Failed to approve user');
@@ -259,19 +259,19 @@ export const userApi = {
 // Habit API
 export const habitApi = {
     getUserHabits: async (): Promise<ApiHabitRead[]> => {
-        const response = await authenticatedFetch(`/habit/list`);
+        const response = await authenticatedFetch(`/api/habit/list`);
         if (!response.ok) throw new Error('Failed to fetch habits');
         return response.json();
     },
 
     getHabitByUuid: async (uuid: string): Promise<ApiHabitRead> => {
-        const response = await authenticatedFetch(`/habit/${uuid}`);
+        const response = await authenticatedFetch(`/api/habit/${uuid}`);
         if (!response.ok) throw new Error('Failed to fetch habit');
         return response.json();
     },
 
     createHabit: async (habit: ApiHabitWrite): Promise<ApiHabitRead> => {
-        const response = await authenticatedFetch(`/habit`, {
+        const response = await authenticatedFetch(`/api/habit`, {
             method: 'POST',
             body: JSON.stringify(habit),
         });
@@ -280,7 +280,7 @@ export const habitApi = {
     },
 
     updateHabit: async (habit: ApiHabitWrite): Promise<ApiHabitRead> => {
-        const response = await authenticatedFetch(`/habit/${habit.uuid}`, {
+        const response = await authenticatedFetch(`/api/habit/${habit.uuid}`, {
             method: 'PUT',
             body: JSON.stringify(habit),
         });
@@ -289,33 +289,33 @@ export const habitApi = {
     },
 
     deleteHabit: async (uuid: string): Promise<void> => {
-        const response = await authenticatedFetch(`/habit/${uuid}`, {
+        const response = await authenticatedFetch(`/api/habit/${uuid}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete habit');
     },
 
     getConnectedHabits: async (uuid: string): Promise<ApiHabitRead[]> => {
-        const response = await authenticatedFetch(`/habit/connected-habits/${uuid}`);
+        const response = await authenticatedFetch(`/api/habit/connected-habits/${uuid}`);
         if (!response.ok) throw new Error('Failed to fetch connected habits');
         return response.json();
     },
 
     getConnectedHabitCount: async (uuid: string): Promise<number> => {
-        const response = await authenticatedFetch(`/habit/connected-habits/${uuid}/count`)
+        const response = await authenticatedFetch(`/api/habit/connected-habits/${uuid}/count`)
         if (!response.ok) throw new Error('Failed to fetch connected habits count');
         return response.json();
     },
 
     moveHabitUp: async (uuid: string): Promise<void> => {
-        const response = await authenticatedFetch(`/habit/${uuid}/sort-position/move-up`, {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/sort-position/move-up`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to move habit up');
     },
 
     moveHabitDown: async (uuid: string): Promise<void> => {
-        const response = await authenticatedFetch(`/habit/${uuid}/sort-position/move-down`, {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/sort-position/move-down`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to move habit down');
@@ -324,7 +324,7 @@ export const habitApi = {
 
 export const notificationApi = {
     updateNotificationForHabit: async (habitUuid: string, config: NotificationConfig): Promise<void> => {
-        const response = await authenticatedFetch(`/notifications/habit/${habitUuid}`, {
+        const response = await authenticatedFetch(`/api/notifications/habit/${habitUuid}`, {
             method: 'PUT',
             body: JSON.stringify(config),
         });
@@ -332,7 +332,7 @@ export const notificationApi = {
     },
 
     deleteNotificationForHabit: async (habitUuid: string): Promise<void> => {
-        const response = await authenticatedFetch(`/notifications/habit/${habitUuid}`, {
+        const response = await authenticatedFetch(`/api/notifications/habit/${habitUuid}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete notification for habit');
@@ -341,7 +341,7 @@ export const notificationApi = {
 
 export const habitNumberModalApi = {
     addNumber: async (habitUuid: string, number: string): Promise<void> => {
-        const response = await authenticatedFetch(`/habitNumberModalConfig/${habitUuid}/add/${number}`, {
+        const response = await authenticatedFetch(`/api/habitNumberModalConfig/${habitUuid}/add/${number}`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to add number to modal');
@@ -349,7 +349,7 @@ export const habitNumberModalApi = {
     },
 
     removeNumber: async (habitUuid: string, number: string): Promise<void> => {
-        const response = await authenticatedFetch(`/habitNumberModalConfig/${habitUuid}/remove/${number}`, {
+        const response = await authenticatedFetch(`/api/habitNumberModalConfig/${habitUuid}/remove/${number}`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to remove number from modal');
@@ -357,7 +357,7 @@ export const habitNumberModalApi = {
     },
 
     getNumberModal: async (habitUuid: string): Promise<ApiHabitNumberModalConfig> => {
-        const response = await authenticatedFetch(`/habitNumberModalConfig/${habitUuid}`);
+        const response = await authenticatedFetch(`/api/habitNumberModalConfig/${habitUuid}`);
         if (!response.ok) throw new Error('Failed to fetch number modal config');
         return response.json();
     }
@@ -366,7 +366,7 @@ export const habitNumberModalApi = {
 // Habit Record API
 export const habitRecordApi = {
     getRecords: async (habitUuid: string, epochDayFrom?: number, epochDayTo?: number): Promise<ApiHabitRecordRead[]> => {
-        let url = `/record/${habitUuid}`;
+        let url = `/api/record/${habitUuid}`;
         if (epochDayFrom !== undefined || epochDayTo !== undefined) {
             url += '?';
             if (epochDayFrom !== undefined) url += `epochDayFrom=${epochDayFrom}`;
@@ -379,7 +379,7 @@ export const habitRecordApi = {
     },
 
     createRecord: async (habitUuid: string, record: ApiHabitRecordWrite): Promise<ApiHabitRecordRead> => {
-        const response = await authenticatedFetch(`/record/${habitUuid}`, {
+        const response = await authenticatedFetch(`/api/record/${habitUuid}`, {
             method: 'POST',
             body: JSON.stringify(record),
         });
@@ -391,19 +391,19 @@ export const habitRecordApi = {
 // Shared Habit API
 export const sharedHabitApi = {
     getAllUserSharedHabits: async (): Promise<ApiSharedHabitRead[]> => {
-        const response = await authenticatedFetch(`/shared-habit/list`);
+        const response = await authenticatedFetch(`/api/shared-habit/list`);
         if (!response.ok) throw new Error('Failed to fetch shared habits');
         return response.json();
     },
 
     getSharedHabitByShareCode: async (shareCode: string): Promise<ApiSharedHabitRead> => {
-        const response = await authenticatedFetch(`/shared-habit/${shareCode}`);
+        const response = await authenticatedFetch(`/api/shared-habit/${shareCode}`);
         if (!response.ok) throw new Error('Failed to fetch shared habit');
         return response.json();
     },
 
     createSharedHabit: async (sharedHabit: ApiSharedHabitWrite): Promise<ApiSharedHabitRead> => {
-        const response = await authenticatedFetch(`/shared-habit`, {
+        const response = await authenticatedFetch(`/api/shared-habit`, {
             method: 'POST',
             body: JSON.stringify(sharedHabit),
         });
@@ -412,7 +412,7 @@ export const sharedHabitApi = {
     },
 
     updateSharedHabit: async (sharedHabit: ApiSharedHabitWrite, shareCode: string): Promise<ApiSharedHabitRead> => {
-        const response = await authenticatedFetch(`/shared-habit/${shareCode}`, {
+        const response = await authenticatedFetch(`/api/shared-habit/${shareCode}`, {
             method: 'PUT',
             body: JSON.stringify(sharedHabit),
         });
@@ -421,7 +421,7 @@ export const sharedHabitApi = {
     },
 
     deleteSharedHabit: async (sharedHabit: ApiSharedHabitWrite, shareCode: string): Promise<void> => {
-        const response = await authenticatedFetch(`/shared-habit/${shareCode}`, {
+        const response = await authenticatedFetch(`/api/shared-habit/${shareCode}`, {
             method: 'DELETE',
             body: JSON.stringify(sharedHabit),
         });
@@ -430,8 +430,8 @@ export const sharedHabitApi = {
 
     joinSharedHabit: async (shareCode: string, habitUuid?: string): Promise<ApiSharedHabitRead> => {
         const url = habitUuid
-            ? `/shared-habit/join/${shareCode}?habitUuid=${habitUuid}`
-            : `/shared-habit/join/${shareCode}`;
+            ? `/api/shared-habit/join/${shareCode}?habitUuid=${habitUuid}`
+            : `/api/shared-habit/join/${shareCode}`;
 
         const response = await authenticatedFetch(url, {
             method: 'POST',
@@ -442,8 +442,8 @@ export const sharedHabitApi = {
 
     updateLinkToSharedHabit: async (shareCode: string, habitUuid?: string): Promise<ApiSharedHabitRead> => {
         const url = habitUuid
-            ? `/shared-habit/join/${shareCode}?habitUuid=${habitUuid}`
-            : `/shared-habit/join/${shareCode}`;
+            ? `/api/shared-habit/join/${shareCode}?habitUuid=${habitUuid}`
+            : `/api/shared-habit/join/${shareCode}`;
 
         const response = await authenticatedFetch(url, {
             method: 'PUT',
@@ -453,14 +453,14 @@ export const sharedHabitApi = {
     },
 
     leaveSharedHabit: async (shareCode: string): Promise<void> => {
-        const response = await authenticatedFetch(`/shared-habit/leave/${shareCode}`, {
+        const response = await authenticatedFetch(`/api/shared-habit/leave/${shareCode}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to leave shared habit');
     },
 
     getMedalsForSharedHabit: async (shareCode: string): Promise<ApiSharedHabitMedalsRead[]> => {
-        const response = await authenticatedFetch(`/shared-habit/${shareCode}/medals`);
+        const response = await authenticatedFetch(`/api/shared-habit/${shareCode}/medals`);
         if (!response.ok) throw new Error('Failed to fetch medals for shared habit');
         return response.json();
     }
@@ -469,25 +469,25 @@ export const sharedHabitApi = {
 // Challenge API
 export const challengeApi = {
     getCurrentChallengeOverview: async (): Promise<ApiChallengeOverviewRead> => {
-        const response = await authenticatedFetch(`/challenge/overview`);
+        const response = await authenticatedFetch(`/api/challenge/overview`);
         if (!response.ok) throw new Error('Failed to fetch challenge overview');
         return response.json();
     },
 
     getChallengeList: async (): Promise<ApiChallengeRead[]> => {
-        const response = await authenticatedFetch(`/challenge/list`);
+        const response = await authenticatedFetch(`/api/challenge/list`);
         if (!response.ok) throw new Error('Failed to fetch challenges');
         return response.json();
     },
 
     getChallengeById: async (id: number): Promise<ApiChallengeRead> => {
-        const response = await authenticatedFetch(`/challenge/${id}`);
+        const response = await authenticatedFetch(`/api/challenge/${id}`);
         if (!response.ok) throw new Error('Failed to fetch challenge');
         return response.json();
     },
 
     createChallenge: async (challenge: ApiChallengeWrite): Promise<ApiChallengeRead> => {
-        const response = await authenticatedFetch(`/challenge`, {
+        const response = await authenticatedFetch(`/api/challenge`, {
             method: 'POST',
             body: JSON.stringify(challenge),
         });
@@ -496,7 +496,7 @@ export const challengeApi = {
     },
 
     updateChallenge: async (challenge: ApiChallengeWrite): Promise<ApiChallengeRead> => {
-        const response = await authenticatedFetch(`/challenge`, {
+        const response = await authenticatedFetch(`/api/challenge`, {
             method: 'PUT',
             body: JSON.stringify(challenge),
         });
@@ -505,14 +505,14 @@ export const challengeApi = {
     },
 
     deleteChallenge: async (id: number): Promise<void> => {
-        const response = await authenticatedFetch(`/challenge/${id}`, {
+        const response = await authenticatedFetch(`/api/challenge/${id}`, {
             method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete challenge');
     },
 
     proposeChallenge: async (id: number): Promise<ApiChallengeRead> => {
-        const response = await authenticatedFetch(`/challenge/${id}/propose`, {
+        const response = await authenticatedFetch(`/api/challenge/${id}/propose`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to propose challenge');
@@ -520,7 +520,7 @@ export const challengeApi = {
     },
 
     voteOnChallenge: async (id: number, vote: boolean): Promise<ApiChallengeRead> => {
-        const response = await authenticatedFetch(`/challenge/${id}/vote?vote=${vote}`, {
+        const response = await authenticatedFetch(`/api/challenge/${id}/vote?vote=${vote}`, {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to vote on challenge');
@@ -528,7 +528,7 @@ export const challengeApi = {
     },
 
     getChallengeHabit: async (): Promise<ApiHabitRead> => {
-        const response = await authenticatedFetch(`/challenge/challenge-habit`);
+        const response = await authenticatedFetch(`/api/challenge/challenge-habit`);
         if (!response.ok) throw new Error('Failed to fetch habit');
         return response.json();
     },
@@ -538,14 +538,14 @@ export const challengeApi = {
 export const authApi = {
     getUserInfo: async (): Promise<any> => {
         console.log('Fetching user info');
-        const response = await authenticatedFetch(`/auth/status`)
+        const response = await authenticatedFetch(`/api/auth/status`)
         if (!response.ok) throw new Error('Failed to fetch user info');
         return response.json();
     },
 
     getLoginOptions: async (): Promise<LoginOptions> => {
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/auth/login-options`, {
+        const response = await fetch(`${baseUrl}/api/auth/login-options`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -557,7 +557,7 @@ export const authApi = {
 
     getTokenPair: async (accessToken: string): Promise<JWTTokenPair> => {
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/user/refresh-token`, {
+        const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
             },
@@ -568,7 +568,7 @@ export const authApi = {
 
     getTokenPairFromRefreshToken: async (refreshToken: string): Promise<JWTTokenPair> => {
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/auth/refresh-token`, {
+        const response = await fetch(`${baseUrl}/api/auth/refresh-token`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -582,7 +582,7 @@ export const authApi = {
     getTokenPairFromUsernamePassword: async (username: string, password: string): Promise<JWTTokenPair> => {
         const credentials = btoa(`${username}:${password}`);
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/user/refresh-token`, {
+        const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
             headers: {
                 'Authorization': `Basic ${credentials}`,
             }
@@ -594,7 +594,7 @@ export const authApi = {
 
 export const serverConfigApi = {
     getServerConfig: async (): Promise<ServerConfig> => {
-        const response = await authenticatedFetch(`/config`);
+        const response = await authenticatedFetch(`/api/config`);
         if (!response.ok) throw new Error('Failed to fetch server config');
         return response.json();
     }

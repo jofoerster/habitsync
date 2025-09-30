@@ -8,6 +8,8 @@ import {
     Image,
     ScrollView,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -44,13 +46,19 @@ const HostnameScreen = () => {
         if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
             return `https://${trimmed}`;
         }
+        if (trimmed.endsWith('/')) {
+            return trimmed.slice(0, -1);
+        }
+        if (trimmed.endsWith('/api')) {
+            return trimmed.slice(0, -4);
+        }
         return trimmed;
     };
 
     const testConnection = async (url: string): Promise<boolean> => {
         try {
             const normalizedUrl = normalizeUrl(url);
-            const testUrl = normalizedUrl.endsWith('/') ? `${normalizedUrl}actuator/health` : `${normalizedUrl}/actuator/health`;
+            const testUrl = `${normalizedUrl}/actuator/health`;
             
             const response = await fetch(testUrl, {
                 method: 'GET',
@@ -85,7 +93,7 @@ const HostnameScreen = () => {
             if (!connectionTest) {
                 alert(
                     'Connection Failed',
-                    'Unable to connect to the server. Please check the hostname and try again.',
+                    'Unable to connect to the server. Please check the hostname and server health and try again.',
                     [
                         { text: 'Save Anyway', onPress: () => saveHostnameAndContinue(normalizedUrl) },
                         { text: 'Cancel', style: 'cancel' }
@@ -129,71 +137,74 @@ const HostnameScreen = () => {
     };
 
     return (
-        <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-            <View style={styles.logoContainer}>
-                <Image source={require('../assets/images/logo-transparent.png')} style={styles.logo} />
-                <Text style={styles.appName}>HabitSync</Text>
-            </View>
-
-            <View style={styles.titleContainer}>
-                <MaterialCommunityIcons name="server" size={48} color={theme.primary} />
-                <Text style={styles.title}>Configure Server</Text>
-                <Text style={styles.subtitle}>
-                    Please enter the hostname or URL of your HabitSync server to continue.
-                </Text>
-            </View>
-
-            <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Server Hostname or URL</Text>
-                <View style={styles.inputWrapper}>
-                    <MaterialCommunityIcons 
-                        name="server-network" 
-                        size={20} 
-                        color={theme.textSecondary} 
-                        style={styles.inputIcon}
-                    />
-                    <TextInput
-                        style={styles.textInput}
-                        value={hostname}
-                        onChangeText={setHostname}
-                        placeholder="https://example.com/api"
-                        placeholderTextColor={theme.textTertiary}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        keyboardType="url"
-                        returnKeyType="done"
-                        onSubmitEditing={handleSaveHostname}
-                        editable={!isLoading}
-                    />
+        <KeyboardAvoidingView
+            style={styles.container}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+            <ScrollView contentContainerStyle={styles.contentContainer}>
+                <View style={styles.logoContainer}>
+                    <Image source={require('../assets/images/logo-transparent.png')} style={styles.logo} />
+                    <Text style={styles.appName}>HabitSync</Text>
                 </View>
-                
-                <Text style={styles.helpText}>
-                    Examples: 192.168.1.100:8080/api, https://my-server.com/api
-                </Text>
-            </View>
 
-            {isTestingConnection && (
-                <View style={styles.testingContainer}>
-                    <ActivityIndicator size="small" color={theme.primary} />
-                    <Text style={styles.testingText}>Testing connection...</Text>
+                <View style={styles.titleContainer}>
+                    <Text style={styles.subtitle}>
+                        Please enter the hostname or URL of your HabitSync server to continue.
+                    </Text>
                 </View>
-            )}
 
-            <TouchableOpacity
-                style={[styles.saveButton, (!hostname.trim() || isLoading) && styles.buttonDisabled]}
-                onPress={handleSaveHostname}
-                disabled={!hostname.trim() || isLoading}
-            >
-                {isLoading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                ) : (
-                    <>
-                        <MaterialCommunityIcons name="check" size={20} color="#fff" />
-                        <Text style={styles.saveButtonText}>Save & Continue</Text>
-                    </>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Server Hostname or URL</Text>
+                    <View style={styles.inputWrapper}>
+                        <MaterialCommunityIcons
+                            name="server-network"
+                            size={20}
+                            color={theme.textSecondary}
+                            style={styles.inputIcon}
+                        />
+                        <TextInput
+                            style={styles.textInput}
+                            value={hostname}
+                            onChangeText={setHostname}
+                            placeholder="https://example.com/api"
+                            placeholderTextColor={theme.textTertiary}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                            keyboardType="url"
+                            returnKeyType="done"
+                            onSubmitEditing={handleSaveHostname}
+                            editable={!isLoading}
+                        />
+                    </View>
+
+                    <Text style={styles.helpText}>
+                        Examples: 192.168.1.100:8080/api, https://my-server.com/api
+                    </Text>
+                </View>
+
+                {isTestingConnection && (
+                    <View style={styles.testingContainer}>
+                        <ActivityIndicator size="small" color={theme.primary} />
+                        <Text style={styles.testingText}>Testing connection...</Text>
+                    </View>
                 )}
-            </TouchableOpacity>
-        </ScrollView>
+
+                <TouchableOpacity
+                    style={[styles.saveButton, (!hostname.trim() || isLoading) && styles.buttonDisabled]}
+                    onPress={handleSaveHostname}
+                    disabled={!hostname.trim() || isLoading}
+                >
+                    {isLoading ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                        <>
+                            <MaterialCommunityIcons name="check" size={20} color="#fff" />
+                            <Text style={styles.saveButtonText}>Save & Continue</Text>
+                        </>
+                    )}
+                </TouchableOpacity>
+            </ScrollView>
+        </KeyboardAvoidingView>
     );
 };
 
