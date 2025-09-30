@@ -36,4 +36,6 @@ public interface HabitRepository extends JpaRepository<Habit, Long> {
 
     @Query("SELECT h FROM Habit h WHERE h.reminderCustom IS NOT NULL AND h.reminderCustom != '' AND h.status = :status")
     List<Habit> findByReminderCustomIsNotEmptyAndStatus(@Param("status") Integer status);
+
+    double countHabitsByAccountAndHabitTypeAndStatusAndChallengeHabit(Account account, HabitType habitType, Integer status, boolean challengeHabit);
 }
