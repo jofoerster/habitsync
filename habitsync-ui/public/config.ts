@@ -35,7 +35,7 @@ const getRuntimeConfig = () => {
 const getDefaultUrls = () => {
   if (Platform.OS === 'web') {
     return {
-      backend: typeof window !== 'undefined' ? window.location.origin + "/api" : "",
+      backend: typeof window !== 'undefined' ? window.location.origin : "",
       ui: typeof window !== 'undefined' ? window.location.origin : ""
     };
   } else {
