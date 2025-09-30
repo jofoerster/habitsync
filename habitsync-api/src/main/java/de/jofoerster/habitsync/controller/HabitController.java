@@ -95,15 +95,14 @@ public class HabitController {
      */
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteHabit(@PathVariable String uuid) {
-        Optional<Habit> habit = habitService.getHabitByUuid(uuid);
+        Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
         checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
-        boolean deleted = habitService.deleteHabit(uuid);
-        habit.ifPresent(notificationServiceNew::deleteNotificationForHabit);
-        if (deleted) {
-            return ResponseEntity.noContent().build();
-        } else {
+        if (habitOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        Habit habit = habitService.deleteHabit(habitOpt.get());
+        notificationServiceNew.deleteNotificationForHabit(habit);
+        return ResponseEntity.noContent().build();
     }
 
     /**

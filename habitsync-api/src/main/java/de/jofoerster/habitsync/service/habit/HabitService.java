@@ -119,9 +119,9 @@ public class HabitService {
         return habitRepository.findHabitsByChallengeHabitIsTrue();
     }
 
-    public void deleteHabit(Habit habit) {
+    public Habit deleteHabit(Habit habit) {
         habit.setStatus(2);
-        habitRepository.save(habit);
+        return habitRepository.save(habit);
     }
 
     public List<SharedHabitHabitPair> getAllRelatedHabitsToHabitOfUser(Account account, String habitUuid,
@@ -198,16 +198,6 @@ public class HabitService {
         habit.applyChanges(apiHabitWrite);
         saveHabit(habit);
         return getApiHabitReadFromHabit(habit);
-    }
-
-    public boolean deleteHabit(String uuid) {
-        Optional<Habit> habitOpt = getHabitByUuid(uuid);
-        if (habitOpt.isEmpty()) {
-            return false;
-        }
-        Habit habit = habitOpt.get();
-        deleteHabit(habit);
-        return true;
     }
 
     public Habit createChallengeHabitForAccount(Account account) {
