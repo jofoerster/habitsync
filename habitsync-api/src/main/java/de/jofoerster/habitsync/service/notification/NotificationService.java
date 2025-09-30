@@ -13,8 +13,6 @@ import de.jofoerster.habitsync.repository.notification.NotificationRuleStatusRep
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.habit.SharedHabitService;
 import jakarta.annotation.PostConstruct;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,8 +20,6 @@ import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -39,7 +35,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class NotificationServiceNew {
+public class NotificationService {
 
     private final HabitService habitService;
     private final SchedulingService schedulingService;
@@ -47,16 +43,13 @@ public class NotificationServiceNew {
     private final TemplateEngine templateEngine;
     private final NotificationRuleService notificationRuleService;
     private final HabitRecordRepository habitRecordRepository;
-    private final JavaMailSender emailSender;
+    private final Optional<EmailService> emailService;
     private final ResourceLoader resourceLoader;
     private final RestTemplate restTemplate = new RestTemplate();
     private final NotificationRuleStatusRepository notificationRuleStatusRepository;
     private final SharedHabitService sharedHabitService;
 
     ObjectMapper mapper = new ObjectMapper();
-
-    @Value("${spring.mail.username}")
-    private String mailSender;
 
     @Value("${base.url}")
     String baseUrl;
@@ -284,22 +277,11 @@ public class NotificationServiceNew {
     }
 
     public void sendNotificationViaMail(Notification notification) {
-        if (notification.getReceiverAccount() == null || notification.getReceiverAccount().getEmail() == null) {
+        if (emailService.isEmpty()) {
+            log.warn("Email service not configured. Cannot send email notification.");
             return;
         }
-        MimeMessage mimeMessage = emailSender.createMimeMessage();
-
-        try {
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
-            helper.setFrom(mailSender);
-            helper.setTo(notification.getReceiverAccount()
-                    .getEmail());
-            helper.setSubject(notification.getSubject());
-            helper.setText(notification.getHtmlContent(), true); // true = isHtml
-
-            emailSender.send(mimeMessage);
-        } catch (MessagingException ignored) {
-        }
+        emailService.get().sendNotification(notification);
     }
 
     public void sendNotificationViaApprise(Notification notification, Habit habit) {

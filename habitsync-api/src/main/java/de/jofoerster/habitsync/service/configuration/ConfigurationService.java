@@ -1,7 +1,7 @@
 package de.jofoerster.habitsync.service.configuration;
 
 import de.jofoerster.habitsync.dto.ConfigReadDTO;
-import de.jofoerster.habitsync.service.notification.NotificationServiceNew;
+import de.jofoerster.habitsync.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class ConfigurationService {
 
-    private final NotificationServiceNew notificationService;
+    private final NotificationService notificationService;
 
     public ConfigReadDTO getConfiguration() {
         return ConfigReadDTO.builder()

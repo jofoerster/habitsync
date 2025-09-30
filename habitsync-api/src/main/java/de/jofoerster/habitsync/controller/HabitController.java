@@ -8,7 +8,7 @@ import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.habit.HabitService;
-import de.jofoerster.habitsync.service.notification.NotificationServiceNew;
+import de.jofoerster.habitsync.service.notification.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,13 +24,13 @@ public class HabitController {
 
     private final HabitService habitService;
     private final AccountService accountService;
-    private final NotificationServiceNew notificationServiceNew;
+    private final NotificationService notificationService;
 
     public HabitController(HabitService habitService, AccountService accountService,
-                           NotificationServiceNew notificationServiceNew) {
+                           NotificationService notificationService) {
         this.habitService = habitService;
         this.accountService = accountService;
-        this.notificationServiceNew = notificationServiceNew;
+        this.notificationService = notificationService;
     }
 
     /**
@@ -83,7 +83,7 @@ public class HabitController {
                                                     @RequestBody HabitWriteDTO habitWriteDTO) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
         checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
-        habitOpt.ifPresent(notificationServiceNew::markHabitAsUpdated);
+        habitOpt.ifPresent(notificationService::markHabitAsUpdated);
         return ResponseEntity.ok(habitService.updateHabit(uuid, habitWriteDTO));
     }
 
@@ -101,7 +101,7 @@ public class HabitController {
             return ResponseEntity.notFound().build();
         }
         Habit habit = habitService.deleteHabit(habitOpt.get());
-        notificationServiceNew.deleteNotificationForHabit(habit);
+        notificationService.deleteNotificationForHabit(habit);
         return ResponseEntity.noContent().build();
     }
 
