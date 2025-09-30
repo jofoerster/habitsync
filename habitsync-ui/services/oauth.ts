@@ -120,6 +120,8 @@ export class OAuthService {
         return AuthSession.makeRedirectUri({
             scheme: 'habitsync',
             path: 'auth-callback',
+            preferLocalhost: false,
+            isTripleSlashed: true,
         });
     }
 
