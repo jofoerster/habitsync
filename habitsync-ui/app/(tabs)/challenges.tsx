@@ -167,7 +167,7 @@ const ChallengesScreen = () => {
     };
 
     const getTimeRemaining = (endDay: number) => {
-        const endDate = new Date(endDay * 86400000);
+        const endDate = new Date((endDay + 1) * 86400000);
         const diffTime = endDate.getTime() - currentTime.getTime();
 
         if (diffTime <= 0) {

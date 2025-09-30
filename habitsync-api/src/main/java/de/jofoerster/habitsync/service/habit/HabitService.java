@@ -69,14 +69,14 @@ public class HabitService {
                 habitToAdd.setDailyGoal(usedHabit.getDailyGoal());
                 habitToAdd.setDailyGoalUnit(usedHabit.getDailyGoalUnit());
                 habitToAdd.setTargetDays(usedHabit.getTargetDays());
-                habitToAdd.setSortPosition(999d);
+                habitToAdd.setSortPosition(this.getNewHabitSortPosition(account));
                 habitToAdd.setType(usedHabit.getType());
                 habitToAdd.setStatus(1);
                 habitToAdd.setStartDate((int) LocalDate.now()
                         .toEpochDay());
                 habitToAdd.setColor(rand.nextInt(10) + 1);
                 habitToAdd.setConnectedSharedHabitId(sharedHabit.getId());
-                habitRepository.save(habitToAdd);
+                this.saveHabit(habitToAdd);
             }
             sharedHabit.addHabit(habitToAdd);
             return Optional.of(sharedHabitService.save(sharedHabit));
@@ -119,9 +119,11 @@ public class HabitService {
         return habitRepository.findHabitsByChallengeHabitIsTrue();
     }
 
-    public void deleteHabit(Habit habit) {
+    public Habit deleteHabit(Habit habit) {
         habit.setStatus(2);
-        habitRepository.save(habit);
+        this.fixHabitSortPositions(this.getAllUserHabitsByType(habit.getAccount(), HabitType.INTERNAL)
+                .stream().filter(h -> !h.isChallengeHabit()).toList());
+        return saveHabit(habit);
     }
 
     public List<SharedHabitHabitPair> getAllRelatedHabitsToHabitOfUser(Account account, String habitUuid,
@@ -185,8 +187,14 @@ public class HabitService {
         habit.setAccount(currentAccount);
         habit.setHabitType(HabitType.INTERNAL);
         habit.applyChanges(apiHabitWrite);
+        habit.setSortPosition(this.getNewHabitSortPosition(currentAccount));
         this.saveHabit(habit);
         return getApiHabitReadFromHabit(habit);
+    }
+
+    public double getNewHabitSortPosition(Account currentAccount) {
+        return this.habitRepository.countHabitsByAccountAndHabitTypeAndStatusAndChallengeHabit(currentAccount,
+                HabitType.INTERNAL, 1, false);
     }
 
     public HabitReadDTO updateHabit(String uuid, HabitWriteDTO apiHabitWrite) {
@@ -198,16 +206,6 @@ public class HabitService {
         habit.applyChanges(apiHabitWrite);
         saveHabit(habit);
         return getApiHabitReadFromHabit(habit);
-    }
-
-    public boolean deleteHabit(String uuid) {
-        Optional<Habit> habitOpt = getHabitByUuid(uuid);
-        if (habitOpt.isEmpty()) {
-            return false;
-        }
-        Habit habit = habitOpt.get();
-        deleteHabit(habit);
-        return true;
     }
 
     public Habit createChallengeHabitForAccount(Account account) {
@@ -227,14 +225,18 @@ public class HabitService {
     }
 
     public void moveHabit(Account account, Habit habit, boolean moveUp) {
-        List<Habit> habits = getAllUserHabitsByType(account, HabitType.INTERNAL);
+        List<Habit> habits = new ArrayList<>(getAllUserHabitsByType(account, HabitType.INTERNAL)
+                .stream().filter(h -> !h.isChallengeHabit()).toList());
         int oldPosition = habits.indexOf(habit);
         int newPosition = moveUp ? oldPosition - 1 : oldPosition + 1;
         if (newPosition < 0 || newPosition >= habits.size() || oldPosition < 0) {
             throw new IllegalArgumentException("Position out of bounds: " + newPosition);
         }
         Collections.swap(habits, newPosition, oldPosition);
+        fixHabitSortPositions(habits);
+    }
 
+    public void fixHabitSortPositions(List<Habit> habits) {
         List<Habit> habitsToUpdate = new ArrayList<>();
         int index = 0;
         for (Habit h : habits) {
@@ -258,13 +260,13 @@ public class HabitService {
         }
         try {
             return mapper.readValue(frequency, NotificationConfigDTO.class);
-        } catch (Exception e){
+        } catch (Exception e) {
             log.warn("Could not parse notification frequency: {}", frequency, e);
             return null;
         }
     }
 
-    public List<NotificationConfigRuleDTO> getFixedTimeNotificationRules (Habit habit) {
+    public List<NotificationConfigRuleDTO> getFixedTimeNotificationRules(Habit habit) {
         String reminderCustom = habit.getReminderCustom();
         if (reminderCustom == null || reminderCustom.isEmpty()) {
             return new ArrayList<>();
@@ -272,7 +274,7 @@ public class HabitService {
         try {
             NotificationConfigDTO configDTO = mapper.readValue(reminderCustom, NotificationConfigDTO.class);
             return configDTO.getRules().stream().filter(r -> r.getType() == NotificationTypeEnum.fixed).toList();
-        } catch (Exception e){
+        } catch (Exception e) {
             try {
                 DeprecatedNotificationFrequencyDTO configDTO =
                         mapper.readValue(reminderCustom, DeprecatedNotificationFrequencyDTO.class);
