@@ -145,3 +145,54 @@ jobs:
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
+
+  build-android:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'habitsync-ui/package-lock.json'
+
+    - name: Install dependencies and EAS CLI
+      run: |
+        cd habitsync-ui
+        npm ci
+        npm install -g eas-cli
+
+    - name: Update app version
+      run: |
+        cd habitsync-ui
+        sed -i 's/"version": ".*"/"version": "${{ github.event.inputs.version }}"/' app.json
+
+    - name: Build and download Android APK
+      run: |
+        cd habitsync-ui
+        # Create minimal EAS config if it doesn't exist
+        echo '{"build":{"production":{"android":{"buildType":"apk"}}}}' > eas.json
+        
+        # Build and wait for completion
+        eas build --platform android --profile production --non-interactive --wait
+        
+        # Download the latest APK
+        eas build:download --platform android --profile production
+        
+        # Rename APK
+        mv *.apk "habitsync-${{ github.event.inputs.version }}.apk"
+      env:
+        EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+    - name: Upload APK to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ github.event.inputs.version }}
+        files: habitsync-ui/habitsync-${{ github.event.inputs.version }}.apk
+        token: ${{ secrets.GITHUB_TOKEN }}
