@@ -9,7 +9,7 @@
 </div>
 
 <div align="center">
-  A powerful, self-hostable habit tracking platform with social features
+  A powerful, self-hostable habit tracking platform with social features.
   
   Transform your daily routines into lasting habits while connecting with friends through shared challenges and progress tracking.
   
