@@ -7,7 +7,6 @@ import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.account.AccountStatus;
 import de.jofoerster.habitsync.repository.account.AccountRepository;
 import de.jofoerster.habitsync.service.auth.TokenService;
-import de.jofoerster.habitsync.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
@@ -28,7 +27,6 @@ import java.util.List;
 public class AccountService {
 
     private final AccountRepository accountRepository;
-    private final NotificationService notificationService;
     private final Environment environment;
     private final SecurityProperties securityProperties;
     private final TokenService tokenService;
