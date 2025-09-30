@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class PushNotificationJob implements Job {
 
     @Autowired
-    private NotificationServiceNew notificationService;
+    private NotificationService notificationService;
 
     @Autowired
     private AccountService accountService;

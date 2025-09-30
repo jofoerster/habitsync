@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image} from 'react-native';
+import {ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View, Image, Platform} from 'react-native';
 import {useAuth} from '@/context/AuthContext';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
@@ -9,6 +9,7 @@ import {capitalizeFirstLetter} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {needsHostnameConfiguration} from "@/public/config";
 
 
 const LoginScreen = () => {
@@ -21,9 +22,10 @@ const LoginScreen = () => {
     const [loginMethods, setLoginMethods] = useState<LoginOptions | null>(null);
     const [loadingMethods, setLoadingMethods] = useState(true);
     const [showUsernamePasswordModal, setShowUsernamePasswordModal] = useState(false);
+    const [checkingHostname, setCheckingHostname] = useState(true);
 
     useEffect(() => {
-        fetchLoginMethods();
+        checkHostnameAndFetchMethods();
     }, []);
 
     useEffect(() => {
@@ -33,6 +35,26 @@ const LoginScreen = () => {
             router.replace('/waiting-approval');
         }
     }, [authState.isAuthenticated, authState.isApproved, redirectPath, router]);
+
+    const checkHostnameAndFetchMethods = async () => {
+        try {
+            setCheckingHostname(true);
+            const needsHostname = await needsHostnameConfiguration();
+
+            if (needsHostname) {
+                router.replace('/hostname');
+                return;
+            }
+
+            await fetchLoginMethods();
+        } catch (error) {
+            console.error('Error checking hostname configuration:', error);
+            // can't check hostname config, try to fetch methods anyway
+            await fetchLoginMethods();
+        } finally {
+            setCheckingHostname(false);
+        }
+    };
 
     const fetchLoginMethods = async () => {
         try {
@@ -98,9 +120,13 @@ const LoginScreen = () => {
         }
     };
 
+    const handleChangeHostname = () => {
+        router.push('/hostname');
+    };
+
     const isCurrentlyLoading = authState.isLoading;
 
-    if (loadingMethods) {
+    if (checkingHostname || loadingMethods) {
         return (
             <View style={styles.container}>
                 <View style={styles.logoContainer}>
@@ -109,7 +135,9 @@ const LoginScreen = () => {
                 </View>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#2196F3"/>
-                    <Text style={styles.loadingText}>Loading login options...</Text>
+                    <Text style={styles.loadingText}>
+                        {checkingHostname ? 'Checking configuration...' : 'Loading login options...'}
+                    </Text>
                 </View>
             </View>
         );
@@ -224,6 +252,15 @@ const LoginScreen = () => {
                     refresh the page.
                 </Text>
             </View>
+
+            {Platform.OS !== 'web' && (
+                <View style={styles.hostnameContainer}>
+                    <TouchableOpacity onPress={handleChangeHostname} style={styles.hostnameButton}>
+                        <MaterialCommunityIcons name="server-network" size={16} color={theme.primary} />
+                        <Text style={styles.hostnameButtonText}>Change Hostname</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             <UsernamePasswordModal
                 visible={showUsernamePasswordModal}
@@ -389,10 +426,29 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         paddingHorizontal: 10,
     },
     infoText: {
-        fontSize: 12,
+        fontSize: 14,
         color: theme.textSecondary,
         textAlign: 'center',
-        lineHeight: 16,
+        lineHeight: 20,
+    },
+    hostnameContainer: {
+        alignItems: 'center',
+        marginTop: 20,
+        paddingTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: theme.borderSecondary,
+    },
+    hostnameButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+    },
+    hostnameButtonText: {
+        color: theme.primary,
+        fontSize: 14,
+        fontWeight: '500',
     },
     maintenanceContainer: {
         alignItems: 'center',
@@ -420,3 +476,4 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
 }));
 
 export default LoginScreen;
+

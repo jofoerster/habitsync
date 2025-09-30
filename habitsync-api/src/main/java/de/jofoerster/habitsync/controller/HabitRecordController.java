@@ -6,7 +6,7 @@ import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.habit.HabitRecordService;
 import de.jofoerster.habitsync.service.habit.HabitService;
-import de.jofoerster.habitsync.service.notification.NotificationServiceNew;
+import de.jofoerster.habitsync.service.notification.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,14 +23,14 @@ public class HabitRecordController {
     private final HabitService habitService;
     private final AccountService accountService;
     private final HabitRecordService habitRecordService;
-    private final NotificationServiceNew notificationServiceNew;
+    private final NotificationService notificationService;
 
     public HabitRecordController(HabitService habitService, AccountService accountService,
-                                 HabitRecordService habitRecordService, NotificationServiceNew notificationServiceNew) {
+                                 HabitRecordService habitRecordService, NotificationService notificationService) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.habitRecordService = habitRecordService;
-        this.notificationServiceNew = notificationServiceNew;
+        this.notificationService = notificationService;
     }
 
     /** * Returns a list of all records for a specific habit.
@@ -57,7 +57,7 @@ public class HabitRecordController {
                                                            @RequestBody HabitRecordWriteDTO recordWrite) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(habitUuid);
         checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
-        habitOpt.ifPresent(notificationServiceNew::markHabitAsUpdated);
+        habitOpt.ifPresent(notificationService::markHabitAsUpdated);
         return ResponseEntity.ok(habitRecordService.createRecord(habitUuid, recordWrite));
     }
 }

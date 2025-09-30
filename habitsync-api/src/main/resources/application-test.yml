@@ -9,6 +9,7 @@ spring:
   datasource:
     url: jdbc:h2:file:./habittracker-db
   mail:
+    enabled: false
     host: smtp.gmail.com
     port: 587
     username: <mail-username>
