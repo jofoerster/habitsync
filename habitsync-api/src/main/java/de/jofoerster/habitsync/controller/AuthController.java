@@ -15,7 +15,9 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.view.RedirectView;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,6 +92,22 @@ public class AuthController {
 
         String userId = tokenService.getUserIdFromToken(refreshToken);
         return tokenService.createTokenPair(userId);
+    }
+
+    @GetMapping("/mobile-callback")
+    public RedirectView mobileCallback(HttpServletRequest request) {
+        log.info("Mobile callback received with parameters: {}", request.getQueryString());
+
+        StringBuilder deepLink = new StringBuilder("habitsync://auth-callback");
+
+        String queryString = request.getQueryString();
+        if (queryString != null && !queryString.isEmpty()) {
+            deepLink.append("?").append(queryString);
+        }
+
+        log.info("Redirecting to mobile app: {}", deepLink);
+
+        return new RedirectView(deepLink.toString());
     }
 
 }
