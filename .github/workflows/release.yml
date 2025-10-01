@@ -82,7 +82,7 @@ jobs:
           VERSION="${{ github.event.inputs.version }}"
           
           # Get the latest build URL
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          BUILD_URL=$(eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
           
           # Download and rename APK
           mkdir -p android-build
