@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -62,13 +63,17 @@ public class HabitRecordService {
     }
 
     public HabitRecordReadDTO createRecord(String habitUuid, HabitRecordWriteDTO recordWrite) {
+        Integer recordDay = recordWrite.getEpochDay();
+        if (recordDay == null) {
+            recordDay = (int) LocalDate.now().toEpochDay();
+        }
         List<HabitRecord> records =
-                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(recordWrite.getEpochDay(), habitUuid);
+                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(recordDay, habitUuid);
         HabitRecord habitRecord;
         if (records.isEmpty()) {
             habitRecord = new HabitRecord();
             habitRecord.setParentUuid(habitUuid);
-            habitRecord.setRecordDate(recordWrite.getEpochDay());
+            habitRecord.setRecordDate(recordDay);
         } else {
             if (records.size() > 1) {
                 records.sort(Comparator.comparing(HabitRecord::getModifyT));
