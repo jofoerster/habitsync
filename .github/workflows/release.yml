@@ -78,33 +78,47 @@ jobs:
       - name: Setup Expo CLI
         run: npm install -g @expo/cli
 
+      - name: Prebuild Android project
+        run: |
+          cd habitsync-ui
+          npx expo prebuild --platform android --clear
+
       - name: Setup Android signing
         if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
           cd habitsync-ui
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android-keystore.jks
           
+          mkdir -p android/app
           cat > android/gradle.properties << EOF
-          MYAPP_RELEASE_STORE_FILE=../android-keystore.jks
+          MYAPP_RELEASE_STORE_FILE=../../android-keystore.jks
           MYAPP_RELEASE_KEY_ALIAS=${{ secrets.ANDROID_KEY_ALIAS }}
           MYAPP_RELEASE_STORE_PASSWORD=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           MYAPP_RELEASE_KEY_PASSWORD=${{ secrets.ANDROID_KEY_PASSWORD }}
           EOF
 
-      - name: Prebuild and build Android
+      - name: Make gradlew executable and build APK
         run: |
           cd habitsync-ui
-          npx expo prebuild --platform android --clear
-          ./android/gradlew -p android assembleRelease
+          chmod +x android/gradlew
+          cd android
+          ./gradlew assembleRelease
 
-      - name: Rename APK
+      - name: Verify and rename APK
         run: |
           cd habitsync-ui
           APK_PATH="android/app/build/outputs/apk/release"
           VERSION="${{ github.event.inputs.version }}"
-          if [ -f "$APK_PATH/app-release.apk" ]; then
-            mv "$APK_PATH/app-release.apk" "$APK_PATH/habitsync-v$VERSION.apk"
+          
+          if [ ! -f "$APK_PATH/app-release.apk" ]; then
+            echo "ERROR: APK file not found at $APK_PATH/app-release.apk"
+            ls -la "$APK_PATH/" || echo "Directory doesn't exist"
+            exit 1
           fi
+          
+          mv "$APK_PATH/app-release.apk" "$APK_PATH/habitsync-v$VERSION.apk"
+          echo "APK created: $APK_PATH/habitsync-v$VERSION.apk"
+          ls -la "$APK_PATH/habitsync-v$VERSION.apk"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -136,13 +150,6 @@ jobs:
             exit 1
           fi
 
-      - name: Create and push tag
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
-          git push origin "v${{ github.event.inputs.version }}"
-
       - name: Log in to Container Registry
         uses: docker/login-action@v3
         with:
@@ -158,6 +165,13 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}
+
+      - name: Create and push tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
+          git push origin "v${{ github.event.inputs.version }}"
 
       - name: Generate changelog
         id: changelog
