@@ -72,7 +72,7 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           cd habitsync-ui
-          eas build --platform android --profile preview --non-interactive --wait
+          eas build --platform android --profile production --non-interactive --wait
 
       - name: Download APK from EAS
         env:
