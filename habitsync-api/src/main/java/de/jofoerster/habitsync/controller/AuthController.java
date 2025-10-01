@@ -93,22 +93,4 @@ public class AuthController {
         String userId = tokenService.getUserIdFromToken(refreshToken);
         return tokenService.createTokenPair(userId);
     }
-
-    @GetMapping("/mobile-callback")
-    public RedirectView mobileCallback(HttpServletRequest request) {
-        log.info("Mobile callback received with parameters: {}", request.getQueryString());
-
-        // Build the mobile deep link with all query parameters (using 3-slash format like Immich)
-        StringBuilder deepLink = new StringBuilder("habitsync:///auth-callback");
-
-        String queryString = request.getQueryString();
-        if (queryString != null && !queryString.isEmpty()) {
-            deepLink.append("?").append(queryString);
-        }
-
-        log.info("Redirecting to mobile app: {}", deepLink);
-
-        return new RedirectView(deepLink.toString());
-    }
-
 }
