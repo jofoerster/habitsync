@@ -54,12 +54,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -67,69 +61,38 @@ jobs:
           cache: 'npm'
           cache-dependency-path: 'habitsync-ui/package-lock.json'
 
-      - name: Install UI dependencies
+      - name: Install dependencies
         run: |
           cd habitsync-ui
           npm ci
+          npm install -g @expo/cli eas-cli
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Setup Expo CLI
-        run: npm install -g @expo/cli
-
-      - name: Prebuild Android project
-        run: |
-          cd habitsync-ui
-          npx expo prebuild --platform android --clean
-
-      - name: Setup Android signing
-        if: env.ANDROID_KEYSTORE_BASE64 != ''
+      - name: Build Android APK with EAS
         env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           cd habitsync-ui
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android-keystore.jks
-          
-          mkdir -p android/app
-          cat > android/gradle.properties << EOF
-          MYAPP_RELEASE_STORE_FILE=../../android-keystore.jks
-          MYAPP_RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
-          MYAPP_RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
-          MYAPP_RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
-          EOF
+          eas build --platform android --profile preview --non-interactive --wait
 
-      - name: Make gradlew executable and build APK
+      - name: Download APK from EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           cd habitsync-ui
-          chmod +x android/gradlew
-          cd android
-          ./gradlew assembleRelease
-
-      - name: Verify and rename APK
-        run: |
-          cd habitsync-ui
-          APK_PATH="android/app/build/outputs/apk/release"
           VERSION="${{ github.event.inputs.version }}"
           
-          if [ ! -f "$APK_PATH/app-release.apk" ]; then
-            echo "ERROR: APK file not found at $APK_PATH/app-release.apk"
-            ls -la "$APK_PATH/" || echo "Directory doesn't exist"
-            exit 1
-          fi
+          # Get the latest build URL
+          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
           
-          mv "$APK_PATH/app-release.apk" "$APK_PATH/habitsync-v$VERSION.apk"
-          echo "APK created: $APK_PATH/habitsync-v$VERSION.apk"
-          ls -la "$APK_PATH/habitsync-v$VERSION.apk"
+          # Download and rename APK
+          mkdir -p android-build
+          curl -o "android-build/habitsync-v$VERSION.apk" "$BUILD_URL"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: habitsync-ui/android/app/build/outputs/apk/release/habitsync-v*.apk
+          path: habitsync-ui/android-build/habitsync-v*.apk
 
   release:
     needs: [test, build-android]
