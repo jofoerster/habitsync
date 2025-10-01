@@ -81,7 +81,7 @@ jobs:
       - name: Prebuild Android project
         run: |
           cd habitsync-ui
-          npx expo prebuild --platform android --clear
+          npx expo prebuild --platform android --clean
 
       - name: Setup Android signing
         if: env.ANDROID_KEYSTORE_BASE64 != ''
