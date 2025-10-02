@@ -271,7 +271,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                     </View>
                     <View style={{flex: 1}}>
                         <Link href={{
-                            pathname: '/habit/[habitUuid]/',
+                            pathname: '/habit/[habitUuid]',
                             params: {habitUuid: habit.uuid, isOwnHabit: (!isConnectedHabitView).toString()}
                         }}>
                             <Pressable>
