@@ -548,7 +548,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginLeft: 4,
     },
     progressSection: {
-        padding: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 20,
     },
     progressCard: {
         backgroundColor: theme.surfaceSecondary,
@@ -728,7 +729,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: '#4CAF50',
     },
     actionsSection: {
-        padding: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 20,
         paddingBottom: 40,
     },
     primaryButton: {
