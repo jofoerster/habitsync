@@ -683,6 +683,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.surface,
         borderRadius: 12,
         margin: 16,
+        marginTop: 32,
         padding: 4,
         elevation: 2,
         shadowColor: theme.shadow,

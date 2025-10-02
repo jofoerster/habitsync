@@ -278,12 +278,14 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         marginBottom: 13,
-        marginTop: 13,
+        marginTop: 16,
     },
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingLeft: 16,
+        marginTop: 16,
+
     },
     logo: {
         width: 32,
