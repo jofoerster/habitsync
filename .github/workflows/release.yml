@@ -81,12 +81,36 @@ jobs:
           cd habitsync-ui
           VERSION="${{ github.event.inputs.version }}"
           
-          # Get the latest build URL
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
-          
           # Download and rename APK
           mkdir -p android-build
-          curl -o "android-build/habitsync-v$VERSION.apk" "$BUILD_URL"
+          
+          # Get the latest build URL with error checking
+          BUILD_URL=$(eas build:list --platform android --limit 1 --json --non-interactive | jq -r '.[0].artifacts.buildUrl')
+          
+          if [ -z "$BUILD_URL" ] || [ "$BUILD_URL" == "null" ]; then
+            echo "ERROR: Failed to get build URL"
+            exit 1
+          fi
+          
+          echo "Downloading from: $BUILD_URL"
+          
+          # Download with authentication and error checking
+          HTTP_CODE=$(curl -w "%{http_code}" -H "Authorization: Bearer $EXPO_TOKEN" \
+            -o "android-build/habitsync-v$VERSION.apk" "$BUILD_URL")
+          
+          if [ "$HTTP_CODE" -ne 200 ]; then
+            echo "ERROR: Download failed with HTTP code $HTTP_CODE"
+            exit 1
+          fi
+          
+          # Verify file size
+          FILE_SIZE=$(stat -f%z "android-build/habitsync-v$VERSION.apk" 2>/dev/null || stat -c%s "android-build/habitsync-v$VERSION.apk")
+          echo "Downloaded APK size: $FILE_SIZE bytes"
+          
+          if [ "$FILE_SIZE" -lt 1000000 ]; then
+            echo "ERROR: APK file is suspiciously small (${FILE_SIZE} bytes)"
+            exit 1
+          fi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
