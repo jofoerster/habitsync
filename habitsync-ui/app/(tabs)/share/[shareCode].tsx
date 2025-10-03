@@ -526,7 +526,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         paddingBottom: 5,
     },
     descriptionSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         margin: 15,
         padding: 20,
         borderRadius: 10,
@@ -544,12 +544,12 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     descriptionText: {
         fontSize: 16,
-        color: theme.textSecondary,
+        color: theme.text,
         lineHeight: 24,
     },
     descriptionInput: {
         fontSize: 16,
-        color: theme.textSecondary,
+        color: theme.text,
         borderWidth: 1,
         borderColor: theme.border,
         borderRadius: 8,
@@ -562,7 +562,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginBottom: 15,
     },
     progressCard: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         padding: 20,
         borderRadius: 10,
         shadowColor: theme.shadow,
@@ -585,7 +585,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginLeft: 10,
     },
     participantsSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         margin: 15,
         padding: 20,
         borderRadius: 10,

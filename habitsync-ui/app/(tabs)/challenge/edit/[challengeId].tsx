@@ -324,7 +324,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: theme.textSecondary,
     },
     section: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         margin: 15,
         padding: 20,
         borderRadius: 10,
@@ -347,7 +347,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         borderColor: theme.border,
         borderRadius: 8,
         padding: 12,
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
     },
     descriptionInput: {
         fontSize: 16,
@@ -356,7 +356,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         borderColor: theme.border,
         borderRadius: 8,
         padding: 12,
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         minHeight: 100,
     },
     actionsSection: {

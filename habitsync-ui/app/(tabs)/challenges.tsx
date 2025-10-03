@@ -655,6 +655,11 @@ const ChallengesScreen = () => {
                 </View>
             )}
 
+            <View>
+                <Text style={styles.header}>Challenge</Text>
+                <Text style={styles.subHeader}>Challenge your friends</Text>
+            </View>
+
             {renderSegmentedControl()}
             {renderContent()}
         </View>
@@ -662,6 +667,20 @@ const ChallengesScreen = () => {
 };
 
 const createStyles = createThemedStyles((theme) => StyleSheet.create({
+    header: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: theme.text,
+        marginBottom: 8,
+        marginTop: 42,
+        paddingLeft: 16,
+    },
+    subHeader: {
+        fontSize: 14,
+        color: theme.textSecondary,
+        fontWeight: '400',
+        paddingLeft: 16,
+    },
     container: {
         flex: 1,
         backgroundColor: theme.background,
@@ -683,6 +702,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.surface,
         borderRadius: 12,
         margin: 16,
+        marginTop: 16,
         padding: 4,
         elevation: 2,
         shadowColor: theme.shadow,
@@ -732,7 +752,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     // Challenge Card Styles
     challengeCard: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         borderRadius: 12,
         padding: 16,
         marginBottom: 16,
@@ -804,7 +824,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     // Goal Section Styles
     goalSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         marginVertical: 20,
     },
     goalHeader: {
@@ -955,7 +975,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginBottom: 12,
     },
     participantsSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         padding: 16,
         borderRadius: 12,
         marginTop: 0,

@@ -194,7 +194,7 @@ const HabitTrackerScreen = () => {
                     backgroundColor={theme.background}
                     color={isDragModeEnabled ? "#ff0000" : theme.text}
                     size={14}
-                    style={{marginRight: 16}}
+                    style={{marginRight: 16, marginTop: 16}}
                     onPress={() => setIsDragModeEnabled(!isDragModeEnabled)}
                 />
             </View>
@@ -278,12 +278,14 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         marginBottom: 13,
-        marginTop: 13,
+        marginTop: 16,
     },
     headerContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingLeft: 16,
+        marginTop: 26,
+
     },
     logo: {
         width: 32,

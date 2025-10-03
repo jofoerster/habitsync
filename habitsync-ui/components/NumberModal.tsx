@@ -426,24 +426,23 @@ const NumberModal: React.FC<NumberModalProps> = ({
                             </Text>
                         </TouchableOpacity>
                     ) : (
-                        <View style={{flexDirection: 'row'}}>
-                            <View style={{flex: 1, flexDirection: "column"}}>
+                        <View style={{flexDirection: 'row', gap: 8}}>
+                            <View style={{flex: 1, gap: 8}}>
                                 <TouchableOpacity
                                     style={{
                                         backgroundColor: isTimerRunning ? '#da0430' : '#4CAF50',
                                         borderRadius: 8,
-                                        padding: (isTimerRunning || timerTime === 0) ? 16 : 2,
+                                        paddingVertical: 16,
+                                        paddingHorizontal: 12,
                                         alignItems: 'center',
-                                        flex: 1,
-                                        margin: 4
+                                        justifyContent: 'center',
+                                        minHeight: 50
                                     }}
                                     onPress={() => startAndStopTimer()}
                                 >
-                                    {isTimerRunning ? (
-                                        <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>Stop</Text>
-                                    ) : (
-                                        <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>Start</Text>
-                                    )}
+                                    <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>
+                                        {isTimerRunning ? 'Stop' : 'Start'}
+                                    </Text>
                                 </TouchableOpacity>
 
                                 {!isTimerRunning && (
@@ -451,10 +450,11 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         style={{
                                             backgroundColor: isDelayedStartActive ? '#ff6b35' : '#FF9800',
                                             borderRadius: 8,
-                                            padding: (isTimerRunning || timerTime === 0) ? 16 : 2,
+                                            paddingVertical: 16,
+                                            paddingHorizontal: 12,
                                             alignItems: 'center',
-                                            flex: 1,
-                                            margin: 4
+                                            justifyContent: 'center',
+                                            minHeight: 50
                                         }}
                                         onPress={startDelayedTimer}
                                     >
@@ -469,36 +469,35 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         style={{
                                             backgroundColor: '#ea3b4e',
                                             borderRadius: 8,
-                                            padding: 2,
+                                            paddingVertical: 16,
+                                            paddingHorizontal: 12,
                                             alignItems: 'center',
-                                            flex: 1,
-                                            margin: 4
+                                            justifyContent: 'center',
+                                            minHeight: 50
                                         }}
                                         onPress={() => resetTimer()}
                                     >
-
                                         <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>Reset</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
-                            <View style={{flexDirection: 'column'}}>
+                            <View style={{gap: 8, justifyContent: 'flex-start'}}>
                                 {(!isTimerRunning && timerTime !== 0) && (
                                     <TouchableOpacity
                                         style={{
                                             backgroundColor: '#4998a7',
                                             borderRadius: 8,
-                                            padding: 10,
+                                            paddingVertical: 16,
+                                            paddingHorizontal: 12,
                                             alignItems: 'center',
-                                            flex: 1,
-                                            margin: 4
+                                            justifyContent: 'center',
+                                            minHeight: 50
                                         }}
                                         onPress={() => handleSubmit(Math.floor(timerTime / 1000).toString())}
                                     >
-                                        <Text style={{
-                                            color: 'white',
-                                            fontSize: 16,
-                                            fontWeight: 'bold'
-                                        }}>Submit: {Math.floor(timerTime / 1000)}</Text>
+                                        <Text style={{color: 'white', fontSize: 14, fontWeight: 'bold'}}>
+                                            Submit: {Math.floor(timerTime / 1000)}s
+                                        </Text>
                                     </TouchableOpacity>
                                 )}
                                 {(!isTimerRunning && timerTime >= 60000) && (
@@ -506,18 +505,17 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         style={{
                                             backgroundColor: '#4998a7',
                                             borderRadius: 8,
-                                            padding: 10,
+                                            paddingVertical: 16,
+                                            paddingHorizontal: 12,
                                             alignItems: 'center',
-                                            flex: 1,
-                                            margin: 4
+                                            justifyContent: 'center',
+                                            minHeight: 50
                                         }}
                                         onPress={() => handleSubmit(Math.floor(timerTime / 60000).toString())}
                                     >
-                                        <Text style={{
-                                            color: 'white',
-                                            fontSize: 16,
-                                            fontWeight: 'bold'
-                                        }}>Submit: {Math.floor(timerTime / 60000)}</Text>
+                                        <Text style={{color: 'white', fontSize: 14, fontWeight: 'bold'}}>
+                                            Submit: {Math.floor(timerTime / 60000)}m
+                                        </Text>
                                     </TouchableOpacity>
                                 )}
                             </View>

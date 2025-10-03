@@ -217,10 +217,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.surfaceSecondary,
     },
     calendarSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         margin: 20,
         borderRadius: 16,
-        padding: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 20,
         shadowColor: theme.shadow,
         shadowOffset: {width: 0, height: 2},
         shadowOpacity: 0.1,

@@ -255,38 +255,41 @@ const HabitRow: React.FC<HabitRowProps> = ({
     return (
         <View style={{marginBottom: 16}}>
             <View style={{
-                backgroundColor: theme.surfaceSecondary,
+                backgroundColor: theme.surface,
                 borderRadius: 10,
                 padding: 4,
                 shadowColor: '#000',
                 shadowOffset: {width: 0, height: 1},
                 shadowOpacity: 0.1,
                 shadowRadius: 4,
-                elevation: 1
+                elevation: 1,
             }}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <View style={{paddingRight: 10}}>
-                        {!hideProgressRing && (
-                            <ProgressRing color={habitColor} percentage={percentage}/>)}
-                    </View>
-                    <View style={{flex: 1}}>
-                        <Link href={{
-                            pathname: '/habit/[habitUuid]/',
+                    <Link
+                        href={{
+                            pathname: '/habit/[habitUuid]',
                             params: {habitUuid: habit.uuid, isOwnHabit: (!isConnectedHabitView).toString()}
-                        }}>
-                            <Pressable>
+                        }}
+                        asChild
+                    >
+                        <Pressable style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
+                            <View style={{paddingRight: 10}}>
+                                {!hideProgressRing && (
+                                    <ProgressRing color={habitColor} percentage={percentage}/>)}
+                            </View>
+                            <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
                                     {!habit.currentMedal !== undefined ? habit.currentMedal : ''}
                                     {!isConnectedHabitView ? (habit.name) : (habit.account.displayName)}
                                 </Text>
-                            </Pressable>
-                        </Link>
-                        {isConnectedHabitView === true && (
-                            <Text style={{fontSize: 8, color: theme.text}}>
-                                {habit.name}
-                            </Text>
-                        )}
-                    </View>
+                                {isConnectedHabitView === true && (
+                                    <Text style={{fontSize: 8, color: theme.text}}>
+                                        {habit.name}
+                                    </Text>
+                                )}
+                            </View>
+                        </Pressable>
+                    </Link>
 
 
                     {(!isConnectedHabitView && hasConnectedHabits && !isDragModeEnabled) && (
@@ -304,7 +307,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                         </TouchableOpacity>
                     )}
                     <View style={{flex: 1}}>
-                        <View style={{flexDirection: 'row', justifyContent: 'right'}}>
+                        <View style={{flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end'}}>
                             {isDragModeEnabled && !isConnectedHabitView ? (
                                 // Show reorder arrows instead of day buttons when in drag mode
                                 <View style={styles.reorderContainer}>
@@ -411,8 +414,8 @@ const styles = StyleSheet.create({
         backgroundColor: '#667eea',
         borderRadius: 8,
         padding: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
         minWidth: 36,
         shadowColor: '#000',
         shadowOffset: {width: 0, height: 1},

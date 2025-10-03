@@ -310,19 +310,16 @@ const HabitDetailsScreen = () => {
     const NotificationModal = () => (
         <Modal
             visible={showNotificationModal}
-            transparent={true}
+            transparent={false}
             animationType="fade"
         >
-            <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-            >
+            <View style={styles.notificationModalContainer}>
                 <NotificationConfigComponent
                     habitUuid={habitDetail!.uuid}
                     currentConfig={habitDetail!.notificationFrequency}
                     onModalClose={handleCloseNotificationModal}
                 />
-            </TouchableOpacity>
+            </View>
         </Modal>
     );
 
@@ -508,7 +505,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
 
     header: {
         marginBottom: 13,
-        marginTop: 16,
+        marginTop: 42,
         paddingHorizontal: 16,
     },
     headerContent: {
@@ -548,10 +545,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginLeft: 4,
     },
     progressSection: {
-        padding: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 20,
     },
     progressCard: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         borderRadius: 16,
         padding: 20,
         shadowColor: theme.shadow,
@@ -728,7 +726,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: '#4CAF50',
     },
     actionsSection: {
-        padding: 20,
+        paddingVertical: 5,
+        paddingHorizontal: 20,
         paddingBottom: 40,
     },
     primaryButton: {
@@ -826,7 +825,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.background,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 10,
     },
     modalContent: {
         backgroundColor: theme.surfaceTertiary,
@@ -916,6 +915,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         height: 8,
         borderRadius: 4,
         backgroundColor: '#FF9800',
+    },
+    notificationModalContainer: {
+        flex: 1,
+        backgroundColor: theme.background,
+        paddingTop: 40,
     },
 }));
 
