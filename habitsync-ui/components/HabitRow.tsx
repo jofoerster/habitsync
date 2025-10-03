@@ -265,28 +265,31 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 elevation: 1,
             }}>
                 <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                    <View style={{paddingRight: 10}}>
-                        {!hideProgressRing && (
-                            <ProgressRing color={habitColor} percentage={percentage}/>)}
-                    </View>
-                    <View style={{flex: 1}}>
-                        <Link href={{
+                    <Link
+                        href={{
                             pathname: '/habit/[habitUuid]',
                             params: {habitUuid: habit.uuid, isOwnHabit: (!isConnectedHabitView).toString()}
-                        }}>
-                            <Pressable>
+                        }}
+                        asChild
+                    >
+                        <Pressable style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
+                            <View style={{paddingRight: 10}}>
+                                {!hideProgressRing && (
+                                    <ProgressRing color={habitColor} percentage={percentage}/>)}
+                            </View>
+                            <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
                                     {!habit.currentMedal !== undefined ? habit.currentMedal : ''}
                                     {!isConnectedHabitView ? (habit.name) : (habit.account.displayName)}
                                 </Text>
-                            </Pressable>
-                        </Link>
-                        {isConnectedHabitView === true && (
-                            <Text style={{fontSize: 8, color: theme.text}}>
-                                {habit.name}
-                            </Text>
-                        )}
-                    </View>
+                                {isConnectedHabitView === true && (
+                                    <Text style={{fontSize: 8, color: theme.text}}>
+                                        {habit.name}
+                                    </Text>
+                                )}
+                            </View>
+                        </Pressable>
+                    </Link>
 
 
                     {(!isConnectedHabitView && hasConnectedHabits && !isDragModeEnabled) && (
