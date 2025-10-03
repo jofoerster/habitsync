@@ -409,11 +409,10 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
 const createStyles = createThemedStyles((theme) => StyleSheet.create({
     container: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         borderRadius: 12,
         padding: 20,
-        marginHorizontal: 16,
-        marginTop: 16,
+        margin: 16,
     },
     title: {
         fontSize: 18,
@@ -525,21 +524,23 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 10,
     },
     modalContent: {
         backgroundColor: theme.surfaceSecondary,
         borderRadius: 12,
         padding: 20,
-        maxWidth: '90%',
         alignItems: 'center',
+        width: '90%',
+        maxWidth: 400,
     },
     configModalContent: {
         backgroundColor: theme.surfaceSecondary,
         borderRadius: 12,
         padding: 20,
-        maxWidth: '95%',
-        maxHeight: '80%',
+        width: '95%',
+        maxWidth: 600,
+        maxHeight: '90%',
     },
     modalTitle: {
         fontSize: 18,

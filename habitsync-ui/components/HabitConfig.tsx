@@ -18,15 +18,13 @@ import {
     ApiHabitWrite,
     ChallengeComputationType,
     FrequencyTypeDTO,
-    NotificationConfig as NotificationConfigType,
-    serverConfigApi
+    NotificationConfig as NotificationConfigType
 } from "@/services/api";
 import {COLOR_OPTIONS} from "@/constants/colors";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {MAX_INTEGER} from "@/constants/numbers";
-import NotificationConfigComponent from "@/components/NotificationConfig";
 
 const {width} = Dimensions.get('window');
 

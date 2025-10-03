@@ -310,19 +310,16 @@ const HabitDetailsScreen = () => {
     const NotificationModal = () => (
         <Modal
             visible={showNotificationModal}
-            transparent={true}
+            transparent={false}
             animationType="fade"
         >
-            <TouchableOpacity
-                style={styles.modalOverlay}
-                activeOpacity={1}
-            >
+            <View style={styles.notificationModalContainer}>
                 <NotificationConfigComponent
                     habitUuid={habitDetail!.uuid}
                     currentConfig={habitDetail!.notificationFrequency}
                     onModalClose={handleCloseNotificationModal}
                 />
-            </TouchableOpacity>
+            </View>
         </Modal>
     );
 
@@ -828,7 +825,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.background,
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 10,
     },
     modalContent: {
         backgroundColor: theme.surfaceTertiary,
@@ -918,6 +915,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         height: 8,
         borderRadius: 4,
         backgroundColor: '#FF9800',
+    },
+    notificationModalContainer: {
+        flex: 1,
+        backgroundColor: theme.background,
+        paddingTop: 40,
     },
 }));
 
