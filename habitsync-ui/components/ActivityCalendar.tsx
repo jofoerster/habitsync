@@ -217,7 +217,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.surfaceSecondary,
     },
     calendarSection: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         margin: 20,
         borderRadius: 16,
         paddingVertical: 5,

@@ -114,7 +114,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         marginBottom: 13,
-        marginTop: 16,
+        marginTop: 42,
         paddingLeft: 16,
     },
     scrollContent: {

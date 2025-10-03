@@ -788,7 +788,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: theme.textSecondary,
     },
     section: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         marginTop: 16,
         marginHorizontal: 16,
         borderRadius: 12,

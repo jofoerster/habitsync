@@ -284,7 +284,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingLeft: 16,
-        marginTop: 16,
+        marginTop: 26,
 
     },
     logo: {

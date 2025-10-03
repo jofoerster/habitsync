@@ -99,7 +99,7 @@ const UserSettingsComponent = () => {
     return (
         <View style={styles.container}>
             <View
-                style={styles.header}
+
             >
                 <Text style={styles.header}>Profile & Settings</Text>
                 <Text style={styles.subHeader}>Manage your account preferences</Text>
@@ -228,7 +228,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontWeight: 'bold',
         color: theme.text,
         marginBottom: 8,
-        marginTop: 16,
+        marginTop: 42,
         paddingLeft: 16,
     },
     subHeader: {

@@ -508,7 +508,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
 
     header: {
         marginBottom: 13,
-        marginTop: 16,
+        marginTop: 42,
         paddingHorizontal: 16,
     },
     headerContent: {
@@ -552,7 +552,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         paddingHorizontal: 20,
     },
     progressCard: {
-        backgroundColor: theme.surfaceSecondary,
+        backgroundColor: theme.surface,
         borderRadius: 16,
         padding: 20,
         shadowColor: theme.shadow,
