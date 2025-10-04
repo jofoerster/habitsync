@@ -68,6 +68,8 @@ jobs:
           npm install -g @expo/cli eas-cli
 
       - name: Build Android APK locally with EAS
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           cd habitsync-ui
           eas build --platform android --profile production --non-interactive --local
@@ -195,3 +197,4 @@ jobs:
           files: ./apk/*.apk
           draft: false
           prerelease: false
+          
