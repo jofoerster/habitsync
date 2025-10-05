@@ -4,11 +4,11 @@
     "slug": "habitsync-ui",
     "version": "0.8.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo-transparent-pad.png",
     "scheme": "habitsync",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/images/logo-transparent-pad.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -21,7 +21,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/icon.png",
+        "foregroundImage": "./assets/images/logo-transparent-pad.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.habitsync.app"
