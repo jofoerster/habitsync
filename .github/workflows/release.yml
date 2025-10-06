@@ -193,9 +193,6 @@ jobs:
             ## Changes
             ${{ steps.changelog.outputs.changelog }}
             
-            ## Downloads
-            - **Android APK**: See attached files below
-            
             ## Docker Image
             ```bash
             docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.event.inputs.version }}
