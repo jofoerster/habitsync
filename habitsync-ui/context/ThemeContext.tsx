@@ -1,5 +1,6 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import {useColorScheme} from 'react-native';
+import {StatusBar} from 'expo-status-bar';
 import {darkTheme, lightTheme, Theme} from '@/constants/colors';
 import {secureStorage} from "@/services/storage";
 
@@ -58,6 +59,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({children
     return (
         <ThemeContext.Provider value={{theme, themeMode, isDark, setThemeMode}}>
             {children}
+            <StatusBar style={isDark ? 'light' : 'dark'} translucent={true}/>
         </ThemeContext.Provider>
     );
 };
