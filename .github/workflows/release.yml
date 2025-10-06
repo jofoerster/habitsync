@@ -170,9 +170,9 @@ jobs:
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
           if [ -n "$LATEST_TAG" ]; then
-            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | head -20)
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | grep -v "Merge pull request" | head -20)
           else
-            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | head -20)
+            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | grep -v "Merge pull request" | head -20)
           fi
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
