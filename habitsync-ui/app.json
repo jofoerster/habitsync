@@ -17,14 +17,22 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.habitsync.app"
+      "bundleIdentifier": "com.habitsync.app",
+      "statusBar": {
+        "barStyle": "dark-content"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/logo-transparent-pad.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.habitsync.app"
+      "package": "com.habitsync.app",
+      "statusBar": {
+        "barStyle": "dark-content",
+        "translucent": true,
+        "backgroundColor": "transparent"
+      }
     },
     "web": {
       "bundler": "metro",
