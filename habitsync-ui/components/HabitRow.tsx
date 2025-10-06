@@ -22,7 +22,16 @@ interface DayButtonProps {
     showCheckMarkIcon?: boolean
 }
 
-const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, onLongPress, disabled, hideDates, showCheckMarkIcon}) => {
+const DayButton: React.FC<DayButtonProps> = ({
+                                                 day,
+                                                 completion,
+                                                 value,
+                                                 onPress,
+                                                 onLongPress,
+                                                 disabled,
+                                                 hideDates,
+                                                 showCheckMarkIcon
+                                             }) => {
     const {theme, isDark} = useTheme();
 
     const getButtonStyle = () => {
@@ -82,9 +91,10 @@ const DayButton: React.FC<DayButtonProps> = ({day, completion, value, onPress, o
             onPress={disabled ? undefined : onPress}
             onLongPress={disabled ? undefined : onLongPress}
         >
-            {value == 0 || (value == 1 && showCheckMarkIcon) ? (<Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
-                {getIcon(completion)}
-            </Text>) : (
+            {value == 0 || (value == 1 && showCheckMarkIcon) ? (
+                <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
+                    {getIcon(completion)}
+                </Text>) : (
                 <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
                     {value}
                 </Text>
@@ -291,22 +301,22 @@ const HabitRow: React.FC<HabitRowProps> = ({
                         </Pressable>
                     </Link>
 
+                    <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                        {(!isConnectedHabitView && hasConnectedHabits && !isDragModeEnabled) && (
+                            <TouchableOpacity
+                                style={{
+                                    backgroundColor: theme.surfaceSecondary,
+                                    borderRadius: 8,
+                                    padding: 3,
+                                    marginRight: 8,
+                                }}
+                                onPress={onToggleExpand}
+                            >
+                                {isExpanded ? <ChevronUp color={theme.text} size={20}/> :
+                                    <ChevronDown color={theme.text} size={20}/>}
+                            </TouchableOpacity>
+                        )}
 
-                    {(!isConnectedHabitView && hasConnectedHabits && !isDragModeEnabled) && (
-                        <TouchableOpacity
-                            style={{
-                                backgroundColor: theme.surfaceSecondary,
-                                borderRadius: 8,
-                                padding: 3,
-                                marginHorizontal: 8,
-                            }}
-                            onPress={onToggleExpand}
-                        >
-                            {isExpanded ? <ChevronUp color={theme.text} size={20}/> :
-                                <ChevronDown color={theme.text} size={20}/>}
-                        </TouchableOpacity>
-                    )}
-                    <View style={{flex: 1}}>
                         <View style={{flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'flex-end'}}>
                             {isDragModeEnabled && !isConnectedHabitView ? (
                                 // Show reorder arrows instead of day buttons when in drag mode
@@ -344,7 +354,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                 days.map(day => {
                                     const record = getRecordForDay(day.epochDay);
                                     return (
-                                        <View key={day.key + habit.uuid} style={{flexDirection: 'columns'}}>
+                                        <View key={day.key + habit.uuid}>
                                             {!hideDates && (<Text key={day.key + record.id}
                                                                   style={{
                                                                       fontSize: 10,

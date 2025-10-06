@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>de.jofoerster.habitsync</groupId>
 	<artifactId>habitsync-api</artifactId>
-	<version>0.8.0</version>
+	<version>0.9.0</version>
 	<name>habitsync</name>
 	<description>Habit tracker with sharing and challenge functions</description>
 	<url/>
@@ -142,7 +142,18 @@
 		<dependency>
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-core</artifactId>
-			<version>11.11.0</version>
+			<version>11.13.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-database-postgresql</artifactId>
+			<version>11.13.2</version>
+			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.7.8</version>
 		</dependency>
 	</dependencies>
 

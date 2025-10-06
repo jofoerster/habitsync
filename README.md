@@ -37,7 +37,7 @@
 ### 🚀 **Simple & Intuitive**
 - **Clean, user-friendly interface** designed like a "normal" habit tracker for daily use and quick habit logging
 - **Progressive Web App (PWA)** install directly from your browser
-- **📱 Mobile app builds coming soon**
+- **📱 Mobile App (Android, see [Downloads](#download-mobile-app))**
 
 ### 🎯 **Extensive Goal Configuration**
 - **Flexible habit tracking** with customizable goals and frequencies
@@ -68,6 +68,10 @@
 - **Easy Docker deployment** for quick setup
 - **API-first architecture** swagger docs available, ready for external integrations
 
+## Download mobile App
+
+[<img alt="Get it on GitHub" src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" width="240">](https://github.com/jofoerster/habitsync/releases/latest)
+
 ## Deployment
 
 ### Docker (Quickstart for testing)
@@ -94,7 +98,8 @@ services:
     environment:
       - BASE_URL=https://your-domain.com/
       # Choose one or more of the following authentication methods:
-      # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), set BASE_URL/auth-callback as redirect
+      # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
+      # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback
       # more than one issuer can be configured
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
@@ -169,10 +174,18 @@ For a complete example, see `examples/docker-compose-apprise.yml`.
 
 ## Database and Backups
 
+Supported databases are H2 (default) and PostgreSQL.
 The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
 optionally can be mounted as a volume in production and can be backed up by copying the file.
 You can also connect to the database using a database client on port `9092`.
-Support for PostgreSQL is planned and coming soon.
+
+To use PostgreSQL, set the following environment variables:
+```
+- SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:<port>/<database>
+- SPRING_DATASOURCE_USERNAME=<username>
+- SPRING_DATASOURCE_PASSWORD=<password>
+- SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+```
 
 ## API Documentation
 

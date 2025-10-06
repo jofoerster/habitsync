@@ -34,8 +34,8 @@ const SharedHabitParticipants = ({sharedHabit, currentUser, hideHabit, medals}: 
                     <View style={{flex: 1, flexDirection: 'column'}}>
                         <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
                             <TouchableOpacity onPress={() => onToggleExpand(habit.uuid)}>
-                                {isExpandedList.get(habit.uuid) ? <ChevronUp size={20} style={{marginRight: 5}}/> :
-                                    <ChevronDown size={20} style={{marginRight: 5}}/>}
+                                {isExpandedList.get(habit.uuid) ? <ChevronUp color={theme.text} size={20} style={{marginRight: 5}}/> :
+                                    <ChevronDown color={theme.text} size={20} style={{marginRight: 5}}/>}
                             </TouchableOpacity>
                             <View style={styles.participantInfo}>
                                 <View

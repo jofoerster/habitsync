@@ -9,20 +9,19 @@ spring:
     driverClassName: org.h2.Driver
     username: sa
     password: password
+    hikari:
+      schema: PUBLIC
   flyway:
     enabled: true
-    locations: classpath:db/migration
+    locations: classpath:db/migration/{vendor}
     baseline-on-migrate: true
     baseline-version: 0.0.1
-    user: sa
-    password: password
     schemas: PUBLIC
   h2:
     console:
       enabled: true
       path: /h2-console
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: none
     open-in-view: false
