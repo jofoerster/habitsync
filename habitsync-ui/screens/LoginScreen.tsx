@@ -176,7 +176,7 @@ const LoginScreen = () => {
             {isMaintenanceMode ? (
                 <View style={styles.maintenanceContainer}>
                     <MaterialCommunityIcons name="wrench" size={48} color="#ff9800"/>
-                    <Text style={styles.maintenanceTitle}>Maintenance mode active</Text>
+                    <Text style={styles.maintenanceTitle}>Server not available</Text>
                     <Text style={styles.maintenanceText}>
                         Login is currently unavailable. Please try again later.
                     </Text>
