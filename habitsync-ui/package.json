@@ -1,7 +1,7 @@
 {
   "name": "habitsync-ui",
   "main": "expo-router/entry",
-  "version": "0.9.1",
+  "version": "0.10.0",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -32,6 +32,7 @@
     "expo-linear-gradient": "^14.1.5",
     "expo-linking": "~7.1.7",
     "expo-modules-core": "~2.5.0",
+    "expo-navigation-bar": "^5.0.8",
     "expo-router": "~5.1.7",
     "expo-secure-store": "~14.2.4",
     "expo-splash-screen": "~0.30.10",

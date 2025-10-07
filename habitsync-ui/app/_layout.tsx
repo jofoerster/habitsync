@@ -5,6 +5,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import {useEffect} from 'react';
 import {ThemeProvider} from "@/context/ThemeContext";
 import {AlertProvider} from "@/context/AlertContext";
+import {StatusBar} from 'expo-status-bar';
+import * as NavigationBar from 'expo-navigation-bar';
+import {Platform} from 'react-native';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,6 +22,14 @@ export default function RootLayout() {
         }
     }, [loaded]);
 
+    useEffect(() => {
+        // Configure translucent navigation bar for Android
+        if (Platform.OS === 'android') {
+            NavigationBar.setPositionAsync('absolute');
+            NavigationBar.setBackgroundColorAsync('#00000000'); // Transparent
+        }
+    }, []);
+
     if (!loaded) {
         return null;
     }
@@ -27,6 +38,7 @@ export default function RootLayout() {
         <ThemeProvider>
             <AlertProvider>
                 <AuthProvider>
+                    <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
                     <Stack screenOptions={{headerShown: false}}/>
                 </AuthProvider>
             </AlertProvider>

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
+import de.jofoerster.habitsync.model.habit.HabitParticipant;
+import de.jofoerster.habitsync.model.habit.HabitParticipationStatus;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.notification.NotificationRule;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
@@ -30,11 +32,26 @@ public class HabitService {
     private final HabitRecordRepository habitRecordRepository;
     private final Random rand = new Random();
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
+    private final HabitParticipantRepository habitParticipantRepository;
 
     ObjectMapper mapper = new ObjectMapper();
 
     public List<Habit> getAllUserHabitsByType(Account account, HabitType habitType) {
-        return habitRepository.findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
+        List<Habit> habits = habitRepository
+                .findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
+        List<HabitParticipant> participants =
+                habitParticipantRepository
+                        .getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
+                                HabitParticipationStatus.ACCEPTED, account.getAuthenticationId());
+        participants.forEach(p -> {
+            Optional<Habit> habitOpt = habitRepository.findByUuid(p.getHabitUuid());
+            habitOpt.ifPresent(h -> {
+                if (h.getStatus() == 1 && h.getHabitType() == habitType) {
+                    habits.add(h);
+                }
+            });
+        });
+        return habits;
     }
 
     public Optional<Habit> getHabitByUuid(String uuid) {
