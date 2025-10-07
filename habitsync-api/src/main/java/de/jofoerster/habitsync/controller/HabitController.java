@@ -7,6 +7,7 @@ import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
+import de.jofoerster.habitsync.service.habit.HabitParticipationService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.notification.NotificationService;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static de.jofoerster.habitsync.controller.PermissionChecker.*;
+import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfIsOwner;
+import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToDelete;
 
 @RestController
 @RequestMapping("/api/habit")
@@ -25,12 +27,18 @@ public class HabitController {
     private final HabitService habitService;
     private final AccountService accountService;
     private final NotificationService notificationService;
+    private final HabitParticipationService habitParticipationService;
+
+    private final PermissionChecker permissionChecker;
 
     public HabitController(HabitService habitService, AccountService accountService,
-                           NotificationService notificationService) {
+                           NotificationService notificationService, HabitParticipationService habitParticipationService,
+                           PermissionChecker permissionChecker) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.notificationService = notificationService;
+        this.habitParticipationService = habitParticipationService;
+        this.permissionChecker = permissionChecker;
     }
 
     /**
@@ -53,7 +61,7 @@ public class HabitController {
     @GetMapping("/{uuid}")
     public ResponseEntity<HabitReadDTO> getHabitByUuid(@PathVariable String uuid) {
         Optional<Habit> habit = habitService.getHabitByUuid(uuid);
-        checkIfisAllowedToRead(habit.orElse(null), accountService.getCurrentAccount(),
+        permissionChecker.checkIfisAllowedToRead(habit.orElse(null), accountService.getCurrentAccount(),
                 habitService);
         return habit.map(value -> ResponseEntity.ok(
                         habitService.getApiHabitReadFromHabit(value)))
@@ -82,7 +90,7 @@ public class HabitController {
     public ResponseEntity<HabitReadDTO> updateHabit(@PathVariable String uuid,
                                                     @RequestBody HabitWriteDTO habitWriteDTO) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
-        checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
         return ResponseEntity.ok(habitService.updateHabit(uuid, habitWriteDTO));
     }
@@ -96,7 +104,7 @@ public class HabitController {
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteHabit(@PathVariable String uuid) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
-        checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
         if (habitOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -114,7 +122,8 @@ public class HabitController {
      */
     @GetMapping("/connected-habits/{uuid}")
     public ResponseEntity<List<HabitReadDTO>> getConnectedHabits(@PathVariable String uuid) {
-        checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null),
+                accountService.getCurrentAccount());
         List<SharedHabitHabitPair> habits =
                 habitService.getAllRelatedHabitsToHabitOfUser(accountService.getCurrentAccount(), uuid,
                         HabitType.INTERNAL);
@@ -126,7 +135,8 @@ public class HabitController {
 
     @GetMapping("/connected-habits/{uuid}/count")
     public ResponseEntity<Long> getConnectedHabitCount(@PathVariable String uuid) {
-        checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null),
+                accountService.getCurrentAccount());
         return ResponseEntity.ok(habitService.getNumberOfConnectedHabits(uuid, HabitType.INTERNAL));
     }
 
@@ -134,7 +144,7 @@ public class HabitController {
     public ResponseEntity moveHabitUp(@PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         Account account = accountService.getCurrentAccount();
-        checkIfisAllowedToEdit(habit, account);
+        permissionChecker.checkIfisAllowedToEdit(habit, account);
         habitService.moveHabit(account, habit, true);
         return ResponseEntity.ok().build();
     }
@@ -143,8 +153,43 @@ public class HabitController {
     public ResponseEntity moveHabitDown(@PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         Account account = accountService.getCurrentAccount();
-        checkIfisAllowedToEdit(habit, account);
+        permissionChecker.checkIfisAllowedToEdit(habit, account);
         habitService.moveHabit(account, habit, false);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{uuid}/participant/invite/{participantAuthId}")
+    public ResponseEntity<Void> inviteParticipant(@PathVariable String uuid, @PathVariable String participantAuthId) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        checkIfIsOwner(habit, account);
+        habitParticipationService.inviteParticipant(habit.getUuid(), participantAuthId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{uuid}/participant/remove/{participantAuthId}")
+    public ResponseEntity<Void> removeParticipant(@PathVariable String uuid, @PathVariable String participantAuthId) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        checkIfIsOwner(habit, account);
+        habitParticipationService.removeParticipant(habit.getUuid(), participantAuthId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{uuid}/participant/accept-invitation")
+    public ResponseEntity<Void> acceptInvitation(@PathVariable String uuid) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        habitParticipationService.acceptInvitation(habit, account.getAuthenticationId());
         return ResponseEntity.ok().build();
     }
 }

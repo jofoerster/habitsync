@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
-import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToEdit;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/notifications")
@@ -21,6 +19,7 @@ public class NotificationController {
     private final NotificationService notificationService;
     private final HabitService habitService;
     private final AccountService accountService;
+    private final PermissionChecker permissionChecker;
 
     @PutMapping("/habit/{habitUuid}")
     public ResponseEntity<Void> scheduleNotificationForHabit(@PathVariable String habitUuid, @RequestBody
@@ -29,7 +28,7 @@ public class NotificationController {
         if (habit.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        checkIfisAllowedToEdit(habit.orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToEdit(habit.orElse(null), accountService.getCurrentAccount());
         boolean result = notificationService.createOrUpdateNotificationsForHabit(habit.get(), frequencyDTO);
         if (!result) {
             return ResponseEntity.badRequest().build();
@@ -43,7 +42,7 @@ public class NotificationController {
         if (habit.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
-        checkIfisAllowedToEdit(habit.orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToEdit(habit.orElse(null), accountService.getCurrentAccount());
         boolean result = notificationService.deleteNotificationForHabit(habit.get());
         if (!result) {
             return ResponseEntity.badRequest().build();
