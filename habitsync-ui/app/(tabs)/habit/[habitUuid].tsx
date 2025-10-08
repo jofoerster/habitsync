@@ -18,13 +18,12 @@ import {useFocusEffect, useLocalSearchParams, useRouter} from "expo-router";
 import alert from "@/services/alert";
 import NumberModal from "@/components/NumberModal";
 import SharedHabitParticipants from "@/components/SharedHabitParticipants";
-import * as Clipboard from "expo-clipboard";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import {AuthService} from "@/services/auth";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {UI_BASE_URL} from "@/public/config";
 import NotificationConfigComponent from "@/components/NotificationConfig";
+import ShareHabitModal from "@/components/ShareHabitModal";
 
 
 const {width} = Dimensions.get('window');
@@ -172,40 +171,6 @@ const HabitDetailsScreen = () => {
         setShowShareModal(false);
     };
 
-    const ShareHabitModal = () => (
-        <Modal
-            visible={showShareModal}
-            transparent={true}
-            animationType="fade"
-            onRequestClose={handleCancel}
-        >
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Habit already shared</Text>
-                    <Text style={styles.modalMessage}>
-                        This habit has already been shared. Copy the share code to let others join the shared habit.
-                    </Text>
-
-                    <View style={styles.buttonContainer}>
-                        <TouchableOpacity
-                            style={[styles.button, styles.primaryButton]}
-                            onPress={() => handleCopyShareCode(sharedHabits[0])}
-                        >
-                            <Text style={styles.primaryButtonText}>Copy share code</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={[styles.button, styles.cancelButton]}
-                            onPress={handleCancel}
-                        >
-                            <Text style={styles.cancelButtonText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-        </Modal>
-    );
-
     const handleDeleteHabit = () => {
         if (!habitDetail?.uuid) {
             alert('Error', 'Habit details not available');
@@ -347,21 +312,37 @@ const HabitDetailsScreen = () => {
                         )}
                     </View>
 
-                    {/* Notification Button */}
-                    {isOwnHabit === "true" && (
-                        <TouchableOpacity
-                            style={styles.notificationButton}
-                            onPress={handleNotificationPress}
-                        >
-                            <MaterialCommunityIcons
-                                name={"bell-outline"}
-                                size={24}
-                                color={theme.textSecondary}
-                            />
-                            {notificationsEnabled && (
-                                <View style={styles.notificationIndicator}/>
-                            )}
-                        </TouchableOpacity>
+                    {/* Action Buttons in Header */}
+                    {isOwnHabit === "true" && !isChallenge && (
+                        <View style={styles.headerActions}>
+                            <TouchableOpacity
+                                style={styles.headerButton}
+                                onPress={() => setShowShareModal(true)}
+                            >
+                                <MaterialCommunityIcons
+                                    name="share-variant"
+                                    size={24}
+                                    color={theme.textSecondary}
+                                />
+                                {sharedHabits.length > 0 && (
+                                    <View style={styles.shareIndicator}/>
+                                )}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={styles.headerButton}
+                                onPress={handleNotificationPress}
+                            >
+                                <MaterialCommunityIcons
+                                    name={"bell-outline"}
+                                    size={24}
+                                    color={theme.textSecondary}
+                                />
+                                {notificationsEnabled && (
+                                    <View style={styles.notificationIndicator}/>
+                                )}
+                            </TouchableOpacity>
+                        </View>
                     )}
                 </View>
             </View>
@@ -448,19 +429,6 @@ const HabitDetailsScreen = () => {
             {/* Action Buttons */}
             {isOwnHabit === "true" && !isChallenge && (
                 <View style={styles.actionsSection}>
-                    <TouchableOpacity style={styles.primaryButton} onPress={handleShareHabit}>
-                        <MaterialCommunityIcons name="share-variant" size={20} color="#FFFFFF"/>
-                        <Text style={styles.buttonText}>Share Habit</Text>
-                    </TouchableOpacity>
-
-                    {sharedHabits.length > 0 && (
-                        <TouchableOpacity style={[styles.primaryButton, styles.leaveSharedButton]}
-                                          onPress={handleLeaveSharedHabit}>
-                            <MaterialCommunityIcons name="exit-to-app" size={20} color="#FFFFFF"/>
-                            <Text style={styles.buttonText}>Leave Shared Habit</Text>
-                        </TouchableOpacity>
-                    )}
-
                     <View style={styles.secondaryButtons}>
                         <TouchableOpacity style={styles.secondaryButton} onPress={handleEditHabit}>
                             <MaterialCommunityIcons name="pencil" size={20} color="#2196F3"/>
@@ -476,6 +444,14 @@ const HabitDetailsScreen = () => {
                         )}
                     </View>
 
+                    {sharedHabits.length > 0 && (
+                        <TouchableOpacity style={[styles.secondaryButton, styles.leaveSharedButton]}
+                                          onPress={handleLeaveSharedHabit}>
+                            <MaterialCommunityIcons name="exit-to-app" size={20} color="#FF9800"/>
+                            <Text style={[styles.secondaryButtonText, {color: '#FF9800'}]}>Leave Shared Habit</Text>
+                        </TouchableOpacity>
+                    )}
+
                     <TouchableOpacity style={[styles.secondaryButton, styles.deleteButton]}
                                       onPress={handleDeleteHabit}>
                         <MaterialCommunityIcons name="delete" size={20} color="#F44336"/>
@@ -485,7 +461,16 @@ const HabitDetailsScreen = () => {
             )}
 
             {/* Modals */}
-            <ShareHabitModal/>
+            {habitDetail && (
+                <ShareHabitModal
+                    visible={showShareModal}
+                    onClose={() => setShowShareModal(false)}
+                    habitDetail={habitDetail}
+                    sharedHabits={sharedHabits}
+                    isOwnHabit={currentUser?.authenticationId! === habitDetail.account?.authenticationId}
+                    onUpdate={fetchData}
+                />
+            )}
             <NotificationModal/>
         </ScrollView>
     );
@@ -771,7 +756,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         borderColor: '#F44336',
     },
     leaveSharedButton: {
-        backgroundColor: '#FF9800',
+        marginBottom: 12,
     },
     sectionTitle: {
         fontSize: 20,
@@ -920,6 +905,24 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         flex: 1,
         backgroundColor: theme.background,
         paddingTop: 40,
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerButton: {
+        padding: 8,
+        position: 'relative',
+        marginLeft: 16,
+    },
+    shareIndicator: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#FF9800',
     },
 }));
 

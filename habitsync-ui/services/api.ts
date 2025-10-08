@@ -253,6 +253,12 @@ export const userApi = {
         });
         if (!response.ok) throw new Error('Failed to approve user');
     },
+
+    getHabitInvitations: async (): Promise<ApiHabitRead[]> => {
+        const response = await authenticatedFetch(`/api/user/invitations/habit-participation/list`);
+        if (!response.ok) throw new Error('Failed to fetch habit invitations');
+        return response.json();
+    },
 }
 
 
@@ -319,7 +325,41 @@ export const habitApi = {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to move habit down');
-    }
+    },
+
+    listParticipants: async (uuid: string): Promise<ApiAccountRead[]> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/list`);
+        if (!response.ok) throw new Error('Failed to fetch participants');
+        return response.json();
+    },
+
+    inviteParticipant: async (uuid: string, authId: string): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/invite/${authId}`, {
+            method: 'POST',
+        });
+        if (!response.ok) throw new Error('Failed to invite participant');
+    },
+
+    removeParticipant: async (uuid: string, authId: string): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/remove/${authId}`, {
+            method: 'POST',
+        });
+        if (!response.ok) throw new Error('Failed to remove participant');
+    },
+
+    acceptInvitation: async (uuid: string): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/accept-invitation`, {
+            method: 'POST',
+        });
+        if (!response.ok) throw new Error('Failed to accept invitation');
+    },
+
+    declineInvitation: async (uuid: string): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/decline-invitation`, {
+            method: 'POST',
+        });
+        if (!response.ok) throw new Error('Failed to decline invitation');
+    },
 };
 
 export const notificationApi = {

@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.controller;
 
+import de.jofoerster.habitsync.dto.AccountReadDTO;
 import de.jofoerster.habitsync.dto.HabitReadDTO;
 import de.jofoerster.habitsync.dto.HabitWriteDTO;
 import de.jofoerster.habitsync.model.account.Account;
@@ -191,5 +192,27 @@ public class HabitController {
         Account account = accountService.getCurrentAccount();
         habitParticipationService.acceptInvitation(habit, account.getAuthenticationId());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/{uuid}/participant/decline-invitation")
+    public ResponseEntity<Void> declineInvitation (@PathVariable String uuid) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        habitParticipationService.declineInvitation(habit, account.getAuthenticationId());
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{uuid}/participant/list")
+    public ResponseEntity<List<AccountReadDTO>> listParticipants(@PathVariable String uuid) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        checkIfIsOwner(habit, account);
+        return ResponseEntity.ok(habitParticipationService.listParticipants(habit));
     }
 }

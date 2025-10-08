@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {ApiAccountSettingsReadWrite, serverConfigApi, userApi} from "@/services/api";
+import {ApiAccountSettingsReadWrite, ApiHabitRead, habitApi, serverConfigApi, userApi} from "@/services/api";
 import alert from "@/services/alert";
 import {AuthService} from "@/services/auth";
 import {Link} from 'expo-router';
@@ -33,9 +33,12 @@ const UserSettingsComponent = () => {
     const [isPushNotificationsEnabled, setIsPushNotificationsEnabled] = useState(false);
     const [appriseTargetUrl, setAppriseTargetUrl] = useState("");
     const [showAppriseField, setShowAppriseField] = useState(false);
+    const [habitInvitations, setHabitInvitations] = useState<ApiHabitRead[]>([]);
+    const [processingInvitation, setProcessingInvitation] = useState<string | null>(null);
 
     useEffect(() => {
         loadSettings();
+        loadHabitInvitations();
         const loadConfig = async () => {
             const config = await serverConfigApi.getServerConfig();
             setShowAppriseField(config.appriseActive);
@@ -57,6 +60,15 @@ const UserSettingsComponent = () => {
             Alert.alert('Error', 'Failed to load settings');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadHabitInvitations = async () => {
+        try {
+            const invitations = await userApi.getHabitInvitations();
+            setHabitInvitations(invitations);
+        } catch (error) {
+            console.error('Failed to load habit invitations', error);
         }
     };
 
@@ -83,6 +95,32 @@ const UserSettingsComponent = () => {
         }
     };
 
+    const handleAcceptInvitation = async (habitUuid: string) => {
+        try {
+            setProcessingInvitation(habitUuid);
+            await habitApi.acceptInvitation(habitUuid);
+            alert('Success', 'Invitation accepted');
+            await loadHabitInvitations();
+        } catch (error) {
+            alert('Error', 'Failed to accept invitation');
+        } finally {
+            setProcessingInvitation(null);
+        }
+    };
+
+    const handleDeclineInvitation = async (habitUuid: string) => {
+        try {
+            setProcessingInvitation(habitUuid);
+            await habitApi.declineInvitation(habitUuid);
+            alert('Success', 'Invitation declined');
+            await loadHabitInvitations();
+        } catch (error) {
+            alert('Error', 'Failed to decline invitation');
+        } finally {
+            setProcessingInvitation(null);
+        }
+    };
+
     const handleLogout = async () => {
         await AuthService.getInstance().logout();
     };
@@ -98,9 +136,7 @@ const UserSettingsComponent = () => {
 
     return (
         <View style={styles.container}>
-            <View
-
-            >
+            <View>
                 <Text style={styles.header}>Profile & Settings</Text>
                 <Text style={styles.subHeader}>Manage your account preferences</Text>
             </View>
@@ -108,6 +144,54 @@ const UserSettingsComponent = () => {
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Theme Settings Section */}
                 <ThemeToggle/>
+
+                {/* Habit Invitations Section */}
+                {habitInvitations.length > 0 && (
+                    <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>Habit Invitations</Text>
+                        {habitInvitations.map((habit) => (
+                            <View key={habit.uuid} style={styles.invitationItem}>
+                                <View style={styles.invitationHeader}>
+                                    <View style={[styles.habitColorDot, {backgroundColor: `#${habit.color.toString(16).padStart(6, '0')}`}]} />
+                                    <Text style={styles.invitationHabitName}>{habit.name}</Text>
+                                </View>
+                                <Text style={styles.invitationFrom}>
+                                    From: {habit.account.displayName}
+                                </Text>
+                                <View style={styles.invitationActions}>
+                                    <TouchableOpacity
+                                        style={[styles.invitationButton, styles.acceptButton]}
+                                        onPress={() => handleAcceptInvitation(habit.uuid)}
+                                        disabled={processingInvitation === habit.uuid}
+                                    >
+                                        {processingInvitation === habit.uuid ? (
+                                            <ActivityIndicator size="small" color={theme.textInverse} />
+                                        ) : (
+                                            <>
+                                                <MaterialCommunityIcons name="check" size={18} color={theme.textInverse} />
+                                                <Text style={styles.invitationButtonText}>Accept</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.invitationButton, styles.declineButton]}
+                                        onPress={() => handleDeclineInvitation(habit.uuid)}
+                                        disabled={processingInvitation === habit.uuid}
+                                    >
+                                        {processingInvitation === habit.uuid ? (
+                                            <ActivityIndicator size="small" color={theme.textInverse} />
+                                        ) : (
+                                            <>
+                                                <MaterialCommunityIcons name="close" size={18} color={theme.textInverse} />
+                                                <Text style={styles.invitationButtonText}>Decline</Text>
+                                            </>
+                                        )}
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                )}
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Account Information</Text>
@@ -361,6 +445,61 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     logoutButtonText: {
         color: theme.textInverse,
         fontSize: 16,
+        fontWeight: '600',
+    },
+    invitationItem: {
+        backgroundColor: theme.surfaceSecondary,
+        borderRadius: 8,
+        padding: 12,
+        marginBottom: 12,
+        borderLeftWidth: 3,
+        borderLeftColor: theme.primary,
+    },
+    invitationHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    habitColorDot: {
+        width: 12,
+        height: 12,
+        borderRadius: 6,
+        marginRight: 8,
+    },
+    invitationHabitName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: theme.text,
+        flex: 1,
+    },
+    invitationFrom: {
+        fontSize: 13,
+        color: theme.textSecondary,
+        marginBottom: 12,
+        marginLeft: 20,
+    },
+    invitationActions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    invitationButton: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 10,
+        borderRadius: 6,
+        gap: 6,
+    },
+    acceptButton: {
+        backgroundColor: theme.success,
+    },
+    declineButton: {
+        backgroundColor: theme.error,
+    },
+    invitationButtonText: {
+        color: theme.textInverse,
+        fontSize: 14,
         fontWeight: '600',
     },
 }));

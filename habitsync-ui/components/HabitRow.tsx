@@ -240,7 +240,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
             const newRecord = await habitRecordApi.createRecord(habit.uuid, {
                 epochDay: epochDay,
-                recordValue: parseInt(value) || 0
+                recordValue: parseFloat(value) || 0
             });
             await loadHabitRecords();
             await handleHabitUpdate(habit);

@@ -70,9 +70,9 @@ const NumberModal: React.FC<NumberModalProps> = ({
     const handleSubmit = (value: string) => {
         let valueToSet: number;
         if (value.startsWith("+") || value.startsWith("-") || !currentRecordValue) {
-            valueToSet = (currentRecordValue || 0) + parseInt(value);
+            valueToSet = (currentRecordValue || 0) + parseFloat(value);
         } else {
-            valueToSet = parseInt(value);
+            valueToSet = parseFloat(value);
         }
         if (isNaN(valueToSet)) {
             console.error("Invalid value submitted:", value);
