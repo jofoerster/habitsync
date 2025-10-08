@@ -19,7 +19,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfIsOwner;
-import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllowedToDelete;
 
 @RestController
 @RequestMapping("/api/habit")
@@ -105,7 +104,8 @@ public class HabitController {
     @DeleteMapping("/{uuid}")
     public ResponseEntity<Void> deleteHabit(@PathVariable String uuid) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
-        permissionChecker.checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null), accountService.getCurrentAccount());
+        permissionChecker.checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null),
+                accountService.getCurrentAccount());
         if (habitOpt.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -166,6 +166,8 @@ public class HabitController {
             return ResponseEntity.notFound().build();
         }
         Account account = accountService.getCurrentAccount();
+        accountService.getAccountById(participantAuthId)
+                .orElseThrow(() -> new IllegalArgumentException("No account found for id " + participantAuthId));
         checkIfIsOwner(habit, account);
         habitParticipationService.inviteParticipant(habit.getUuid(), participantAuthId);
         return ResponseEntity.ok().build();
@@ -195,7 +197,7 @@ public class HabitController {
     }
 
     @PostMapping("/{uuid}/participant/decline-invitation")
-    public ResponseEntity<Void> declineInvitation (@PathVariable String uuid) {
+    public ResponseEntity<Void> declineInvitation(@PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
