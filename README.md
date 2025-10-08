@@ -66,7 +66,7 @@
 - **Dark/Light mode** support for comfortable viewing
 - **Responsive design** that works on all devices
 - **Easy Docker deployment** for quick setup
-- **API-first architecture** swagger docs available, ready for external integrations
+- **API-first architecture** swagger docs available, ready for external integrations (see [API](#api-documentation))
 
 ## Download mobile App
 
@@ -135,6 +135,33 @@ To enable notifications via [Apprise Api](https://github.com/caronc/apprise-api)
 ```
 For a complete example, see `examples/docker-compose-apprise.yml`.
 
+## Database and Backups
+
+Supported databases are H2 (default) and PostgreSQL.
+The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
+optionally can be mounted as a volume in production and can be backed up by copying the file.
+You can also connect to the database using a database client on port `9092`.
+
+To use PostgreSQL, set the following environment variables:
+```
+- SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:<port>/<database>
+- SPRING_DATASOURCE_USERNAME=<username>
+- SPRING_DATASOURCE_PASSWORD=<password>
+- SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+```
+
+## API Documentation
+
+The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
+The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
+To access the API, you can use either Basic Auth 
+or (WIP) generate an access token by using the `GET /api/user/api-key/new` endpoint.
+
+
+## Contributing and Help
+
+All contributions are welcome! If you find a bug, have a feature request or need help, please open an issue.
+
 ## Development Setup
 
 ### Backend API
@@ -171,30 +198,6 @@ For a complete example, see `examples/docker-compose-apprise.yml`.
    ```
 
 5. The UI will be available at `http://localhost:8081`
-
-## Database and Backups
-
-Supported databases are H2 (default) and PostgreSQL.
-The application uses H2 database by default with file-based storage. The database file `habittracker-db.mv.db`
-optionally can be mounted as a volume in production and can be backed up by copying the file.
-You can also connect to the database using a database client on port `9092`.
-
-To use PostgreSQL, set the following environment variables:
-```
-- SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:<port>/<database>
-- SPRING_DATASOURCE_USERNAME=<username>
-- SPRING_DATASOURCE_PASSWORD=<password>
-- SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
-```
-
-## API Documentation
-
-The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
-The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
-
-## Contributing
-
-All contributions are welcome!
 
 ## Known Issues / TODOs
 
