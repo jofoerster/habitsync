@@ -2,9 +2,12 @@ package de.jofoerster.habitsync.controller;
 
 import de.jofoerster.habitsync.dto.AccountReadDTO;
 import de.jofoerster.habitsync.dto.AccountSettingsReadWriteDTO;
+import de.jofoerster.habitsync.dto.HabitReadDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.auth.TokenService;
+import de.jofoerster.habitsync.service.habit.HabitParticipationService;
+import de.jofoerster.habitsync.service.habit.HabitService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,10 +20,15 @@ public class AccountController {
 
     private final AccountService accountService;
     private final TokenService tokenService;
+    private final HabitParticipationService habitParticipationService;
+    private final HabitService habitService;
 
-    public AccountController(AccountService accountService, TokenService tokenService) {
+    public AccountController(AccountService accountService, TokenService tokenService,
+                             HabitParticipationService habitParticipationService, HabitService habitService) {
         this.accountService = accountService;
         this.tokenService = tokenService;
+        this.habitParticipationService = habitParticipationService;
+        this.habitService = habitService;
     }
 
     @GetMapping("/info")
@@ -49,6 +57,18 @@ public class AccountController {
     public ResponseEntity<Void> approveAccount(@PathVariable String accountUuid) {
         accountService.approveAccount(accountUuid);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/invitations/habit-participation/list")
+    public ResponseEntity<List<HabitReadDTO>> getPendingHabitParticipationInvitations() {
+        Account account = accountService.getCurrentAccount();
+        return ResponseEntity.ok(
+                habitParticipationService.getPendingHabitParticipationInvitations(account.getAuthenticationId())
+                        .stream()
+                        .map(h -> habitService.getHabitByUuid(h)
+                                .orElseThrow())
+                        .map(habitService::getApiHabitReadFromHabit)
+                        .toList());
     }
 
     @GetMapping("/refresh-token")
