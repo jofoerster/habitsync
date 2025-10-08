@@ -39,6 +39,10 @@ public class ApiKeyService {
         return plainApiKey;
     }
 
+    public void revokeApiKey(ApiKey validApiKey) {
+        apiKeyRepository.delete(validApiKey);
+    }
+
     /**
      * Validates an API key and returns the associated ApiKey entity if valid
      */
