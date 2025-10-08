@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -87,7 +88,9 @@ public class HabitParticipationService {
                         List.of(HabitParticipationStatus.ACCEPTED, HabitParticipationStatus.INVITED));
         return participantList.stream()
                 .map(HabitParticipant::getParticipantAuthenticationId)
-                .map(accountService::getOrCreateAccountById)
+                .map(accountService::getAccountById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .map(Account::getApiAccountRead)
                 .toList();
     }
