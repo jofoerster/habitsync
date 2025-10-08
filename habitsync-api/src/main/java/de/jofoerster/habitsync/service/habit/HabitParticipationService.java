@@ -59,6 +59,20 @@ public class HabitParticipationService {
         habitParticipantRepository.saveAll(participantList);
     }
 
+    public void declineInvitation(Habit habit, String participantAuthId) {
+        List<HabitParticipant> participantList =
+                habitParticipantRepository
+                        .getHabitParticipantByHabitUuidAndParticipantAuthenticationId(habit.getUuid(),
+                                participantAuthId);
+        if (participantList.isEmpty()) {
+            return; // No invitation found
+        }
+        for (HabitParticipant participant : participantList) {
+            participant.setHabitParticipationStatus(HabitParticipationStatus.DECLINED);
+        }
+        habitParticipantRepository.saveAll(participantList);
+    }
+
     public boolean isAccountParticipantOfHabit(String uuid, String authenticationId) {
         return false;
     }

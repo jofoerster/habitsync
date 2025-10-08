@@ -353,6 +353,13 @@ export const habitApi = {
         });
         if (!response.ok) throw new Error('Failed to accept invitation');
     },
+
+    declineInvitation: async (uuid: string): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/${uuid}/participant/decline-invitation`, {
+            method: 'POST',
+        });
+        if (!response.ok) throw new Error('Failed to decline invitation');
+    },
 };
 
 export const notificationApi = {

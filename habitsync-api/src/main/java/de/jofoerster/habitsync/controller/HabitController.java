@@ -194,6 +194,17 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{uuid}/participant/decline-invitation")
+    public ResponseEntity<Void> declineInvitation (@PathVariable String uuid) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Account account = accountService.getCurrentAccount();
+        habitParticipationService.declineInvitation(habit, account.getAuthenticationId());
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/{uuid}/participant/list")
     public ResponseEntity<List<AccountReadDTO>> listParticipants(@PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
