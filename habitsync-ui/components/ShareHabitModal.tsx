@@ -309,6 +309,7 @@ const createStyles = createThemedStyles((theme) =>
             flex: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             justifyContent: 'center',
+            margin: 20,
         },
         modalContainer: {
             backgroundColor: theme.surface,

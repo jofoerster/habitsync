@@ -756,7 +756,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         borderColor: '#F44336',
     },
     leaveSharedButton: {
-        backgroundColor: '#FF9800',
+        marginBottom: 12,
     },
     sectionTitle: {
         fontSize: 20,
