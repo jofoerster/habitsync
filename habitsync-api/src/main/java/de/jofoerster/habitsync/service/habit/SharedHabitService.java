@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -24,16 +25,19 @@ public class SharedHabitService {
     private final NotificationRuleService notificationRuleService;
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
     private final HabitRepository habitRepository;
+    private final HabitParticipationService habitParticipationService;
 
     public SharedHabitService(SharedHabitRepository sharedHabitRepository, HabitRecordRepository habitRecordRepository,
                               NotificationRuleService notificationRuleService,
                               SharedHabitResultsRepository sharedHabitResultsRepository,
-                              HabitRepository habitRepository) {
+                              HabitRepository habitRepository, HabitParticipantRepository habitParticipantRepository,
+                              HabitParticipationService habitParticipationService) {
         this.sharedHabitRepository = sharedHabitRepository;
         this.habitRecordSupplier = new HabitRecordSupplier(habitRecordRepository);
         this.notificationRuleService = notificationRuleService;
         this.sharedHabitResultsRepository = sharedHabitResultsRepository;
         this.habitRepository = habitRepository;
+        this.habitParticipationService = habitParticipationService;
     }
 
     public Optional<SharedHabit> getSharedHabitByCode(String shareCode) {
@@ -168,11 +172,20 @@ public class SharedHabitService {
     }
 
 
+    //TODO this should probable be optimized
     public List<SharedHabitReadDTO> getSharedHabitsByAccount(Account currentAccount, HabitService habitService) {
-        return sharedHabitRepository.findAll().stream()
+        List<SharedHabitReadDTO> sharedHabits = sharedHabitRepository.findAll().stream()
                 .filter(sharedHabit -> sharedHabit.getHabitByOwner(currentAccount).isPresent())
                 .map(sh -> this.getApiSharedHabitReadFromSharedHabit(sh, habitService))
                 .toList();
+        List<SharedHabitReadDTO> habitsByParticipant = habitParticipationService.getHabitsByParticipant(currentAccount)
+                .stream()
+                .map(h -> this.getSharedHabitsByHabit(habitService.getHabitByUuid(h).orElseThrow()))
+                .flatMap(Collection::stream)
+                .distinct()
+                .map(sh -> this.getApiSharedHabitReadFromSharedHabit(sh, habitService))
+                .toList();
+        return Stream.concat(sharedHabits.stream(), habitsByParticipant.stream()).toList();
     }
 
     public SharedHabitReadDTO createNewSharedHabit(SharedHabitWriteDTO sharedHabitWrite, Account account,

@@ -13,6 +13,7 @@ interface ShareHabitModalProps {
     onClose: () => void;
     habitDetail: ApiHabitRead;
     sharedHabits: ApiSharedHabitRead[];
+    isOwnHabit: boolean;
     onUpdate: () => void;
 }
 
@@ -21,6 +22,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                                              onClose,
                                                              habitDetail,
                                                              sharedHabits,
+                                                             isOwnHabit,
                                                              onUpdate,
                                                          }) => {
     const {theme} = useTheme();
@@ -36,7 +38,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
     const shareUrl = sharedHabit ? `${UI_BASE_URL}/share/${sharedHabit.shareCode}` : '';
 
     useEffect(() => {
-        if (visible && sharedHabit) {
+        if (visible && sharedHabit && isOwnHabit) {
             loadParticipants();
         }
     }, [visible, sharedHabit]);
@@ -124,7 +126,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
         <Modal
             visible={visible}
             transparent={true}
-            animationType="slide"
+            animationType="fade"
             onRequestClose={onClose}
         >
             <View style={styles.modalOverlay}>
@@ -151,19 +153,21 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                             </Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[styles.tab, activeTab === 'participants' && styles.activeTab]}
-                            onPress={() => setActiveTab('participants')}
-                        >
-                            <MaterialCommunityIcons
-                                name="account-multiple"
-                                size={20}
-                                color={activeTab === 'participants' ? theme.primary : theme.textSecondary}
-                            />
-                            <Text style={[styles.tabText, activeTab === 'participants' && styles.activeTabText]}>
-                                Participants
-                            </Text>
-                        </TouchableOpacity>
+                        {isOwnHabit && (
+                            <TouchableOpacity
+                                style={[styles.tab, activeTab === 'participants' && styles.activeTab]}
+                                onPress={() => setActiveTab('participants')}
+                            >
+                                <MaterialCommunityIcons
+                                    name="account-multiple"
+                                    size={20}
+                                    color={activeTab === 'participants' ? theme.primary : theme.textSecondary}
+                                />
+                                <Text style={[styles.tabText, activeTab === 'participants' && styles.activeTabText]}>
+                                    Participants
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <ScrollView style={styles.content}>
@@ -304,12 +308,11 @@ const createStyles = createThemedStyles((theme) =>
         modalOverlay: {
             flex: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
         },
         modalContainer: {
             backgroundColor: theme.surface,
-            borderTopLeftRadius: 20,
-            borderTopRightRadius: 20,
+            borderRadius: 20,
             maxHeight: '90%',
             paddingBottom: 20,
         },

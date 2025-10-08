@@ -74,7 +74,10 @@ public class HabitParticipationService {
     }
 
     public boolean isAccountParticipantOfHabit(String uuid, String authenticationId) {
-        return false;
+        return !habitParticipantRepository
+                .getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationIdAndHabitUuid(
+                        HabitParticipationStatus.ACCEPTED, authenticationId, uuid
+                ).isEmpty();
     }
 
     public List<AccountReadDTO> listParticipants(Habit habit) {
@@ -95,5 +98,12 @@ public class HabitParticipationService {
                 ).stream()
                 .map(p -> p.getHabitUuid())
                 .toList();
+    }
+
+    public List<String> getHabitsByParticipant(Account currentAccount) {
+        return habitParticipantRepository
+                .getHabitParticipantsByParticipantAuthenticationIdAndHabitParticipationStatus(
+                        currentAccount.getAuthenticationId(), HabitParticipationStatus.ACCEPTED
+                ).stream().map(HabitParticipant::getHabitUuid).toList();
     }
 }

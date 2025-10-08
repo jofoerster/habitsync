@@ -467,6 +467,7 @@ const HabitDetailsScreen = () => {
                     onClose={() => setShowShareModal(false)}
                     habitDetail={habitDetail}
                     sharedHabits={sharedHabits}
+                    isOwnHabit={currentUser?.authenticationId! === habitDetail.account?.authenticationId}
                     onUpdate={fetchData}
                 />
             )}

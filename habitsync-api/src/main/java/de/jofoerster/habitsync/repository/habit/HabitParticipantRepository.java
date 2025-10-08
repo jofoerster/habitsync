@@ -27,4 +27,10 @@ public interface HabitParticipantRepository extends JpaRepository<HabitParticipa
     List<HabitParticipant> getHabitParticipantsByHabitUuid(String habitUuid);
 
     List<HabitParticipant> getHabitParticipantsByHabitUuidAndHabitParticipationStatusIn(String habitUuid, Collection<HabitParticipationStatus> habitParticipationStatuses);
+
+    List<HabitParticipant> getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationIdAndHabitUuid(
+            HabitParticipationStatus habitParticipationStatus, String participantAuthenticationId,
+            String habitUuid);
+
+    List<HabitParticipant> getHabitParticipantsByParticipantAuthenticationIdAndHabitParticipationStatus(String authenticationId, HabitParticipationStatus habitParticipationStatus);
 }
