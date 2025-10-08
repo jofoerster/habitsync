@@ -309,13 +309,13 @@ const createStyles = createThemedStyles((theme) =>
             flex: 1,
             backgroundColor: 'rgba(0, 0, 0, 0.5)',
             justifyContent: 'center',
-            margin: 20,
         },
         modalContainer: {
             backgroundColor: theme.surface,
             borderRadius: 20,
-            maxHeight: '90%',
+            flex: 0.8,
             paddingBottom: 20,
+            margin: 20,
         },
         header: {
             flexDirection: 'row',
