@@ -313,7 +313,6 @@ const createStyles = createThemedStyles((theme) =>
         modalContainer: {
             backgroundColor: theme.surface,
             borderRadius: 20,
-            flex: 0.8,
             paddingBottom: 20,
             margin: 20,
         },

@@ -540,7 +540,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         padding: 20,
         width: '95%',
         maxWidth: 600,
-        maxHeight: '90%',
     },
     modalTitle: {
         fontSize: 18,
