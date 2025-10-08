@@ -9,7 +9,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.security.authorization.AuthorizationDecision;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -24,6 +23,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtIss
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -41,6 +41,7 @@ public class SecurityConfig {
     private final AccountService accountService;
     private final SecurityProperties securityProperties;
     private final TokenService tokenService;
+    private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
 
     @Value("${base.url}")
     String baseUrl;
@@ -52,6 +53,7 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .userDetailsService(userDetailsService())
                 .httpBasic(httpBasic -> httpBasic
                         .authenticationEntryPoint(customAuthenticationEntryPoint())
@@ -69,7 +71,6 @@ public class SecurityConfig {
                 )
                 .exceptionHandling(ex ->
                         ex.authenticationEntryPoint(customAuthenticationEntryPoint()));
-        ;
 
         return http.build();
     }
