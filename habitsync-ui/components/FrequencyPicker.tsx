@@ -184,8 +184,6 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         alignItems: 'center',
     },
     picker: {
-        width: 100,
-        height: 40,
         backgroundColor: theme.surfaceTertiary,
         color: theme.text,
     },
