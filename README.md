@@ -10,11 +10,12 @@
 
 <div align="center">
   A powerful, self-hostable habit tracking platform with social features.
-  
-  Transform your daily routines into lasting habits while connecting with friends through shared challenges and progress tracking.
-  
-   **Try the Demo: [https://demo.habitsync.de](https://demo.habitsync.de)** 
-  
+
+Transform your daily routines into lasting habits while connecting with friends through shared challenges and progress
+tracking.
+
+**Try the Demo: [https://demo.habitsync.de](https://demo.habitsync.de)**
+
 </div>
 
 ---
@@ -35,34 +36,40 @@
 ## ✨ Key Features
 
 ### 🚀 **Simple & Intuitive**
+
 - **Clean, user-friendly interface** designed like a "normal" habit tracker for daily use and quick habit logging
 - **Progressive Web App (PWA)** install directly from your browser
 - **📱 Mobile App (Android, see [Downloads](#download-mobile-app))**
 
 ### 🎯 **Extensive Goal Configuration**
+
 - **Flexible habit tracking** with customizable goals and frequencies
 - **Variety of habit types**: daily, weekly, monthly, or custom intervals
 
 ### 👥 **Social & Sharing Features**
+
 - **Shared habits** to track progress with friends and family
 - **Monthly challenges** with community voting and leaderboards
 - **Achievement system** with medals for top performers
 - **Progress comparison** to stay motivated together
 
 ### 🔐 **Flexible Authentication, build for sharing**
+
 - **SSO OIDC integration** via public clients (PKCE flow)
 - **Multi-issuer support** (combine personal sso server with public provider for external users)
 - **Optional user approval** require approval for new users (per issuer)
 
 ### 🔔 **Flexible Notification System**
+
 - **Apprise integration** - send notifications anywhere (Discord, Email, Signal, Home Assistant, and 80+ services)
 - **Custom notification schedules** configure days and times for reminders
 - **Smart triggers** with customizable conditions:
     - ✅ **Scheduled reminders** if you haven't logged your habit
     - 📈 **Threshold alerts** when you fall below a certain percentage
-   - 🏆 **Overtake notifications** when friends surpass your progress
+    - 🏆 **Overtake notifications** when friends surpass your progress
 
 ### 🌓 **Modern Experience**
+
 - **Dark/Light mode** support for comfortable viewing
 - **Responsive design** that works on all devices
 - **Easy Docker deployment** for quick setup
@@ -72,11 +79,17 @@
 
 [<img alt="Get it on GitHub" src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" width="240">](https://github.com/jofoerster/habitsync/releases/latest)
 
+## Integrate with Home Assistant
+
+Use the REST API to integrate HabitSync with Home Assistant. See the detailed instructions in
+[README-Home-Assistant.md](README-Home-Assistant.md).
+
 ## Deployment
 
 ### Docker (Quickstart for testing)
 
 Start locally using Docker with the following command:
+
 ```
 docker run \
   -p 6842:6842 \
@@ -84,6 +97,7 @@ docker run \
   -e 'APP_SECURITY_BASIC-AUTH-USERS_test=$2y$10$EyuJ.fL/PzCTMMKTONEquuFLxAR8SAzl9iXF2v.qDZYCh5K2m78fS' \
   ghcr.io/jofoerster/habitsync:latest
 ```
+
 When started, login under `http://localhost:6842` with username `test` and
 password `PASSWORD`.
 
@@ -129,10 +143,14 @@ services:
 ```
 
 ### Notifications (Apprise)
-To enable notifications via [Apprise Api](https://github.com/caronc/apprise-api), set the following environment variables:
+
+To enable notifications via [Apprise Api](https://github.com/caronc/apprise-api), set the following environment
+variables:
+
 ```
 - APPRISE_API_URL=<your-apprise-url> # e.g. http://apprise-api:8000
 ```
+
 For a complete example, see `examples/docker-compose-apprise.yml`.
 
 ## Database and Backups
@@ -143,6 +161,7 @@ optionally can be mounted as a volume in production and can be backed up by copy
 You can also connect to the database using a database client on port `9092`.
 
 To use PostgreSQL, set the following environment variables:
+
 ```
 - SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:<port>/<database>
 - SPRING_DATASOURCE_USERNAME=<username>
@@ -153,10 +172,10 @@ To use PostgreSQL, set the following environment variables:
 ## API Documentation
 
 The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
-The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
-To access the API, you can use either Basic Auth 
+The Swagger API documentation is available at `/swagger-ui/index.html` (
+or [here](https://demo.habitsync.de/swagger-ui/index.html)).
+To access the API, you can use either Basic Auth
 or (WIP) generate an access token by using the `GET /api/user/api-key` endpoint.
-
 
 ## Contributing and Help
 
