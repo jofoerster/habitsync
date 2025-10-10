@@ -11,8 +11,10 @@ import de.jofoerster.habitsync.service.notification.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.TimeZone;
 
 @RestController
 @RequestMapping("/api/record")
@@ -59,6 +61,22 @@ public class HabitRecordController {
         return ResponseEntity.ok(habitRecordService.getRecords(habit, epochDayFrom, epochDayTo));
     }
 
+    @GetMapping("/{habitUuid}/simple")
+    public ResponseEntity<HabitRecordReadDTO> getRecordSimplified(@PathVariable String habitUuid,
+                                                                         @RequestParam(required = false) Integer offset,
+                                                                         @RequestParam(required = false) TimeZone timeZone) {
+        Habit habit = habitService.getHabitByUuid(habitUuid).orElse(null);
+        permissionChecker.checkIfisAllowedToRead(habit,
+                accountService.getCurrentAccount(), habitService);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        TimeZone tzToUse = timeZone != null ? timeZone : TimeZone.getDefault();
+        int offsetToUse = offset != null ? offset : 0;
+        int epochDay = (int) LocalDate.now(tzToUse.toZoneId()).plusDays(offsetToUse).toEpochDay();
+        return ResponseEntity.ok(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, epochDay));
+    }
+
     /**
      * Creates a new record for a specific habit.
      *
@@ -73,5 +91,22 @@ public class HabitRecordController {
         permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
         return ResponseEntity.ok(cachingHabitRecordService.createRecord(habitOpt.get(), recordWrite));
+    }
+
+    @PostMapping("/{habitUuid}/simple")
+    public ResponseEntity<HabitRecordReadDTO> createRecordSimplified(@PathVariable String habitUuid,
+                                                                     @RequestParam(required = false) Double value,
+                                                                     @RequestParam(required = false) Integer offset,
+                                                                     @RequestParam(
+                                                                             required = false) TimeZone timeZone) {
+        TimeZone tzToUse = timeZone != null ? timeZone : TimeZone.getDefault();
+        int offsetToUse = offset != null ? offset : 0;
+        double valueToUse = value != null ? value : 1;
+        int epochDay = (int) LocalDate.now(tzToUse.toZoneId()).plusDays(offsetToUse).toEpochDay();
+        HabitRecordWriteDTO recordWrite = HabitRecordWriteDTO.builder()
+                .epochDay(epochDay)
+                .recordValue(valueToUse)
+                .build();
+        return createRecord(habitUuid, recordWrite);
     }
 }
