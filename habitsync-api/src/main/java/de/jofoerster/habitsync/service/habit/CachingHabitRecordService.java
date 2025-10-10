@@ -30,7 +30,7 @@ public class CachingHabitRecordService {
                 .evictIfPresent(getCacheKey(habitUuid, epochDay));
     }
 
-    @Cacheable(value = "habitRecordCache", key = "#root.target.getCacheKey(#habitUuid, #epochDay)")
+    @Cacheable(value = "habitRecordCache", key = "#root.target.getCacheKey(#habit.getUuid(), #epochDay)")
     public HabitRecordReadDTO getHabitRecordByHabitAndEpochDay(Habit habit, Integer epochDay) {
         List<HabitRecord> records =
                 habitRecordRepository.findHabitRecordByParentUuidAndRecordDate(habit.getUuid(), epochDay);
@@ -38,7 +38,11 @@ public class CachingHabitRecordService {
             HabitRecord record = records.getFirst();
             return habitRecordService.getApiRecordFromRecord(habit, record);
         }
-        return null;
+        return HabitRecordReadDTO.builder()
+                .habitUuid(habit.getUuid())
+                .epochDay(epochDay)
+                .recordValue(0d)
+                .build();
     }
 
     public HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordDTO) {

@@ -204,7 +204,7 @@ public class HabitService {
     private List<HabitRecordReadDTO> getRecordsOfCurrentDays(Habit habit) {
         List<HabitRecordReadDTO> records = new ArrayList<>();
         int todayEpochDay = (int) LocalDate.now().toEpochDay();
-        for (int i = todayEpochDay - 1; i <= todayEpochDay + 1; i++ ) {
+        for (int i = todayEpochDay - 3; i <= todayEpochDay + 1; i++ ) {
             records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
         }
         return records;

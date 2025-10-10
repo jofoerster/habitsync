@@ -125,6 +125,24 @@ const UserSettingsComponent = () => {
         await AuthService.getInstance().logout();
     };
 
+    const handleCreateApiKey = async () => {
+        try {
+            const apiKey = await userApi.getApiKey();
+            alert('API Key Created', `Your API Key: ${apiKey}\n\nPlease save this key securely. You won't be able to see it again.`);
+        } catch (error) {
+            alert('Error', 'Failed to create API key');
+        }
+    };
+
+    const handleEvictAllApiKeys = async () => {
+        try {
+            await userApi.evictAllApiKeys();
+            alert('Success', 'All API keys have been deleted');
+        } catch (error) {
+            alert('Error', 'Failed to delete API keys');
+        }
+    };
+
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -292,6 +310,36 @@ const UserSettingsComponent = () => {
                     />
                     <Text style={styles.logoutButtonText}>Logout</Text>
                 </TouchableOpacity>
+
+                <View style={styles.apiKeySection}>
+                    <Text style={styles.sectionTitle}>API Key Management</Text>
+
+                    <TouchableOpacity
+                        style={[styles.apiKeyButton, styles.createApiKeyButton]}
+                        onPress={handleCreateApiKey}
+                    >
+                        <MaterialCommunityIcons
+                            name="key-plus"
+                            size={20}
+                            color={theme.textInverse}
+                            style={{marginRight: 8}}
+                        />
+                        <Text style={styles.apiKeyButtonText}>Create API Key</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.apiKeyButton, styles.evictApiKeysButton]}
+                        onPress={handleEvictAllApiKeys}
+                    >
+                        <MaterialCommunityIcons
+                            name="key-remove"
+                            size={20}
+                            color={theme.textInverse}
+                            style={{marginRight: 8}}
+                        />
+                        <Text style={styles.apiKeyButtonText}>Delete All API Keys</Text>
+                    </TouchableOpacity>
+                </View>
             </ScrollView>
         </View>
     );
@@ -500,6 +548,37 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     invitationButtonText: {
         color: theme.textInverse,
         fontSize: 14,
+        fontWeight: '600',
+    },
+    apiKeySection: {
+        backgroundColor: theme.surface,
+        borderRadius: 12,
+        padding: 16,
+        marginTop: 16,
+        marginBottom: 32,
+        shadowColor: theme.shadow,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: theme.shadowOpacity,
+        shadowRadius: 4,
+        elevation: theme.elevation.level1,
+    },
+    apiKeyButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 12,
+    },
+    createApiKeyButton: {
+        backgroundColor: theme.success,
+    },
+    evictApiKeysButton: {
+        backgroundColor: theme.error,
+    },
+    apiKeyButtonText: {
+        color: theme.textInverse,
+        fontSize: 16,
         fontWeight: '600',
     },
 }));
