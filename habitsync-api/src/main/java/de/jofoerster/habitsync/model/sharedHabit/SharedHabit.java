@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.notification.NotificationRule;
-import de.jofoerster.habitsync.model.notification.NotificationTemplate;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import de.jofoerster.habitsync.util.HashGenerator;
 import jakarta.persistence.*;
@@ -13,8 +13,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @EqualsAndHashCode(exclude = {"habits", "owner"})
 @ToString(exclude = {"habits", "owner"})
@@ -61,19 +61,6 @@ public class SharedHabit {
         habits.add(habit);
     }
 
-    public Map<NotificationRule, Map<Account, Map<Boolean, Habit>>> getStatusOfAllHabits(
-            NotificationRuleService notificationRuleService, HabitRecordSupplier recordSupplier) {
-        Map<NotificationRule, Map<Account, Map<Boolean, Habit>>> result = new HashMap<>();
-        Set<Account> allAccounts = habits.stream()
-                .map(Habit::getAccount)
-                .collect(Collectors.toSet());
-        return notificationRuleService.getNotificationRulesBySharedHabit(this)
-                .stream()
-                .collect(Collectors.toMap(r -> r, r -> allAccounts.stream()
-                        .collect(Collectors.toMap(a -> a,
-                                a -> r.computeWhichHabitsTriggerNotificationForAccount(habits, a, recordSupplier)))));
-    }
-
     public Optional<NotificationRule> getMainNotificationRule(NotificationRuleService notificationRuleService) {
         List<NotificationRule> rules = notificationRuleService.getNotificationRulesBySharedHabit(this);
         if (rules.isEmpty()) {
@@ -89,25 +76,23 @@ public class SharedHabit {
         }
     }
 
-    public NotificationRule getTemporaryMainNotificationRule(NotificationRuleService notificationRuleService,
-                                                             NotificationTemplate notificationTemplate) {
-        return getMainNotificationRule(notificationRuleService).orElseGet(
-                () -> notificationRuleService.getTemporaryMainNotificationRuleForSharedHabit(this,
-                        notificationTemplate));
-    }
-
     public double getProgressOfHabit(Habit habit, NotificationRuleService notificationRuleService,
-                                     HabitRecordSupplier habitRecordSupplier) {
+                                     CachingHabitProgressService cachingHabitProgressService) {
         Optional<NotificationRule> rule = getMainNotificationRule(notificationRuleService);
-        return rule.map(notificationRule -> notificationRule.getPercentage(habit, habitRecordSupplier))
-                .orElseGet(() -> habit.getCompletionPercentage(habitRecordSupplier));
+        return rule.map(notificationRule -> cachingHabitProgressService.getCompletionPercentageAtDate(
+                        notificationRule.getInternalHabitForComputationOfGoal(), habit,
+                        LocalDate.now()))
+                .orElseGet(() -> cachingHabitProgressService.getCompletionPercentageAtDate(habit,
+                        LocalDate.now()));
     }
 
     public boolean getCompletionForDay(Habit habit, NotificationRuleService notificationRuleService,
-                                       HabitRecordSupplier habitRecordSupplier, Integer day) {
+                                       CachingHabitProgressService cachingHabitProgressService, Integer day) {
         Optional<NotificationRule> rule = getMainNotificationRule(notificationRuleService);
-        return rule.map(notificationRule -> notificationRule.getCompletionForDay(habit, habitRecordSupplier, day))
-                .orElseGet(() -> habit.getCompletionForDay(habitRecordSupplier, day));
+        return rule.map(notificationRule -> cachingHabitProgressService.getCompletionForDay(
+                LocalDate.ofEpochDay(day), notificationRule.getInternalHabitForComputationOfGoal(), habit))
+                .orElseGet(() -> cachingHabitProgressService.getCompletionForDay(
+                        LocalDate.ofEpochDay(day), habit));
     }
 
     public void removeHabit(Habit habit) {

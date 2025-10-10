@@ -6,6 +6,7 @@ import de.jofoerster.habitsync.dto.ChallengeWriteDTO;
 import de.jofoerster.habitsync.dto.ComputationReadWriteDTO;
 import de.jofoerster.habitsync.model.notification.NotificationRule;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -38,7 +39,7 @@ public class Challenge {
 
     private ChallengeComputationType computationType;
 
-    public Map<Account, ChallengeProgress> getProgressOfHabits(List<Habit> habits, HabitRecordSupplier recordSupplier) {
+    public Map<Account, ChallengeProgress> getProgressOfHabits(List<Habit> habits, HabitRecordSupplier recordSupplier, CachingHabitProgressService cachingHabitProgressService) {
         Map<Account, ChallengeProgress> progressAbsolute = new HashMap<>();
 
         if (computationType.equals(ChallengeComputationType.MAX_VALUE)) {
@@ -50,15 +51,15 @@ public class Challenge {
                 progressAbsolute.put(habit.getAccount(), ChallengeProgress.builder()
                         .maxValue(progress)
                         .percentage(progress)
-                        .total(rule.getTotalAchievement(habit, recordSupplier, startDate, endDate))
+                        .total(cachingHabitProgressService.getTotalAchievement(rule.getInternalHabitForComputationOfGoal(), habit, startDate, endDate))
                         .challengeUnit(rule.getInternalHabitForComputationOfGoal().getDailyGoalUnit())
                         .linkToHabit(linkToHabit(habit))
                         .build());
             });
         } else {
             habits.forEach(habit -> progressAbsolute.put(habit.getAccount(), ChallengeProgress.builder()
-                    .percentage(rule.getPercentage(habit, recordSupplier, startDate, endDate))
-                    .total(rule.getTotalAchievement(habit, recordSupplier, startDate, endDate))
+                    .percentage(cachingHabitProgressService.getCompletionPercentage(rule.getInternalHabitForComputationOfGoal(), habit, startDate, endDate, startDate, endDate))
+                    .total(cachingHabitProgressService.getTotalAchievement(rule.getInternalHabitForComputationOfGoal(), habit, startDate, endDate))
                     .challengeUnit(rule.getInternalHabitForComputationOfGoal().getDailyGoalUnit())
                     .linkToHabit(linkToHabit(habit))
                     .build()));

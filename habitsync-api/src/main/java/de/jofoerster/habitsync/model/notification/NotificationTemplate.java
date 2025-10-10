@@ -5,6 +5,7 @@ import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,6 +17,7 @@ import org.thymeleaf.context.Context;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -48,24 +50,25 @@ public class NotificationTemplate {
                                            NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                            String baseUrl, NotificationStatus notificationStatus,
                                            ResourceLoader resourceLoader,
-                                           NotificationConfigRuleDTO notificationConfigRule) {
+                                           NotificationConfigRuleDTO notificationConfigRule, CachingHabitProgressService
+                                           cachingHabitProgressService) {
         String subject =
                 getSubjectContent(sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
-                        recordSupplier, notificationConfigRule);
+                        recordSupplier, notificationConfigRule, cachingHabitProgressService);
         return Notification.builder()
                 .content(getNotificationPlainContent(sender, receiver, sharedHabit, habit, rule, templateEngine,
                         ruleService,
-                        recordSupplier, resourceLoader, notificationConfigRule))
+                        recordSupplier, resourceLoader, notificationConfigRule, cachingHabitProgressService))
                 .htmlContent(
                         getNotificationHtmlContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
-                                recordSupplier, baseUrl, subject, notificationConfigRule))
+                                recordSupplier, baseUrl, subject, notificationConfigRule, cachingHabitProgressService))
                 .htmlContentShade(
                         getNotificationShadeContent(templateEngine, receiver, sender, sharedHabit, habit, ruleService,
-                                recordSupplier, baseUrl, subject, notificationConfigRule))
+                                recordSupplier, baseUrl, subject, notificationConfigRule, cachingHabitProgressService))
                 .htmlContentShadeMinimal(
                         getNotificationShadeContentMinimal(templateEngine, receiver, sender, sharedHabit, habit,
                                 ruleService,
-                                recordSupplier, baseUrl, subject, notificationConfigRule))
+                                recordSupplier, baseUrl, subject, notificationConfigRule, cachingHabitProgressService))
                 .subject(subject)
                 .receiverAccount(receiver)
                 .senderAccount(getSenderAccount(sender))
@@ -96,10 +99,12 @@ public class NotificationTemplate {
     private String getNotificationHtmlContent(TemplateEngine templateEngine, Account receiver, Optional<Account> sender,
                                               SharedHabit sharedHabit, Habit habit, NotificationRuleService ruleService,
                                               HabitRecordSupplier recordSupplier, String baseurl, String subject,
-                                              NotificationConfigRuleDTO notificationConfigRule) {
+                                              NotificationConfigRuleDTO notificationConfigRule,
+                                              CachingHabitProgressService cachingHabitProgressService) {
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier,
+                        cachingHabitProgressService, baseurl,
                         subject, notificationConfigRule));
         return templateEngine.process(htmlTemplateName, context);
     }
@@ -108,13 +113,15 @@ public class NotificationTemplate {
                                                Optional<Account> sender, SharedHabit sharedHabit, Habit habit,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                                String baseurl, String subject,
-                                               NotificationConfigRuleDTO notificationConfigRule) {
+                                               NotificationConfigRuleDTO notificationConfigRule,
+                                               CachingHabitProgressService cachingHabitProgressService) {
         if (htmlShadeTemplateName == null || htmlShadeTemplateName.isEmpty()) {
             return "";
         }
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseurl,
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier,
+                        cachingHabitProgressService, baseurl,
                         subject, notificationConfigRule));
         return templateEngine.process(htmlShadeTemplateName, context);
     }
@@ -124,13 +131,15 @@ public class NotificationTemplate {
                                                       NotificationRuleService ruleService,
                                                       HabitRecordSupplier recordSupplier, String baseUrl,
                                                       String subject,
-                                                      NotificationConfigRuleDTO notificationConfigRule) {
+                                                      NotificationConfigRuleDTO notificationConfigRule,
+                                                      CachingHabitProgressService cachingHabitProgressService) {
         if (htmlShadeMinimalTemplateName == null || htmlShadeMinimalTemplateName.isEmpty()) {
             return "";
         }
         Context context = new Context();
         context.setVariables(
-                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier, baseUrl,
+                getNotificationVariables(receiver, sender, sharedHabit, habit, ruleService, recordSupplier,
+                        cachingHabitProgressService, baseUrl,
                         subject, notificationConfigRule));
         return templateEngine.process(htmlShadeMinimalTemplateName, context);
     }
@@ -138,9 +147,10 @@ public class NotificationTemplate {
     private String getSubjectContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit, Habit habit,
                                      NotificationRule rule, TemplateEngine templateEngine,
                                      NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
-                                     NotificationConfigRuleDTO notificationConfigRule) {
+                                     NotificationConfigRuleDTO notificationConfigRule,
+                                     CachingHabitProgressService cachingHabitProgressService) {
         return getPlainContent(subjectTemplate, sender, receiver, sharedHabit, habit, rule, templateEngine, ruleService,
-                recordSupplier, notificationConfigRule);
+                recordSupplier, cachingHabitProgressService, notificationConfigRule);
     }
 
     private String getNotificationPlainContent(Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
@@ -148,16 +158,18 @@ public class NotificationTemplate {
                                                NotificationRule rule, TemplateEngine templateEngine,
                                                NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
                                                ResourceLoader resourceLoader,
-                                               NotificationConfigRuleDTO notificationConfigRule) {
+                                               NotificationConfigRuleDTO notificationConfigRule,
+                                               CachingHabitProgressService cachingHabitProgressService) {
         return getPlainContent(getContentTemplateString(resourceLoader), sender, receiver, sharedHabit, habit, rule,
                 templateEngine, ruleService,
-                recordSupplier, notificationConfigRule);
+                recordSupplier, cachingHabitProgressService, notificationConfigRule);
     }
 
     private String getPlainContent(String template, Optional<Account> sender, Account receiver, SharedHabit sharedHabit,
                                    Habit habit,
                                    NotificationRule rule, TemplateEngine templateEngine,
                                    NotificationRuleService ruleService, HabitRecordSupplier recordSupplier,
+                                   CachingHabitProgressService cachingHabitProgressService,
                                    NotificationConfigRuleDTO notificationConfigRule) {
         Map<String, String> parameters = new HashMap<>();
         if (sharedHabit != null) {
@@ -175,7 +187,9 @@ public class NotificationTemplate {
             parameters.put("percentage", String.valueOf(percentageForN));
         }
         if (habit != null && recordSupplier != null) {
-            parameters.put("percentage", String.valueOf(Math.round(habit.getCompletionPercentage(recordSupplier))));
+            parameters.put("percentage",
+                    String.valueOf(Math.round(cachingHabitProgressService.getCompletionPercentageAtDate(habit,
+                            LocalDate.now()))));
         }
         if (notificationConfigRule != null && notificationConfigRule.getThresholdPercentage() != null) {
             parameters.put("threshold", String.valueOf(notificationConfigRule.getThresholdPercentage()));
@@ -191,7 +205,9 @@ public class NotificationTemplate {
     private Map<String, Object> getNotificationVariables(Account receiver, Optional<Account> sender,
                                                          SharedHabit sharedHabit, Habit habit,
                                                          NotificationRuleService notificationRuleService,
-                                                         HabitRecordSupplier habitRecordSupplier, String baseUrl,
+                                                         HabitRecordSupplier habitRecordSupplier,
+                                                         CachingHabitProgressService
+                                                                 cachingHabitProgressService, String baseUrl,
                                                          String subject,
                                                          NotificationConfigRuleDTO notificationConfigRule) {
         HashMap<String, Object> parameters = new HashMap<>();
@@ -205,7 +221,9 @@ public class NotificationTemplate {
             parameters.put("sharedHabits", List.of(sharedHabit));
             int maxProgress = (int) Math.round(sharedHabit.getHabits()
                     .stream()
-                    .map(h -> sharedHabit.getProgressOfHabit(h, notificationRuleService, habitRecordSupplier))
+                    .map(h -> cachingHabitProgressService.getCompletionPercentageAtDate(
+                            sharedHabit.getMainNotificationRule(notificationRuleService).get()
+                                    .getInternalHabitForComputationOfGoal(), h, LocalDate.now()))
                     .max(Comparator.naturalOrder())
                     .orElse(0d));
             parameters.put("maxProgress", maxProgress);

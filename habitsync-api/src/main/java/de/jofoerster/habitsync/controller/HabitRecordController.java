@@ -64,6 +64,6 @@ public class HabitRecordController {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(habitUuid);
         permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
-        return ResponseEntity.ok(habitRecordService.createRecord(habitUuid, recordWrite));
+        return ResponseEntity.ok(habitRecordService.createRecord(habitOpt.get(), recordWrite));
     }
 }

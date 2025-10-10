@@ -54,49 +54,4 @@ public class HabitRecordSupplier {
         return countRecordsByHabitSince(habit, LocalDate.now()
                 .minusDays(days), habit.getDailyGoal());
     }
-
-    public double getHabitRecordsByDate(Habit habit, int date) {
-        List<HabitRecord> records =
-                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(date, habit.getUuid());
-        if (records.isEmpty()) {
-            return 0;
-        } else {
-            return records.getFirst()
-                    .getRecordValue();
-        }
-    }
-
-    public double getHabitRecordsByDate(Habit habit, String date) { //used in thymeleaf
-        LocalDate parsedDate = LocalDate.parse(date + "." + LocalDate.now()
-                .getYear(), DateTimeFormatter.ofPattern("dd.MM.yyyy"));
-        List<HabitRecord> records =
-                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid((int) parsedDate.toEpochDay(),
-                        habit.getUuid());
-        if (records.isEmpty()) {
-            return 0;
-        } else {
-            return records.getFirst()
-                    .getRecordValue();
-        }
-    }
-
-    public Map<Integer, Boolean> getRecordIsCompletedByDateMap(LocalDate now, Habit habit) {
-        Map<Integer, Boolean> result = new HashMap<>();
-        int epochDay = (int) now.minusDays(2).toEpochDay();
-        for (int i = 0; i <= 2; i++) {
-            result.put(epochDay + i, habit.getCompletionForDay(this, epochDay + i));
-        }
-        return result;
-    }
-
-    public Map<Integer, Boolean> getRecordIsCompletedByDateMap(LocalDate now, SharedHabit sharedHabit, Habit habit,
-                                                               NotificationRuleService notificationRuleService) {
-        Map<Integer, Boolean> result = new HashMap<>();
-        int epochDay = (int) now.minusDays(2).toEpochDay();
-        for (int i = 0; i <= 2; i++) {
-            result.put(epochDay + i,
-                    sharedHabit.getCompletionForDay(habit, notificationRuleService, this, epochDay + i));
-        }
-        return result;
-    }
 }

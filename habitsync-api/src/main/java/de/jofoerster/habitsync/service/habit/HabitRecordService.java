@@ -19,11 +19,13 @@ import java.util.*;
 public class HabitRecordService {
     private final HabitRecordRepository habitRecordRepository;
     private final HabitService habitService;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     private HabitRecordCompletion getHabitRecordStatus(HabitRecord habitRecord) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(habitRecord.getParentUuid());
         boolean completion = habitOpt.map(
-                        h -> h.getCompletionForDay(new HabitRecordSupplier(habitRecordRepository), habitRecord.getRecordDate()))
+                        h -> cachingHabitProgressService.getCompletionForDay(
+                                LocalDate.ofEpochDay(habitRecord.getRecordDate()), h))
                 .orElse(false);
         if (habitOpt.isPresent() && habitOpt.get().getDailyGoal() != null &&
                 habitRecord.getRecordValue() >= habitOpt.get().getDailyGoal()) {
@@ -62,17 +64,18 @@ public class HabitRecordService {
         return records.stream().map(this::getApiRecordFromRecord).toList();
     }
 
-    public HabitRecordReadDTO createRecord(String habitUuid, HabitRecordWriteDTO recordWrite) {
+    public HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordWrite) {
         Integer recordDay = recordWrite.getEpochDay();
         if (recordDay == null) {
             recordDay = (int) LocalDate.now().toEpochDay();
         }
+        cachingHabitProgressService.onHabitChanged(habit, recordDay);
         List<HabitRecord> records =
-                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(recordDay, habitUuid);
+                habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(recordDay, habit.getUuid());
         HabitRecord habitRecord;
         if (records.isEmpty()) {
             habitRecord = new HabitRecord();
-            habitRecord.setParentUuid(habitUuid);
+            habitRecord.setParentUuid(habit.getUuid());
             habitRecord.setRecordDate(recordDay);
         } else {
             if (records.size() > 1) {
