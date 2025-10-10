@@ -267,8 +267,7 @@ export const userApi = {
     getApiKey: async (): Promise<string> => {
         const response = await authenticatedFetch(`/api/user/api-key`);
         if (!response.ok) throw new Error('Failed to fetch API key');
-        const data = await response.json();
-        return data.apiKey;
+        return response.text();
     },
 
     evictAllApiKeys: async (): Promise<void> => {

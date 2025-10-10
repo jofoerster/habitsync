@@ -3,6 +3,7 @@ package de.jofoerster.habitsync.service.auth;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.account.ApiKey;
 import de.jofoerster.habitsync.repository.account.ApiKeyRepository;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -39,6 +40,7 @@ public class ApiKeyService {
         return plainApiKey;
     }
 
+    @Transactional
     public void revokeApiKeys(Account account) {
         apiKeyRepository.deleteApiKeyByAccount(account);
     }

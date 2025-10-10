@@ -571,13 +571,13 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         marginBottom: 12,
     },
     createApiKeyButton: {
-        backgroundColor: theme.success,
+        backgroundColor: theme.surfaceTertiary,
     },
     evictApiKeysButton: {
-        backgroundColor: theme.error,
+        backgroundColor: theme.surfaceTertiary,
     },
     apiKeyButtonText: {
-        color: theme.textInverse,
+        color: theme.text,
         fontSize: 16,
         fontWeight: '600',
     },
