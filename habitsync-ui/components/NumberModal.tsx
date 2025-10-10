@@ -1,7 +1,7 @@
 import {Plus, X} from "lucide-react-native";
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {Modal, Text, TextInput, TouchableOpacity, View} from "react-native";
-import {habitNumberModalApi} from "../services/api";
+import {ApiHabitRead, habitNumberModalApi} from "../services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
 import {useKeepAwake} from "expo-keep-awake";
@@ -10,9 +10,7 @@ interface NumberModalProps {
     visible: boolean;
     onClose: () => void;
     onSubmit: (value: number) => void;
-    habit: {
-        uuid: string;
-    };
+    habit: ApiHabitRead;
     showStopwatch?: boolean;
     currentRecordValue?: number | null;
 }
@@ -47,7 +45,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
 
     const fetchNumbers = useCallback(async () => {
         try {
-            const response = await habitNumberModalApi.getNumberModal(habit.uuid);
+            const response = habit.numberModalConfig;
             const values = (response.values || []) as string[];
             setNumbers(values);
         } catch (error) {

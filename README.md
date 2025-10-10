@@ -155,7 +155,7 @@ To use PostgreSQL, set the following environment variables:
 The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
 The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
 To access the API, you can use either Basic Auth 
-or (WIP) generate an access token by using the `GET /api/user/api-key/new` endpoint.
+or (WIP) generate an access token by using the `GET /api/user/api-key` endpoint.
 
 
 ## Contributing and Help

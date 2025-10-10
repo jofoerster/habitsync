@@ -1,7 +1,7 @@
 import {ChevronDown, ChevronUp} from "lucide-react-native";
 import React, {useEffect, useState} from "react";
 import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {ApiHabitRead, habitApi, habitRecordApi} from "../services/api";
+import {ApiHabitRead, ApiHabitRecordRead, habitApi, habitRecordApi} from "../services/api";
 import NumberModal from "./NumberModal";
 import ProgressRing from "./ProgressRing";
 import {Link} from 'expo-router';
@@ -143,7 +143,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
         epochDay: null,
         habitUuid: null,
     });
-    const [records, setRecords] = useState({});
+    const [records, setRecords] = useState<Map<number, ApiHabitRecordRead>>(new Map())
     const [loading, setLoading] = useState(true);
     const [hasConnectedHabits, setHasConnectedHabits] = useState(!isConnectedHabitView && !isChallengeHabit);
     const [percentage, setPercentage] = useState(habit.currentPercentage);
@@ -179,10 +179,11 @@ const HabitRow: React.FC<HabitRowProps> = ({
         createDay(2, 'dayBeforeYesterday')
     ];
 
-    const loadHabitRecords = async () => {
+    const loadHabitRecords = async (habitNew: ApiHabitRead | null = null) => {
         try {
-            const records = await habitRecordApi.getRecords(habit.uuid, days[2].epochDay, days[0].epochDay);
-            setRecords(new Map(records.map(r => [r.epochDay, r])));
+            console.log("Records:" + habit.records);
+            const habitToUse = habitNew || habit;
+            setRecords(new Map(habitToUse.records.map(r => [r.epochDay, r])));
         } catch (error) {
             alert('Error', 'Failed to load habit records');
         } finally {
@@ -195,8 +196,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             setHasConnectedHabits(false);
             return;
         }
-        const recordCount = await habitApi.getConnectedHabitCount(habit.uuid);
-        setHasConnectedHabits(recordCount > 0);
+        setHasConnectedHabits(habit.hasConnectedHabits);
     }
 
     const getRecordForDay = (epochDay) => {
@@ -217,8 +217,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 epochDay: epochDay,
                 recordValue: newRecordValue
             })
-            await loadHabitRecords();
-            await handleHabitUpdate(habit);
+            const updatedHabit = await handleHabitUpdate(habit);
+            await loadHabitRecords(updatedHabit);
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -242,8 +242,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 epochDay: epochDay,
                 recordValue: parseFloat(value) || 0
             });
-            await loadHabitRecords();
-            await handleHabitUpdate(habit);
+            const updatedHabit = await handleHabitUpdate(habit);
+            await loadHabitRecords(updatedHabit);
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -257,6 +257,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             if (onUpdate) {
                 onUpdate(updatedHabit);
             }
+            return updatedHabit;
         } catch (error) {
             alert('Error', 'Failed to update habit');
         }

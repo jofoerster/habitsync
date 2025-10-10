@@ -17,6 +17,8 @@ import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,6 +36,11 @@ public class HabitService {
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
     private final HabitParticipantRepository habitParticipantRepository;
     private final CachingHabitProgressService cachingHabitProgressService;
+    private final CachingHabitRecordService cachingHabitRecordService;
+    private final HabitNumberModalConfigService habitNumberModalConfigService;
+
+    private final CacheManager cacheManager;
+    private final CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -95,6 +102,8 @@ public class HabitService {
                 habitToAdd.setColor(rand.nextInt(10) + 1);
                 habitToAdd.setConnectedSharedHabitId(sharedHabit.getId());
                 this.saveHabit(habitToAdd);
+            } else {
+                cachingNumberOfConnectedHabitsService.evictCache(habitUuid);
             }
             sharedHabit.addHabit(habitToAdd);
             return Optional.of(sharedHabitService.save(sharedHabit));
@@ -117,6 +126,7 @@ public class HabitService {
                     .filter(h -> h.getAccount().equals(currentAccount))
                     .toList();
             habits.forEach(h -> {
+                cachingNumberOfConnectedHabitsService.evictCache(h.getUuid());
                 sharedHabit.removeHabit(h);
                 sharedHabitService.save(sharedHabit);
                 h.setConnectedSharedHabitId(null);
@@ -162,19 +172,6 @@ public class HabitService {
         return result;
     }
 
-    public Long getNumberOfConnectedHabits(String habitUuid, HabitType habitType) {
-        Optional<Habit> habit = habitRepository.findByUuid(habitUuid);
-        if (habit.isEmpty()) {
-            return 0L;
-        }
-        List<SharedHabit> sharedHabits = sharedHabitRepository.findAllByHabitsContaining(List.of(habit.get()));
-        long result = 0L;
-        for (SharedHabit sh : sharedHabits) {
-            result += sh.getHabits().size() - 1; // -1 because the habit itself is included in the shared habits
-        }
-        return result;
-    }
-
     public List<HabitReadDTO> getAllUserHabits(Account currentAccount) {
         return this.getAllUserHabitsByType(currentAccount, HabitType.INTERNAL).stream()
                 .filter(h -> !h.isChallengeHabit())
@@ -196,8 +193,21 @@ public class HabitService {
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
                 .notificationFrequency(this.getNotificationConfig(habit))
+                .records(this.getRecordsOfCurrentDays(habit))
+                .numberModalConfig(habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
+                        .getApiHabitNumberModalConfig())
+                .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(), habit.getHabitType()) > 0)
                 .build();
 
+    }
+
+    private List<HabitRecordReadDTO> getRecordsOfCurrentDays(Habit habit) {
+        List<HabitRecordReadDTO> records = new ArrayList<>();
+        int todayEpochDay = (int) LocalDate.now().toEpochDay();
+        for (int i = todayEpochDay - 3; i <= todayEpochDay + 1; i++ ) {
+            records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
+        }
+        return records;
     }
 
     public HabitReadDTO createNewHabit(HabitWriteDTO apiHabitWrite, Account currentAccount) {

@@ -14,6 +14,9 @@ export interface ApiHabitRead {
     synchronizedSharedHabitId?: number;
     sortPosition: number;
     notificationFrequency: NotificationConfig | null;
+    records: ApiHabitRecordRead[];
+    hasConnectedHabits: boolean;
+    numberModalConfig: ApiHabitNumberModalConfig;
 }
 
 export interface ApiAccountRead {
@@ -260,6 +263,19 @@ export const userApi = {
         if (!response.ok) throw new Error('Failed to fetch habit invitations');
         return response.json();
     },
+
+    getApiKey: async (): Promise<string> => {
+        const response = await authenticatedFetch(`/api/user/api-key`);
+        if (!response.ok) throw new Error('Failed to fetch API key');
+        return response.text();
+    },
+
+    evictAllApiKeys: async (): Promise<void> => {
+        const response = await authenticatedFetch(`/api/user/api-key`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to evict API keys');
+    }
 }
 
 
