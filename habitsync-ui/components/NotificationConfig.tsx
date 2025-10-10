@@ -358,7 +358,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                         value={tempFixedConfig.triggerIfFulfilled || false}
                                         onValueChange={(value) => setTempFixedConfig(prev => ({
                                             ...prev,
-                                            triggerIfFulfilled: value
+                                            triggerIfFulfilled: value,
+                                            triggerOnlyWhenStreakLost: value ? false : prev.triggerOnlyWhenStreakLost
                                         }))}
                                         trackColor={{false: theme.disabled, true: theme.primaryLight}}
                                         thumbColor={tempFixedConfig.triggerIfFulfilled ? theme.primary : theme.surface}
