@@ -663,12 +663,12 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}, retrie
         },
     });
 
-    if (!response.ok && retries <= 3) {
+    if (response.status === 401 && retries <= 3) {
         console.log('Unauthorized, attempting token refresh');
 
         const refreshSuccess = await auth.refresh();
         if (refreshSuccess) {
-            console.log('Token refreshed successfully, retrying request');
+            console.log('Token refreshed successfully, retrying request, retry number ', retries + 1);
             await new Promise(resolve => setTimeout(resolve, 100));
             return await authenticatedFetch(url, options, retries++);
         }
