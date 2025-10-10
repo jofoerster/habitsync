@@ -3,6 +3,8 @@ package de.jofoerster.habitsync.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class HabitReadDTO {
@@ -24,4 +26,10 @@ public class HabitReadDTO {
     private Long synchronizedSharedHabitId; // share code of the shared habit if this habit is syncronized with a shared habit
 
     private NotificationConfigDTO notificationFrequency;
+
+    private List<HabitRecordReadDTO> records;
+
+    private Boolean hasConnectedHabits;
+
+    private HabitNumberModalConfigDTO numberModalConfig;
 }

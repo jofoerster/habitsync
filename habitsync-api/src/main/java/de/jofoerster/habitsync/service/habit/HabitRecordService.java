@@ -1,34 +1,30 @@
 package de.jofoerster.habitsync.service.habit;
 
-import de.jofoerster.habitsync.model.habit.Habit;
-import de.jofoerster.habitsync.model.habit.HabitRecord;
 import de.jofoerster.habitsync.dto.HabitRecordReadDTO;
 import de.jofoerster.habitsync.dto.HabitRecordWriteDTO;
+import de.jofoerster.habitsync.model.habit.Habit;
+import de.jofoerster.habitsync.model.habit.HabitRecord;
 import de.jofoerster.habitsync.model.habit.HabitRecordCompletion;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
-import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class HabitRecordService {
     private final HabitRecordRepository habitRecordRepository;
-    private final HabitService habitService;
     private final CachingHabitProgressService cachingHabitProgressService;
 
-    private HabitRecordCompletion getHabitRecordStatus(HabitRecord habitRecord) {
-        Optional<Habit> habitOpt = habitService.getHabitByUuid(habitRecord.getParentUuid());
-        boolean completion = habitOpt.map(
-                        h -> cachingHabitProgressService.getCompletionForDay(
-                                LocalDate.ofEpochDay(habitRecord.getRecordDate()), h))
-                .orElse(false);
-        if (habitOpt.isPresent() && habitOpt.get().getDailyGoal() != null &&
-                habitRecord.getRecordValue() >= habitOpt.get().getDailyGoal()) {
+    private HabitRecordCompletion getHabitRecordStatus(Habit habit, HabitRecord habitRecord) {
+        boolean completion = cachingHabitProgressService.getCompletionForDay(
+                LocalDate.ofEpochDay(habitRecord.getRecordDate()), habit);
+        if (habit.getDailyGoal() != null &&
+                habitRecord.getRecordValue() >= habit.getDailyGoal()) {
             return HabitRecordCompletion.COMPLETED;
         } else if (completion) {
             return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
@@ -38,33 +34,33 @@ public class HabitRecordService {
                 : HabitRecordCompletion.MISSED;
     }
 
-    public HabitRecordReadDTO getApiRecordFromRecord(HabitRecord habitRecord) {
+    public HabitRecordReadDTO getApiRecordFromRecord(Habit habit, HabitRecord habitRecord) {
         return HabitRecordReadDTO.builder()
                 .uuid(habitRecord.getUuid())
                 .habitUuid(habitRecord.getParentUuid())
                 .epochDay(habitRecord.getRecordDate())
                 .recordValue(habitRecord.getRecordValue())
-                .completion(getHabitRecordStatus(habitRecord))
+                .completion(getHabitRecordStatus(habit, habitRecord))
                 .build();
     }
 
-    public List<HabitRecordReadDTO> getRecords(String habitUuid, Integer epochDayFrom, Integer epochDayTo) {
+    public List<HabitRecordReadDTO> getRecords(Habit habit, Integer epochDayFrom, Integer epochDayTo) {
         List<HabitRecord> records =
-                habitRecordRepository.findHabitRecordsByParentUuidAndRecordDateBetween(habitUuid, epochDayFrom,
+                habitRecordRepository.findHabitRecordsByParentUuidAndRecordDateBetween(habit.getUuid(), epochDayFrom,
                         epochDayTo);
         for (Integer day = epochDayFrom; day <= epochDayTo; day++) {
             Integer finalRecord = day;
             if (records.stream().noneMatch(r -> r.getRecordDate().equals(finalRecord))) {
                 records.add(HabitRecord.builder()
-                        .parentUuid(habitUuid)
+                        .parentUuid(habit.getUuid())
                         .recordValue(0d)
                         .recordDate(day).build());
             }
         }
-        return records.stream().map(this::getApiRecordFromRecord).toList();
+        return records.stream().map(h -> this.getApiRecordFromRecord(habit, h)).toList();
     }
 
-    public HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordWrite) {
+    HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordWrite) {
         Integer recordDay = recordWrite.getEpochDay();
         if (recordDay == null) {
             recordDay = (int) LocalDate.now().toEpochDay();
@@ -88,7 +84,7 @@ public class HabitRecordService {
         }
         habitRecord.setRecordValue(recordWrite.getRecordValue());
         habitRecord = habitRecordRepository.save(habitRecord);
-        return getApiRecordFromRecord(habitRecord);
+        return getApiRecordFromRecord(habit, habitRecord);
     }
 
     public MultipartFile loadRecordResource(String uuid, String recordUuid, String resourcePath) {

@@ -8,6 +8,7 @@ import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
+import de.jofoerster.habitsync.service.habit.CachingNumberOfConnectedHabitsService;
 import de.jofoerster.habitsync.service.habit.HabitParticipationService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.notification.NotificationService;
@@ -30,15 +31,18 @@ public class HabitController {
     private final HabitParticipationService habitParticipationService;
 
     private final PermissionChecker permissionChecker;
+    private final CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService;
 
     public HabitController(HabitService habitService, AccountService accountService,
                            NotificationService notificationService, HabitParticipationService habitParticipationService,
-                           PermissionChecker permissionChecker) {
+                           PermissionChecker permissionChecker,
+                           CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.notificationService = notificationService;
         this.habitParticipationService = habitParticipationService;
         this.permissionChecker = permissionChecker;
+        this.cachingNumberOfConnectedHabitsService = cachingNumberOfConnectedHabitsService;
     }
 
     /**
@@ -138,7 +142,7 @@ public class HabitController {
     public ResponseEntity<Long> getConnectedHabitCount(@PathVariable String uuid) {
         permissionChecker.checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null),
                 accountService.getCurrentAccount());
-        return ResponseEntity.ok(habitService.getNumberOfConnectedHabits(uuid, HabitType.INTERNAL));
+        return ResponseEntity.ok(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(uuid, HabitType.INTERNAL));
     }
 
     @PostMapping("/{uuid}/sort-position/move-up")

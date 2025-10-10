@@ -4,6 +4,7 @@ import de.jofoerster.habitsync.dto.HabitRecordReadDTO;
 import de.jofoerster.habitsync.dto.HabitRecordWriteDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.service.account.AccountService;
+import de.jofoerster.habitsync.service.habit.CachingHabitRecordService;
 import de.jofoerster.habitsync.service.habit.HabitRecordService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.notification.NotificationService;
@@ -23,15 +24,18 @@ public class HabitRecordController {
     private final NotificationService notificationService;
 
     private final PermissionChecker permissionChecker;
+    private final CachingHabitRecordService cachingHabitRecordService;
 
     public HabitRecordController(HabitService habitService, AccountService accountService,
                                  HabitRecordService habitRecordService, NotificationService notificationService,
-                                 PermissionChecker permissionChecker) {
+                                 PermissionChecker permissionChecker,
+                                 CachingHabitRecordService cachingHabitRecordService) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.habitRecordService = habitRecordService;
         this.notificationService = notificationService;
         this.permissionChecker = permissionChecker;
+        this.cachingHabitRecordService = cachingHabitRecordService;
     }
 
     /**
@@ -46,9 +50,13 @@ public class HabitRecordController {
     public ResponseEntity<List<HabitRecordReadDTO>> getRecords(@PathVariable String habitUuid,
                                                                @RequestParam(required = false) Integer epochDayFrom,
                                                                @RequestParam(required = false) Integer epochDayTo) {
-        permissionChecker.checkIfisAllowedToRead(habitService.getHabitByUuid(habitUuid).orElse(null),
+        Habit habit = habitService.getHabitByUuid(habitUuid).orElse(null);
+        permissionChecker.checkIfisAllowedToRead(habit,
                 accountService.getCurrentAccount(), habitService);
-        return ResponseEntity.ok(habitRecordService.getRecords(habitUuid, epochDayFrom, epochDayTo));
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(habitRecordService.getRecords(habit, epochDayFrom, epochDayTo));
     }
 
     /**
@@ -64,6 +72,6 @@ public class HabitRecordController {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(habitUuid);
         permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
-        return ResponseEntity.ok(habitRecordService.createRecord(habitOpt.get(), recordWrite));
+        return ResponseEntity.ok(cachingHabitRecordService.createRecord(habitOpt.get(), recordWrite));
     }
 }

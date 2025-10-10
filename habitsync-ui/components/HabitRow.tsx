@@ -181,8 +181,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     const loadHabitRecords = async () => {
         try {
-            const records = await habitRecordApi.getRecords(habit.uuid, days[2].epochDay, days[0].epochDay);
-            setRecords(new Map(records.map(r => [r.epochDay, r])));
+            setRecords(new Map(habit.records.map(r => [r.epochDay, r])));
         } catch (error) {
             alert('Error', 'Failed to load habit records');
         } finally {
@@ -195,8 +194,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             setHasConnectedHabits(false);
             return;
         }
-        const recordCount = await habitApi.getConnectedHabitCount(habit.uuid);
-        setHasConnectedHabits(recordCount > 0);
+        setHasConnectedHabits(habit.hasConnectedHabits);
     }
 
     const getRecordForDay = (epochDay) => {
