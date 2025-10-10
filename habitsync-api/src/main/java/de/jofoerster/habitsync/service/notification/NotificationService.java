@@ -261,7 +261,12 @@ public class NotificationService {
                         habitOpt.get().getUuid());
                 return;
             }
-            ;
+        } else if (fixedTimeRules.getFirst().getTriggerOnlyWhenStreakLost()) {
+            if (cachingHabitProgressService.getCompletionForDay(LocalDate.now(), habitOpt.get())) {
+                log.debug("Habit {} has not lost its streak today. Not sending fixed time notification.",
+                        habitOpt.get().getUuid());
+                return;
+            }
         }
 
         NotificationTemplate notificationTemplate =

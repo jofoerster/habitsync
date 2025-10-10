@@ -123,7 +123,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 frequency: 'daily',
                 weekdays: [],
                 time: '08:00',
-                triggerIfFulfilled: false
+                triggerIfFulfilled: false,
+                triggerOnlyWhenStreakLost: false,
             });
             setConfigType('fixed');
             setConfigModalVisible(true);
@@ -145,7 +146,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 frequency: 'daily',
                 weekdays: [],
                 time: '08:00',
-                triggerIfFulfilled: false
+                triggerIfFulfilled: false,
+                triggerOnlyWhenStreakLost: false,
             });
         } else {
             setTempThresholdConfig(existingRule as ThresholdNotificationConfigRule || {
@@ -166,7 +168,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 frequency: tempFixedConfig.frequency || 'daily',
                 weekdays: tempFixedConfig.weekdays || [],
                 time: tempFixedConfig.time || '08:00',
-                triggerIfFulfilled: tempFixedConfig.triggerIfFulfilled || false
+                triggerIfFulfilled: tempFixedConfig.triggerIfFulfilled || false,
+                triggerOnlyWhenStreakLost: tempFixedConfig.triggerOnlyWhenStreakLost || false,
             };
             rules = updateRule(fixedRule);
         } else if (configType === 'threshold') {
@@ -359,6 +362,19 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                         }))}
                                         trackColor={{false: theme.disabled, true: theme.primaryLight}}
                                         thumbColor={tempFixedConfig.triggerIfFulfilled ? theme.primary : theme.surface}
+                                    />
+                                </View>
+                                <View style={styles.switchContainer}>
+                                    <Text style={styles.switchLabel}>Notify only when streak will be lost</Text>
+                                    <Switch
+                                        value={tempFixedConfig.triggerOnlyWhenStreakLost || false}
+                                        onValueChange={(value) => setTempFixedConfig(prev => ({
+                                            ...prev,
+                                            triggerOnlyWhenStreakLost: value,
+                                            triggerIfFulfilled: value ? false : prev.triggerIfFulfilled
+                                        }))}
+                                        trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                                        thumbColor={tempFixedConfig.triggerOnlyWhenStreakLost ? theme.primary : theme.surface}
                                     />
                                 </View>
                             </View>

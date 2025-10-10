@@ -18,6 +18,7 @@ public class NotificationConfigRuleDTO {
     private String[] weekdays; // MO, TU, WE, TH, FR, SA, SU
     private String time;
     private Boolean triggerIfFulfilled = false;
+    private Boolean triggerOnlyWhenStreakLost = false;
 
     // Threshold notifications
     private Long thresholdPercentage; // percentage

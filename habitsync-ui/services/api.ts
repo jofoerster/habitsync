@@ -199,6 +199,7 @@ export interface FixedTimeNotificationConfigRule extends BaseNotificationConfigR
     weekdays: string[];
     time: string;
     triggerIfFulfilled: boolean;
+    triggerOnlyWhenStreakLost: boolean;
 }
 
 export interface ThresholdNotificationConfigRule extends BaseNotificationConfigRule {
