@@ -218,9 +218,10 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     calendarSection: {
         backgroundColor: theme.surface,
-        margin: 20,
+        marginHorizontal: 20,
+        marginVertical: 10,
         borderRadius: 16,
-        paddingVertical: 5,
+        paddingVertical: 20,
         paddingHorizontal: 20,
         shadowColor: theme.shadow,
         shadowOffset: {width: 0, height: 2},

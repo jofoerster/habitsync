@@ -790,8 +790,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     section: {
         backgroundColor: theme.surface,
-        marginTop: 16,
-        marginHorizontal: 16,
+        marginVertical: 10,
+        marginHorizontal: 20,
         borderRadius: 12,
         padding: 20,
         shadowColor: theme.shadow,

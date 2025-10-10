@@ -527,7 +527,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     descriptionSection: {
         backgroundColor: theme.surface,
-        margin: 15,
+        marginVertical: 10,
+        marginHorizontal: 20,
         padding: 20,
         borderRadius: 10,
         shadowColor: '#000',
@@ -558,8 +559,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         textAlignVertical: 'top',
     },
     progressSection: {
-        marginHorizontal: 15,
-        marginBottom: 15,
+        marginHorizontal: 20,
+        marginVertical: 10,
     },
     progressCard: {
         backgroundColor: theme.surface,
@@ -767,8 +768,9 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         textAlign: 'center',
     },
     copyLinkSection: {
-        backgroundColor: theme.surfaceSecondary,
-        margin: 15,
+        backgroundColor: theme.surface,
+        marginHorizontal: 20,
+        marginVertical: 10,
         padding: 20,
         borderRadius: 10,
         shadowColor: '#000',

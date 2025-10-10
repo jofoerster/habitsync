@@ -325,7 +325,8 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     section: {
         backgroundColor: theme.surface,
-        margin: 15,
+        marginHorizontal: 20,
+        marginVertical: 10,
         padding: 20,
         borderRadius: 10,
         shadowColor: theme.shadow,
@@ -338,7 +339,7 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         fontSize: 18,
         fontWeight: 'bold',
         color: theme.text,
-        marginBottom: 15,
+        marginBottom: 10,
     },
     titleInput: {
         fontSize: 16,
