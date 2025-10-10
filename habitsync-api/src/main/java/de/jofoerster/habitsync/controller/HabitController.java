@@ -166,8 +166,10 @@ public class HabitController {
             return ResponseEntity.notFound().build();
         }
         Account account = accountService.getCurrentAccount();
-        accountService.getAccountById(participantAuthId)
-                .orElseThrow(() -> new IllegalArgumentException("No account found for id " + participantAuthId));
+        Optional<Account> account1 = accountService.getAccountById(participantAuthId);
+        if (account1.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
         checkIfIsOwner(habit, account);
         habitParticipationService.inviteParticipant(habit.getUuid(), participantAuthId);
         return ResponseEntity.ok().build();

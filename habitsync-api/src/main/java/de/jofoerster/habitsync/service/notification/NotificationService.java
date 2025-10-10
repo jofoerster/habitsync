@@ -10,6 +10,7 @@ import de.jofoerster.habitsync.model.notification.*;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import de.jofoerster.habitsync.repository.notification.NotificationRuleStatusRepository;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.habit.SharedHabitService;
 import jakarta.annotation.PostConstruct;
@@ -28,6 +29,7 @@ import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.TemplateEngine;
 
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -48,6 +50,7 @@ public class NotificationService {
     private final RestTemplate restTemplate = new RestTemplate();
     private final NotificationRuleStatusRepository notificationRuleStatusRepository;
     private final SharedHabitService sharedHabitService;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -104,7 +107,7 @@ public class NotificationService {
                 String ruleIdentifier = getIdentifierFromRule(rule, habit);
                 boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
                 boolean isActive =
-                        habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
+                        cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now())
                                 < rule.getThresholdPercentage();
                 if (!wasActive && isActive) {
                     log.debug("Threshold rule triggered for habit {}", habit.getUuid());
@@ -143,8 +146,8 @@ public class NotificationService {
         String ruleIdentifier = getIdentifierFromRule(rule, habit, ch);
         boolean wasActive = habitRuleNotificationStatusMap.getOrDefault(ruleIdentifier, false);
         boolean isActive =
-                habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository))
-                        < ch.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository));
+                cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now())
+                        < cachingHabitProgressService.getCompletionPercentageAtDate(ch, LocalDate.now());
         if (!wasActive && isActive) {
             log.debug("Overtake rule triggered for habit {}", habit.getUuid());
             sendCustomReminderNotifications(rule, habit);
@@ -233,7 +236,7 @@ public class NotificationService {
                 notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
                         templateEngine,
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, rule);
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, rule, cachingHabitProgressService);
         sendNotificationViaApprise(notification, habit);
         if (habit.getAccount().isSendNotificationsViaEmail()) {
             sendNotificationViaMail(notification);
@@ -258,7 +261,12 @@ public class NotificationService {
                         habitOpt.get().getUuid());
                 return;
             }
-            ;
+        } else if (fixedTimeRules.getFirst().getTriggerOnlyWhenStreakLost()) {
+            if (cachingHabitProgressService.getCompletionForDay(LocalDate.now(), habitOpt.get())) {
+                log.debug("Habit {} has not lost its streak today. Not sending fixed time notification.",
+                        habitOpt.get().getUuid());
+                return;
+            }
         }
 
         NotificationTemplate notificationTemplate =
@@ -269,7 +277,7 @@ public class NotificationService {
                 notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
                         templateEngine,
                         notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, null);
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, null, cachingHabitProgressService);
         sendNotificationViaApprise(notification, habit);
         if (habit.getAccount().isSendNotificationsViaEmail()) {
             sendNotificationViaMail(notification);

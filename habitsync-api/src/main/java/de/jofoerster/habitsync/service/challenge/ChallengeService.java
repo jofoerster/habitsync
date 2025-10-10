@@ -8,6 +8,7 @@ import de.jofoerster.habitsync.repository.challenge.ChallengeRepository;
 import de.jofoerster.habitsync.repository.challenge.ChallengeResultRepository;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
 import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.notification.NotificationRuleService;
 import de.jofoerster.habitsync.util.exceptions.ChallengeProposalFailedException;
@@ -32,6 +33,7 @@ public class ChallengeService {
     private final VoteService voteService;
     private final ChallengeResultRepository challengeResultRepository;
     private final NotificationRuleService notificationRuleService;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     private Map<Account, Integer> cachedLeaderboard = new HashMap<>();
     private LocalDate leaderboardLastUpdated = LocalDate.now()
@@ -134,7 +136,7 @@ public class ChallengeService {
         if (challenge == null) {
             return scores;
         }
-        scores = challenge.getProgressOfHabits(habits, recordSupplier);
+        scores = challenge.getProgressOfHabits(habits, recordSupplier, cachingHabitProgressService);
         scores.entrySet()
                 .removeIf(e -> e.getValue()
                         .getPercentage() == 0.0);

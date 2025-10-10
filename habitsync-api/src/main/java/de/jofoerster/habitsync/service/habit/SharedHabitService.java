@@ -26,18 +26,21 @@ public class SharedHabitService {
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
     private final HabitRepository habitRepository;
     private final HabitParticipationService habitParticipationService;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     public SharedHabitService(SharedHabitRepository sharedHabitRepository, HabitRecordRepository habitRecordRepository,
                               NotificationRuleService notificationRuleService,
                               SharedHabitResultsRepository sharedHabitResultsRepository,
                               HabitRepository habitRepository, HabitParticipantRepository habitParticipantRepository,
-                              HabitParticipationService habitParticipationService) {
+                              HabitParticipationService habitParticipationService,
+                              CachingHabitProgressService cachingHabitProgressService) {
         this.sharedHabitRepository = sharedHabitRepository;
         this.habitRecordSupplier = new HabitRecordSupplier(habitRecordRepository);
         this.notificationRuleService = notificationRuleService;
         this.sharedHabitResultsRepository = sharedHabitResultsRepository;
         this.habitRepository = habitRepository;
         this.habitParticipationService = habitParticipationService;
+        this.cachingHabitProgressService = cachingHabitProgressService;
     }
 
     public Optional<SharedHabit> getSharedHabitByCode(String shareCode) {
@@ -81,7 +84,8 @@ public class SharedHabitService {
             List<Map.Entry<Account, Double>> progress = sharedHabit.getHabits()
                     .stream()
                     .map(h -> Map.entry(h.getAccount(),
-                            sharedHabit.getProgressOfHabit(h, notificationRuleService, habitRecordSupplier)))
+                            cachingHabitProgressService.getCompletionPercentageAtDate(sharedHabit.getMainNotificationRule(notificationRuleService).get()
+                                    .getInternalHabitForComputationOfGoal(), h, LocalDate.now())))
                     .sorted(Map.Entry.<Account, Double>comparingByValue()
                             .reversed())
                     .toList();

@@ -33,6 +33,7 @@ public class HabitService {
     private final Random rand = new Random();
     private final SharedHabitResultsRepository sharedHabitResultsRepository;
     private final HabitParticipantRepository habitParticipantRepository;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -181,7 +182,7 @@ public class HabitService {
     }
 
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {
-        Double currentPercentage = habit.getCompletionPercentage(new HabitRecordSupplier(habitRecordRepository));
+        Double currentPercentage = cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now());
         String currentMedal = getLastMonthMedalString(habit);
         return HabitReadDTO.builder()
                 .color(habit.getColor())
@@ -219,6 +220,7 @@ public class HabitService {
         if (habitOpt.isEmpty()) {
             throw new EntityNotFoundException("Habit with UUID " + uuid + " not found.");
         }
+        cachingHabitProgressService.onHabitChanged(habitOpt.get(), (int) LocalDate.now().toEpochDay());
         Habit habit = habitOpt.get();
         habit.applyChanges(apiHabitWrite);
         saveHabit(habit);

@@ -13,6 +13,7 @@ import de.jofoerster.habitsync.repository.habit.HabitRecordSupplier;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.challenge.ChallengeService;
 import de.jofoerster.habitsync.service.challenge.VoteService;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,15 +33,18 @@ public class ChallengeController {
     private final VoteService voteService;
     private final HabitService habitService;
     private final HabitRecordRepository habitRecordRepository;
+    private final CachingHabitProgressService cachingHabitProgressService;
 
     public ChallengeController(ChallengeService challengeService, AccountService accountService,
                                VoteService voteService, HabitService habitService,
-                               HabitRecordRepository habitRecordRepository) {
+                               HabitRecordRepository habitRecordRepository,
+                               CachingHabitProgressService cachingHabitProgressService) {
         this.challengeService = challengeService;
         this.accountService = accountService;
         this.voteService = voteService;
         this.habitService = habitService;
         this.habitRecordRepository = habitRecordRepository;
+        this.cachingHabitProgressService = cachingHabitProgressService;
     }
 
     @GetMapping("/overview")
@@ -157,7 +161,7 @@ public class ChallengeController {
             Challenge challenge = challengeService.getCurrentlyActiveChallenge();
             Habit challengeHabit = challengeHabits.getFirst();
             Map<Account, ChallengeProgress> progress = challenge != null ? challenge.getProgressOfHabits(List.of(challengeHabit),
-                    new HabitRecordSupplier(habitRecordRepository)) : Map.of();
+                    new HabitRecordSupplier(habitRecordRepository), cachingHabitProgressService) : Map.of();
             HabitReadDTO habit = habitService.getApiHabitReadFromHabit(challengeHabit);
             habit.setCurrentPercentage(challenge != null ? progress.get(accountService.getCurrentAccount()).getPercentage() : 0);
             return ResponseEntity.ok(habit);
