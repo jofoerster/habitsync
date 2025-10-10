@@ -76,21 +76,14 @@ public class AccountController {
                         .toList());
     }
 
-    @GetMapping("/api-key/new")
+    @GetMapping("/api-key")
     public String createNewApiKey() {
         return apiKeyService.createApiKey(accountService.getCurrentAccount(), Set.of("ROLE_USER"));
     }
 
-    @DeleteMapping("/api-key/revoke")
-    public ResponseEntity<Void> revokeApiKey(@RequestParam String apiKey) {
-        apiKeyService.validateApiKey(apiKey).ifPresent(validApiKey -> {
-            if (validApiKey.getAccount().getAuthenticationId()
-                    .equals(accountService.getCurrentAccount().getAuthenticationId())) {
-                apiKeyService.revokeApiKey(validApiKey);
-            } else {
-                throw new IllegalArgumentException("API key does not belong to the current user");
-            }
-        });
+    @DeleteMapping("/api-key")
+    public ResponseEntity<Void> revokeApiKey() {
+        apiKeyService.revokeApiKeys(accountService.getCurrentAccount());
         return ResponseEntity.ok().build();
     }
 

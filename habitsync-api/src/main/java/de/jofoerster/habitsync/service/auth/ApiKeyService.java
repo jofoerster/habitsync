@@ -39,8 +39,8 @@ public class ApiKeyService {
         return plainApiKey;
     }
 
-    public void revokeApiKey(ApiKey validApiKey) {
-        apiKeyRepository.delete(validApiKey);
+    public void revokeApiKeys(Account account) {
+        apiKeyRepository.deleteApiKeyByAccount(account);
     }
 
     /**

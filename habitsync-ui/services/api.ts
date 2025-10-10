@@ -263,6 +263,20 @@ export const userApi = {
         if (!response.ok) throw new Error('Failed to fetch habit invitations');
         return response.json();
     },
+
+    getApiKey: async (): Promise<string> => {
+        const response = await authenticatedFetch(`/api/user/api-key`);
+        if (!response.ok) throw new Error('Failed to fetch API key');
+        const data = await response.json();
+        return data.apiKey;
+    },
+
+    evictAllApiKeys: async (): Promise<void> => {
+        const response = await authenticatedFetch(`/api/user/api-key`, {
+            method: 'DELETE',
+        });
+        if (!response.ok) throw new Error('Failed to evict API keys');
+    }
 }
 
 
