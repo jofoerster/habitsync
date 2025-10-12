@@ -181,7 +181,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     const loadHabitRecords = async (habitNew: ApiHabitRead | null = null) => {
         try {
-            console.log("Records:" + habit.records);
             const habitToUse = habitNew || habit;
             setRecords(new Map(habitToUse.records.map(r => [r.epochDay, r])));
         } catch (error) {

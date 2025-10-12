@@ -10,8 +10,14 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjuster;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
+
+import static de.jofoerster.habitsync.util.EvictionHelper.getCompletionEvictionTimeframe;
 
 @Service
 @RequiredArgsConstructor
@@ -25,9 +31,14 @@ public class CachingHabitRecordService {
         return habitUuid + "_" + epochDay;
     }
 
-    public void evictCache(String habitUuid, int epochDay) {
-        Objects.requireNonNull(cacheManager.getCache("habitRecordCache"))
-                .evictIfPresent(getCacheKey(habitUuid, epochDay));
+    public void evictCache(Habit habit, int epochDay) {
+        LocalDate date = LocalDate.ofEpochDay(epochDay);
+        LocalDate[] timeframe = getCompletionEvictionTimeframe(habit, date);
+        for (LocalDate d = timeframe[0]; !d.isAfter(timeframe[1]); d = d.plusDays(1)) {
+            int dayEpoch = (int) d.toEpochDay();
+            Objects.requireNonNull(cacheManager.getCache("habitRecordCache"))
+                    .evictIfPresent(getCacheKey(habit.getUuid(), dayEpoch));
+        }
     }
 
     @Cacheable(value = "habitRecordCache", key = "#root.target.getCacheKey(#habit.getUuid(), #epochDay)")
@@ -46,7 +57,7 @@ public class CachingHabitRecordService {
     }
 
     public HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordDTO) {
-        this.evictCache(habit.getUuid(), recordDTO.getEpochDay());
+        this.evictCache(habit, recordDTO.getEpochDay());
         return habitRecordService.createRecord(habit, recordDTO);
     }
 }

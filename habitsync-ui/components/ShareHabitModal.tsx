@@ -5,7 +5,7 @@ import * as Clipboard from 'expo-clipboard';
 import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
 import {ApiAccountRead, ApiHabitRead, ApiSharedHabitRead, habitApi, sharedHabitApi,} from '@/services/api';
-import {UI_BASE_URL} from '@/public/config';
+import {getBackendBaseUrl, getUiBaseUrl, UI_BASE_URL} from '@/public/config';
 import alert from '@/services/alert';
 
 interface ShareHabitModalProps {
@@ -33,15 +33,21 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
     const [participants, setParticipants] = useState<ApiAccountRead[]>([]);
     const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [inviting, setInviting] = useState(false);
+    const [shareUrl, setShareUrl] = useState('loading...');
 
     const sharedHabit = sharedHabits.length > 0 ? sharedHabits[0] : null;
-    const shareUrl = sharedHabit ? `${UI_BASE_URL}/share/${sharedHabit.shareCode}` : '';
 
     useEffect(() => {
+        loadBackendUrl();
         if (visible && sharedHabit && isOwnHabit) {
             loadParticipants();
         }
     }, [visible, sharedHabit]);
+
+    const loadBackendUrl = async () => {
+        const uiBaseUrl = await getUiBaseUrl();
+        setShareUrl(sharedHabit ? `${uiBaseUrl}/share/${sharedHabit.shareCode}` : '');
+    }
 
     const loadParticipants = async () => {
         if (!habitDetail?.uuid) return;

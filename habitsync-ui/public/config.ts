@@ -76,6 +76,12 @@ export const getUiBaseUrl = async (): Promise<string> => {
     return UI_BASE_URL;
   }
 
+  // Fallback to environment variable or default
+  const storedHostname = await getStoredHostname();
+  if (storedHostname) {
+    return storedHostname;
+  }
+
   // For mobile, use environment variable or default
   return runtimeConfig.UI_BASE_URL || defaultUrls.ui;
 };

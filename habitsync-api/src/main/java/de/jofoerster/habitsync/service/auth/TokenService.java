@@ -2,6 +2,7 @@ package de.jofoerster.habitsync.service.auth;
 
 import de.jofoerster.habitsync.config.SecurityProperties;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -65,7 +66,7 @@ public class TokenService {
             Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
             String tokenType = claims.getPayload().get("type", String.class);
             return expectedType.equals(tokenType) && claims.getPayload().getExpiration().after(new Date());
-        } catch (JwtException | IllegalArgumentException e) {
+        } catch (ExpiredJwtException | JwtException | IllegalArgumentException e) {
             return false;
         }
     }

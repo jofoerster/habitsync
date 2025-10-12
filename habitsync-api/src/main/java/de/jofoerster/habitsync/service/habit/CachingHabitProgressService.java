@@ -16,6 +16,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static de.jofoerster.habitsync.util.EvictionHelper.getCompletionEvictionTimeframe;
+
 @Service
 public class CachingHabitProgressService {
 
@@ -37,11 +39,12 @@ public class CachingHabitProgressService {
     }
 
     public void onHabitChanged(Habit habit, int epochDay) {
-        for (int i = epochDay; i <= epochDay + habit.getTargetDays() && i <= LocalDate.now().toEpochDay(); i++) {
+        LocalDate[] timeframe = getCompletionEvictionTimeframe(habit, LocalDate.ofEpochDay(epochDay));
+        for (int i = (int) timeframe[0].toEpochDay(); i <= timeframe[1].toEpochDay(); i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitCompletionCache")).evictIfPresent(key);
         }
-        for (int i = epochDay - (habit.getTargetDays()-1); i <= epochDay + (habit.getTargetDays()-1); i++) {
+        for (int i = epochDay - (habit.getTargetDays() - 1); i <= epochDay; i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitProgressCache")).evictIfPresent(key);
         }
@@ -62,14 +65,39 @@ public class CachingHabitProgressService {
     public double getCompletionPercentageAtDateWithValuesInRange(Habit habit, Habit habitToUseValuesOf,
                                                                  LocalDate localDate,
                                                                  LocalDate forcedStartDate, LocalDate forcedEndDate) {
-        LocalDate startDate = localDate.minusDays(habit.getTargetDays() - 1);
-        return getCompletionPercentage(habit, habitToUseValuesOf, forcedStartDate, forcedEndDate, startDate,
-                localDate);
+        if (habit.getTargetDays() == 0 || habit.getFreqCustom() == null ||
+                habit.getFreqCustom().isEmpty()) {
+            return 0d;
+        }
+        LocalDate endDate = localDate;
+        LocalDate startDate = endDate.minusDays(habit.getTargetDays() - 1);
+
+        double completionPercentage = getCompletionPercentage(habit, habitToUseValuesOf, forcedStartDate,
+                forcedEndDate, startDate, endDate);
+
+        switch (habit.getFreqType()) {
+            case 1 -> {
+                endDate = endDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
+                startDate = endDate.minusDays(habit.getTargetDays());
+            }
+            case 2 -> {
+                endDate = endDate.plusMonths(1).withDayOfMonth(1).minusDays(1);
+                startDate = endDate.minusDays(habit.getTargetDays());
+            }
+            case 3 -> {
+                return completionPercentage;
+            }
+            default -> throw new IllegalArgumentException("Invalid frequency type: " + habit.getFreqType());
+        }
+
+        return Math.max(completionPercentage,
+                getCompletionPercentage(habit, habitToUseValuesOf, forcedStartDate,
+                        forcedEndDate, startDate, endDate));
     }
 
     public double getCompletionPercentage(Habit configHabit, Habit habitToUseRecordsOf,
-                                           LocalDate forcedStartDate, LocalDate forcedEndDate, LocalDate startDate,
-                                           LocalDate endDate) {
+                                          LocalDate forcedStartDate, LocalDate forcedEndDate, LocalDate startDate,
+                                          LocalDate endDate) {
         if (configHabit.getTargetDays() == 0 || configHabit.getFreqCustom() == null ||
                 configHabit.getFreqCustom().isEmpty()) {
             return 0d;
