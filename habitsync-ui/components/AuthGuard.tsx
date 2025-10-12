@@ -29,8 +29,6 @@ export default function AuthGuard({children}: AuthGuardProps) {
     const pathname = usePathname();
 
     useEffect(() => {
-        console.log("AuthGuard effect running for pathname:", pathname);
-        console.log("Auth state:", authState);
         if (authState.isLoading) return;
 
         if (PUBLIC_ROUTES.includes(pathname)) return;
@@ -46,7 +44,6 @@ export default function AuthGuard({children}: AuthGuardProps) {
             router.replace('/waiting-approval');
             return;
         }
-        console.log("AuthGuard effect ran successfully");
     }, [authState, pathname, router]);
 
     if (authState.isLoading) {
