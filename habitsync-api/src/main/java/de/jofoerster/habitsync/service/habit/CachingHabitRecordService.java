@@ -17,6 +17,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Objects;
 
+import static de.jofoerster.habitsync.util.EvictionHelper.getCompletionEvictionTimeframe;
+
 @Service
 @RequiredArgsConstructor
 public class CachingHabitRecordService {
@@ -31,23 +33,8 @@ public class CachingHabitRecordService {
 
     public void evictCache(Habit habit, int epochDay) {
         LocalDate date = LocalDate.ofEpochDay(epochDay);
-        LocalDate startDate;
-        LocalDate endDate;
-        switch (habit.getParsedFrequencyType()) {
-            case MONTHLY -> {
-                startDate = date.with(TemporalAdjusters.firstDayOfMonth());
-                endDate = date.with(TemporalAdjusters.lastDayOfMonth());
-            }
-            case X_TIMES_PER_Y_DAYS -> {
-                startDate = date.minusDays(habit.parseCustomFrequency()[1] - 1);
-                endDate = date;
-            }
-            default-> { // always WEEKLY
-                startDate = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                endDate = startDate.plusDays(6);
-            }
-        }
-        for (LocalDate d = startDate; !d.isAfter(endDate); d = d.plusDays(1)) {
+        LocalDate[] timeframe = getCompletionEvictionTimeframe(habit, date);
+        for (LocalDate d = timeframe[0]; !d.isAfter(timeframe[1]); d = d.plusDays(1)) {
             int dayEpoch = (int) d.toEpochDay();
             Objects.requireNonNull(cacheManager.getCache("habitRecordCache"))
                     .evictIfPresent(getCacheKey(habit.getUuid(), dayEpoch));

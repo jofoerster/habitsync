@@ -16,6 +16,8 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static de.jofoerster.habitsync.util.EvictionHelper.getCompletionEvictionTimeframe;
+
 @Service
 public class CachingHabitProgressService {
 
@@ -37,11 +39,12 @@ public class CachingHabitProgressService {
     }
 
     public void onHabitChanged(Habit habit, int epochDay) {
-        for (int i = epochDay; i <= epochDay + habit.getTargetDays() && i <= LocalDate.now().toEpochDay(); i++) {
+        LocalDate[] timeframe = getCompletionEvictionTimeframe(habit, LocalDate.ofEpochDay(epochDay));
+        for (int i = (int) timeframe[0].toEpochDay(); i <= timeframe[1].toEpochDay(); i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitCompletionCache")).evictIfPresent(key);
         }
-        for (int i = epochDay - (habit.getTargetDays() - 1); i <= epochDay + (habit.getTargetDays() - 1); i++) {
+        for (int i = epochDay - (habit.getTargetDays() - 1); i <= epochDay; i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitProgressCache")).evictIfPresent(key);
         }
