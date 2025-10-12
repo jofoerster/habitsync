@@ -231,6 +231,7 @@ public class NotificationTemplate {
         parameters.put("habit", habit);
         parameters.put("notificationRuleService", notificationRuleService);
         parameters.put("habitRecordSupplier", habitRecordSupplier);
+        parameters.put("progressService", cachingHabitProgressService);
         sender.ifPresent(account -> parameters.put("sender", account.getUserName()));
 
         return parameters;
