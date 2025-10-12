@@ -223,11 +223,13 @@ All contributions are welcome! If you find a bug, have a feature request or need
 ### Backend
 
 - Improve shared habit connection cleanup
+- Improve background shared habit handling
+- Further improve caching
+- Improve notification handling
 
 ### Frontend
 
 - Add push notifications support
-- Support for mobile apps
 
 ## Release Process
 
