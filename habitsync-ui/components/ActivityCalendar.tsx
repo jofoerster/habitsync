@@ -21,7 +21,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
 
     useEffect(() => {
         fetchCalendarData();
-    }, [currentMonth, habit.uuid]);
+    }, [currentMonth, habit]);
 
     const fetchCalendarData = async () => {
         try {
