@@ -272,4 +272,13 @@ public class Habit {
     public Integer getFreqType() {
         return freqType != null ? freqType : 1;
     }
+
+    public FrequencyTypeDTO getParsedFrequencyType() {
+        return switch (this.getFreqType()) {
+            case 1 -> FrequencyTypeDTO.WEEKLY;
+            case 2 -> FrequencyTypeDTO.MONTHLY;
+            case 3 -> FrequencyTypeDTO.X_TIMES_PER_Y_DAYS;
+            default -> null;
+        };
+    }
 }
