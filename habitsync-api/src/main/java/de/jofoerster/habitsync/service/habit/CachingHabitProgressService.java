@@ -38,6 +38,10 @@ public class CachingHabitProgressService {
         return getCacheKey(habit, (int) date.toEpochDay());
     }
 
+    public String getCacheKey(Habit habit) {
+        return getCacheKey(habit, (int) LocalDate.now().toEpochDay());
+    }
+
     public void onHabitChanged(Habit habit, int epochDay) {
         LocalDate[] timeframe = getCompletionEvictionTimeframe(habit, LocalDate.ofEpochDay(epochDay));
         for (int i = (int) timeframe[0].toEpochDay(); i <= timeframe[1].toEpochDay(); i++) {
@@ -53,6 +57,11 @@ public class CachingHabitProgressService {
     @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit, #localDate)")
     public double getCompletionPercentageAtDate(Habit habit, LocalDate localDate) {
         return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null);
+    }
+
+    @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit)")
+    public double getCompletionPercentage(Habit habit) {
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, LocalDate.now(), null, null);
     }
 
     public double getCompletionPercentageAtDate(Habit habit, Habit habitToUseValuesOf, LocalDate localDate) {
