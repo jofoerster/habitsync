@@ -1,11 +1,27 @@
-import {ApiHabitRead, ApiHabitRecordRead, habitRecordApi, habitApi, HabitRecordCompletion} from "@/services/api";
+import {ApiHabitRead, ApiHabitRecordRead, habitRecordApi, habitApi} from "@/services/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import React, { useEffect, useState, useCallback } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, TouchableOpacity, View, Platform } from "react-native";
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import { VictoryLine, VictoryChart, VictoryAxis, VictoryTheme } from "victory-native";
+
+// Platform-specific imports for Victory charts
+let VictoryLine: any, VictoryChart: any, VictoryAxis: any, VictoryTheme: any;
+
+if (Platform.OS === 'web') {
+    const Victory = require('victory');
+    VictoryLine = Victory.VictoryLine;
+    VictoryChart = Victory.VictoryChart;
+    VictoryAxis = Victory.VictoryAxis;
+    VictoryTheme = Victory.VictoryTheme;
+} else {
+    const VictoryNative = require('victory-native');
+    VictoryLine = VictoryNative.VictoryLine;
+    VictoryChart = VictoryNative.VictoryChart;
+    VictoryAxis = VictoryNative.VictoryAxis;
+    VictoryTheme = VictoryNative.VictoryTheme;
+}
 
 const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
     handleClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
