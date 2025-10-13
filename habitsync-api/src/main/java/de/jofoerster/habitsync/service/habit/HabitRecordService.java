@@ -19,6 +19,7 @@ import java.util.List;
 public class HabitRecordService {
     private final HabitRecordRepository habitRecordRepository;
     private final CachingHabitProgressService cachingHabitProgressService;
+    private final CachingHabitProgressHistoryService cachingHabitProgressHistoryService;
 
     private HabitRecordCompletion getHabitRecordStatus(Habit habit, HabitRecord habitRecord) {
         boolean completion = cachingHabitProgressService.getCompletionForDay(
@@ -66,6 +67,7 @@ public class HabitRecordService {
             recordDay = (int) LocalDate.now().toEpochDay();
         }
         cachingHabitProgressService.onHabitChanged(habit, recordDay);
+        cachingHabitProgressHistoryService.evictCacheForHabit(habit, recordDay);
         List<HabitRecord> records =
                 habitRecordRepository.findHabitRecordByRecordDateAndParentUuid(recordDay, habit.getUuid());
         HabitRecord habitRecord;

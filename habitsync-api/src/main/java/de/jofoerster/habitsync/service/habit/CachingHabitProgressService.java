@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.service.habit;
 
+import de.jofoerster.habitsync.dto.PercentageHistoryDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitRecord;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
@@ -51,29 +53,35 @@ public class CachingHabitProgressService {
         for (int i = epochDay; i < epochDay + habit.getTargetDays() && i <= LocalDate.now().toEpochDay(); i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitProgressCache")).evictIfPresent(key);
+            Objects.requireNonNull(cacheManager.getCache("habitProgressCacheNoFuture")).evictIfPresent(key);
         }
     }
 
     @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit, #localDate)")
     public double getCompletionPercentageAtDate(Habit habit, LocalDate localDate) {
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, false);
+    }
+
+    @Cacheable(value = "habitProgressCacheNoFuture", key = "#root.target.getCacheKey(#habit, #localDate)")
+    public double getCompletionPercentageAtDateWithoutFuture(Habit habit, LocalDate localDate) {
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, true);
     }
 
     @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit)")
     public double getCompletionPercentage(Habit habit) {
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, LocalDate.now(), null, null);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, LocalDate.now(), null, null, false);
     }
 
     public double getCompletionPercentageAtDate(Habit habit, Habit habitToUseValuesOf, LocalDate localDate) {
         if (habit == null) {
             habit = habitToUseValuesOf;
         }
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habitToUseValuesOf, localDate, null, null);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habitToUseValuesOf, localDate, null, null, false);
     }
 
     public double getCompletionPercentageAtDateWithValuesInRange(Habit habit, Habit habitToUseValuesOf,
                                                                  LocalDate localDate,
-                                                                 LocalDate forcedStartDate, LocalDate forcedEndDate) {
+                                                                 LocalDate forcedStartDate, LocalDate forcedEndDate, boolean lookIntoFuture) {
         if (habit.getTargetDays() == 0 || habit.getFreqCustom() == null ||
                 habit.getFreqCustom().isEmpty()) {
             return 0d;
@@ -83,6 +91,10 @@ public class CachingHabitProgressService {
 
         double completionPercentage = getCompletionPercentage(habit, habitToUseValuesOf, forcedStartDate,
                 forcedEndDate, startDate, endDate);
+
+        if (!lookIntoFuture) {
+            return completionPercentage;
+        }
 
         switch (habit.getFreqType()) {
             case 1 -> {
