@@ -1,7 +1,7 @@
 {
   "name": "habitsync-ui",
   "main": "expo-router/entry",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
@@ -47,6 +47,7 @@
     "react-native": "0.79.5",
     "react-native-draggable-flatlist": "^4.0.3",
     "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
