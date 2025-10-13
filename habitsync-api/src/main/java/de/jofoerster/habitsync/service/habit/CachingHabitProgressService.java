@@ -59,24 +59,24 @@ public class CachingHabitProgressService {
 
     @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit, #localDate)")
     public double getCompletionPercentageAtDate(Habit habit, LocalDate localDate) {
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, false);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, true);
     }
 
     @Cacheable(value = "habitProgressCacheNoFuture", key = "#root.target.getCacheKey(#habit, #localDate)")
     public double getCompletionPercentageAtDateWithoutFuture(Habit habit, LocalDate localDate) {
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, true);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, localDate, null, null, false);
     }
 
     @Cacheable(value = "habitProgressCache", key = "#root.target.getCacheKey(#habit)")
     public double getCompletionPercentage(Habit habit) {
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, LocalDate.now(), null, null, false);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habit, LocalDate.now(), null, null, true);
     }
 
     public double getCompletionPercentageAtDate(Habit habit, Habit habitToUseValuesOf, LocalDate localDate) {
         if (habit == null) {
             habit = habitToUseValuesOf;
         }
-        return getCompletionPercentageAtDateWithValuesInRange(habit, habitToUseValuesOf, localDate, null, null, false);
+        return getCompletionPercentageAtDateWithValuesInRange(habit, habitToUseValuesOf, localDate, null, null, true);
     }
 
     public double getCompletionPercentageAtDateWithValuesInRange(Habit habit, Habit habitToUseValuesOf,
