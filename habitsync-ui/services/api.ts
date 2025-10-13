@@ -19,6 +19,11 @@ export interface ApiHabitRead {
     numberModalConfig: ApiHabitNumberModalConfig;
 }
 
+export interface PercentageHistoryDTO {
+    month: string; // "YYYY-MM"
+    dailyPercentages: { [epochDay: number]: number }; // epochDay -> percentage
+}
+
 export interface ApiAccountRead {
     displayName: string;
     authenticationId: string;
@@ -290,6 +295,14 @@ export const habitApi = {
     getHabitByUuid: async (uuid: string): Promise<ApiHabitRead> => {
         const response = await authenticatedFetch(`/api/habit/${uuid}`);
         if (!response.ok) throw new Error('Failed to fetch habit');
+        return response.json();
+    },
+
+    getHabitPercentageHistory: async (uuid: string, month: Date): Promise<PercentageHistoryDTO> => {
+        const monthMiddleOfMonth = new Date(month.getFullYear(), month.getMonth(), 15);
+        const monthStr = monthMiddleOfMonth.toISOString().substring(0, 7); // "YYYY-MM"
+        const response = await authenticatedFetch(`/api/habit/${uuid}/percentage-history?month=${monthStr}`);
+        if (!response.ok) throw new Error('Failed to fetch habit percentage history');
         return response.json();
     },
 

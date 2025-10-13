@@ -84,7 +84,7 @@
 
     <div class="reminder-text">
         <p>Hi there! 👋</p>
-        <p th:text="${'Someone has beaten your percentage of' + progressService.getCompletionPercentageAtDate(habit, LocalDate.now()) + '% in'}"></p>
+        <p th:text="${'Someone has beaten your percentage of' + progressService.getCompletionPercentage(habit) + '% in'}"></p>
     </div>
 
     <div class="habit-name" th:text="${habit.name}">

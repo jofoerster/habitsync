@@ -22,6 +22,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -41,6 +42,7 @@ public class HabitService {
 
     private final CacheManager cacheManager;
     private final CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService;
+    private final CachingHabitProgressHistoryService cachingHabitProgressHistoryService;
 
     ObjectMapper mapper = new ObjectMapper();
 
@@ -231,6 +233,7 @@ public class HabitService {
             throw new EntityNotFoundException("Habit with UUID " + uuid + " not found.");
         }
         cachingHabitProgressService.onHabitChanged(habitOpt.get(), (int) LocalDate.now().toEpochDay());
+        cachingHabitProgressHistoryService.evictCacheForHabit(habitOpt.get(), (int) LocalDate.now().toEpochDay());
         Habit habit = habitOpt.get();
         habit.applyChanges(apiHabitWrite);
         saveHabit(habit);

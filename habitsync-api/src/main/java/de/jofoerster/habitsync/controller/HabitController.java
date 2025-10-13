@@ -3,11 +3,13 @@ package de.jofoerster.habitsync.controller;
 import de.jofoerster.habitsync.dto.AccountReadDTO;
 import de.jofoerster.habitsync.dto.HabitReadDTO;
 import de.jofoerster.habitsync.dto.HabitWriteDTO;
+import de.jofoerster.habitsync.dto.PercentageHistoryDTO;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
+import de.jofoerster.habitsync.service.habit.CachingHabitProgressHistoryService;
 import de.jofoerster.habitsync.service.habit.CachingNumberOfConnectedHabitsService;
 import de.jofoerster.habitsync.service.habit.HabitParticipationService;
 import de.jofoerster.habitsync.service.habit.HabitService;
@@ -15,6 +17,7 @@ import de.jofoerster.habitsync.service.notification.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -32,17 +35,20 @@ public class HabitController {
 
     private final PermissionChecker permissionChecker;
     private final CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService;
+    private final CachingHabitProgressHistoryService cachingHabitProgressHistoryService;
 
     public HabitController(HabitService habitService, AccountService accountService,
                            NotificationService notificationService, HabitParticipationService habitParticipationService,
                            PermissionChecker permissionChecker,
-                           CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService) {
+                           CachingNumberOfConnectedHabitsService cachingNumberOfConnectedHabitsService,
+                           CachingHabitProgressHistoryService cachingHabitProgressHistoryService) {
         this.habitService = habitService;
         this.accountService = accountService;
         this.notificationService = notificationService;
         this.habitParticipationService = habitParticipationService;
         this.permissionChecker = permissionChecker;
         this.cachingNumberOfConnectedHabitsService = cachingNumberOfConnectedHabitsService;
+        this.cachingHabitProgressHistoryService = cachingHabitProgressHistoryService;
     }
 
     /**
@@ -222,5 +228,20 @@ public class HabitController {
         Account account = accountService.getCurrentAccount();
         checkIfIsOwner(habit, account);
         return ResponseEntity.ok(habitParticipationService.listParticipants(habit));
+    }
+
+    @GetMapping("/{uuid}/percentage-history")
+    public ResponseEntity<PercentageHistoryDTO> getPercentageHistoryForMonth(@PathVariable String uuid,
+                                                                             @RequestParam String month) {
+        Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
+        if (habit == null) {
+            return ResponseEntity.notFound().build();
+        }
+        Year year = Year.parse(month.substring(0, 4));
+        int monthInt = Integer.parseInt(month.substring(5, 7));
+        Account account = accountService.getCurrentAccount();
+        permissionChecker.checkIfisAllowedToRead(habit, account, habitService);
+        PercentageHistoryDTO dto = cachingHabitProgressHistoryService.getPercentageHistoryForMonth(habit, year, monthInt);
+        return ResponseEntity.ok(dto);
     }
 }

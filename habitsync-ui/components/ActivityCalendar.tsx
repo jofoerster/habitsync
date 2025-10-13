@@ -1,10 +1,11 @@
-import {ApiHabitRead, ApiHabitRecordRead, habitRecordApi} from "@/services/api";
+import {ApiHabitRead, ApiHabitRecordRead, habitRecordApi, habitApi, HabitRecordCompletion} from "@/services/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Pressable, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import { VictoryLine, VictoryChart, VictoryAxis, VictoryTheme } from "victory-native";
 
 const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
     handleClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
@@ -18,19 +19,21 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [calendarRecords, setCalendarRecords] = useState<ApiHabitRecordRead[]>([]);
+    const [showCalendarAsGraph, setShowCalendarAsGraph] = useState(false);
+    const [percentageHistory, setPercentageHistory] = useState<{ [epochDay: number]: number }>({});
 
-    useEffect(() => {
-        fetchCalendarData();
-    }, [currentMonth, habit]);
-
-    const fetchCalendarData = async () => {
+    const fetchCalendarData = useCallback(async () => {
         try {
             const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
             const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
             const startEpoch = Math.floor(Date.UTC(startOfMonth.getFullYear(), startOfMonth.getMonth(), startOfMonth.getDate()) / (1000 * 60 * 60 * 24))
             const endEpoch = Math.floor(Date.UTC(endOfMonth.getFullYear(), endOfMonth.getMonth(), endOfMonth.getDate()) / (1000 * 60 * 60 * 24))
+            // Fetch percentage history
+            const historyData = await habitApi.getHabitPercentageHistory(habit.uuid, currentMonth);
+            setPercentageHistory(historyData.dailyPercentages);
 
+            // Fetch calendar records
             const calendarData = await habitRecordApi.getRecords(
                 habit.uuid,
                 startEpoch,
@@ -40,23 +43,102 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
         } catch (error) {
             console.error('Error fetching calendar data:', error);
         }
-    };
+    }, [currentMonth, habit.uuid]);
 
+    useEffect(() => {
+        fetchCalendarData();
+    }, [fetchCalendarData]);
 
     const getCompletionColor = (completion: string) => {
         switch (completion) {
-            case 'COMPLETED':
+            case "COMPLETED":
                 return '#4CAF50';
-            case 'PARTIALLY_COMPLETED':
+            case "PARTIALLY_COMPLETED":
                 return '#FF9800';
-            case 'COMPLETED_BY_OTHER_RECORDS':
+            case "COMPLETED_BY_OTHER_RECORDS":
                 return '#addfb5';
-            case 'MISSED':
+            case "MISSED":
                 return '#F44336';
             default:
                 return '#E0E0E0';
         }
     };
+
+    const renderGraph = () => {
+
+        // Convert percentage history to chart data, filtering for current month only
+        const chartData = Object.entries(percentageHistory)
+            .map(([epochDay, percentage]) => {
+                const date = new Date(parseInt(epochDay) * 24 * 60 * 60 * 1000);
+                return {
+                    x: date.getDate(),
+                    y: percentage,
+                    epochDay: parseInt(epochDay),
+                    month: date.getMonth(),
+                    year: date.getFullYear()
+                };
+            })
+            .filter(data =>
+                data.month === currentMonth.getMonth() &&
+                data.year === currentMonth.getFullYear()
+            )
+            .sort((a, b) => a.x - b.x);
+
+        if (chartData.length === 0) {
+            return (
+                <View style={{ height: 220, alignItems: 'center', justifyContent: 'center' }}>
+                    <Text style={styles.noDataText}>No data available for this month</Text>
+                </View>
+            );
+        }
+
+        // Get the number of days in the current month for domain
+        const daysInMonth = new Date(
+            currentMonth.getFullYear(),
+            currentMonth.getMonth() + 1,
+            0
+        ).getDate();
+
+        return (
+            <View style={{ height: 220, width: '100%' }}>
+                <VictoryChart
+                    theme={VictoryTheme.material}
+                    height={200}
+                    padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
+                    domain={{ x: [1, daysInMonth], y: [0, 100] }}
+                >
+                    <VictoryAxis
+                        label="Day of Month"
+                        style={{
+                            axisLabel: { fontSize: 12, padding: 30, fill: theme.textSecondary },
+                            tickLabels: { fontSize: 10, fill: theme.textSecondary },
+                            grid: { stroke: theme.border, strokeWidth: 0.5 }
+                        }}
+                    />
+                    <VictoryAxis
+                        dependentAxis
+                        label="Percentage (%)"
+                        style={{
+                            axisLabel: { fontSize: 12, padding: 35, fill: theme.textSecondary },
+                            tickLabels: { fontSize: 10, fill: theme.textSecondary },
+                            grid: { stroke: theme.border, strokeWidth: 0.5 }
+                        }}
+                    />
+                    <VictoryLine
+                        key={`${currentMonth.getMonth()}-${currentMonth.getFullYear()}`}
+                        data={chartData}
+                        style={{
+                            data: { stroke: "#2196F3", strokeWidth: 2 }
+                        }}
+                        animate={{
+                            duration: 300,
+                            onLoad: { duration: 300 }
+                        }}
+                    />
+                </VictoryChart>
+            </View>
+        );
+    }
 
     const renderCalendar = () => {
         const year = currentMonth.getFullYear();
@@ -97,29 +179,8 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
             weeks.push(days.slice(i, i + 7));
         }
 
-
         return (
             <View style={styles.calendarContainer}>
-                <View style={styles.calendarHeader}>
-                    <TouchableOpacity
-                        onPress={() => setCurrentMonth(new Date(year, month - 1))}
-                        style={styles.monthButton}
-                    >
-                        <MaterialCommunityIcons name="chevron-left" size={24} color="#2196F3"/>
-                    </TouchableOpacity>
-
-                    <Text style={styles.monthTitle}>
-                        {currentMonth.toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}
-                    </Text>
-
-                    <TouchableOpacity
-                        onPress={() => setCurrentMonth(new Date(year, month + 1))}
-                        style={styles.monthButton}
-                    >
-                        <MaterialCommunityIcons name="chevron-right" size={24} color="#2196F3"/>
-                    </TouchableOpacity>
-                </View>
-
                 <View style={styles.weekDaysHeader}>
                     {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
                         <Text key={day} style={styles.weekDayText}>{day}</Text>
@@ -132,8 +193,8 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                             <View key={dayIndex} style={styles.dayContainer}>
                                 {day.record && !day.isInFuture ? (
                                     <Pressable
-                                        onPress={() => handleClickOnCalendarItem(day.record)}
-                                        onLongPress={() => handleLongClickOnCalendarItem(day.record)}
+                                        onPress={() => handleClickOnCalendarItem(day.record!)}
+                                        onLongPress={() => handleLongClickOnCalendarItem(day.record!)}
                                         style={[
                                             styles.daySquare,
                                             {
@@ -149,7 +210,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                                                 fontWeight: day.isCurrentMonth ? 'bold' : 'normal'
                                             }
                                         ]}>
-                                            {isBooleanHabit ? getIcon(day.record.completion) : day.record.recordValue}
+                                            {isBooleanHabit ? getIcon(day.record.completion as any) : day.record.recordValue}
                                         </Text>
                                     </Pressable>
                                 ) : (
@@ -175,32 +236,81 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
         );
     };
 
+    const handlePreviousMonth = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        setCurrentMonth(new Date(year, month - 1));
+    };
+
+    const handleNextMonth = () => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        setCurrentMonth(new Date(year, month + 1));
+    };
+
     return (
         <View style={styles.calendarSection}>
-            {showTitle && (<Text style={styles.sectionTitle}>Activity Calendar</Text>)}
-            {renderCalendar()}
+            {showTitle && (
+                <View style={styles.headerRow}>
+                    <Text style={styles.sectionTitle}>Activity Calendar</Text>
+                    <TouchableOpacity
+                        onPress={() => setShowCalendarAsGraph(!showCalendarAsGraph)}
+                        style={styles.toggleButton}
+                    >
+                        <MaterialCommunityIcons
+                            name={showCalendarAsGraph ? "chart-line" : "calendar"}
+                            size={24}
+                            color="#2196F3"
+                        />
+                    </TouchableOpacity>
+                </View>
+            )}
 
-            <View style={styles.legendContainer}>
-                <Text style={styles.legendTitle}>Legend:</Text>
-                <View style={styles.legendItems}>
-                    <View style={styles.legendItem}>
-                        <View style={[styles.legendSquare, {backgroundColor: '#4CAF50'}]}/>
-                        <Text style={styles.legendText}>Completed</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                        <View style={[styles.legendSquare, {backgroundColor: '#addfb5'}]}/>
-                        <Text style={styles.legendText}>Goal reached</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                        <View style={[styles.legendSquare, {backgroundColor: '#FF9800'}]}/>
-                        <Text style={styles.legendText}>Partial</Text>
-                    </View>
-                    <View style={styles.legendItem}>
-                        <View style={[styles.legendSquare, {backgroundColor: '#F44336'}]}/>
-                        <Text style={styles.legendText}>Missed</Text>
+            <View style={styles.calendarHeader}>
+                <TouchableOpacity
+                    onPress={handlePreviousMonth}
+                    style={styles.monthButton}
+                >
+                    <MaterialCommunityIcons name="chevron-left" size={24} color="#2196F3"/>
+                </TouchableOpacity>
+
+                <Text style={styles.monthTitle}>
+                    {currentMonth.toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}
+                </Text>
+
+                <TouchableOpacity
+                    onPress={handleNextMonth}
+                    style={styles.monthButton}
+                >
+                    <MaterialCommunityIcons name="chevron-right" size={24} color="#2196F3"/>
+                </TouchableOpacity>
+            </View>
+
+            {showCalendarAsGraph ? renderGraph() : renderCalendar()}
+
+            {!showCalendarAsGraph && (
+                <View style={styles.legendContainer}>
+                    <Text style={styles.legendTitle}>Legend:</Text>
+                    <View style={styles.legendItems}>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendSquare, {backgroundColor: '#4CAF50'}]}/>
+                            <Text style={styles.legendText}>Completed</Text>
+                        </View>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendSquare, {backgroundColor: '#addfb5'}]}/>
+                            <Text style={styles.legendText}>Goal reached</Text>
+                        </View>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendSquare, {backgroundColor: '#FF9800'}]}/>
+                            <Text style={styles.legendText}>Partial</Text>
+                        </View>
+                        <View style={styles.legendItem}>
+                            <View style={[styles.legendSquare, {backgroundColor: '#F44336'}]}/>
+                            <Text style={styles.legendText}>Missed</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
+            )}
         </View>
     )
 }
@@ -358,6 +468,15 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     },
     buttonContainer: {
         gap: 12,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    toggleButton: {
+        padding: 8,
     },
 }));
 
