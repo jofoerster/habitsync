@@ -35,7 +35,7 @@ public class CachingHabitProgressService {
     }
 
     public String getCacheKey(Habit habit, LocalDate date) {
-        return habit.getUuid() + "_" + date.toEpochDay();
+        return getCacheKey(habit, (int) date.toEpochDay());
     }
 
     public void onHabitChanged(Habit habit, int epochDay) {
@@ -44,7 +44,7 @@ public class CachingHabitProgressService {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitCompletionCache")).evictIfPresent(key);
         }
-        for (int i = epochDay - (habit.getTargetDays() - 1); i <= epochDay; i++) {
+        for (int i = epochDay; i < epochDay + habit.getTargetDays() && i <= LocalDate.now().toEpochDay(); i++) {
             String key = getCacheKey(habit, i);
             Objects.requireNonNull(cacheManager.getCache("habitProgressCache")).evictIfPresent(key);
         }
