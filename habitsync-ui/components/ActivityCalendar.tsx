@@ -6,21 +6,14 @@ import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 
-// Platform-specific imports for Victory charts
-let VictoryLine: any, VictoryChart: any, VictoryAxis: any, VictoryTheme: any;
+// Platform-specific imports for Victory charts - only on web
+let VictoryLine: any, VictoryChart: any, VictoryAxis: any;
 
 if (Platform.OS === 'web') {
     const Victory = require('victory');
     VictoryLine = Victory.VictoryLine;
     VictoryChart = Victory.VictoryChart;
     VictoryAxis = Victory.VictoryAxis;
-    VictoryTheme = Victory.VictoryTheme;
-} else {
-    const VictoryNative = require('victory-native');
-    VictoryLine = VictoryNative.VictoryLine;
-    VictoryChart = VictoryNative.VictoryChart;
-    VictoryAxis = VictoryNative.VictoryAxis;
-    VictoryTheme = VictoryNative.VictoryTheme;
 }
 
 const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
@@ -35,6 +28,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     const [calendarRecords, setCalendarRecords] = useState<ApiHabitRecordRead[]>([]);
+    // Only enable graph toggle on web
     const [showCalendarAsGraph, setShowCalendarAsGraph] = useState(false);
     const [percentageHistory, setPercentageHistory] = useState<{ [epochDay: number]: number }>({});
 
@@ -81,6 +75,10 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
     };
 
     const renderGraph = () => {
+        // Only render graph on web
+        if (Platform.OS !== 'web') {
+            return null;
+        }
 
         // Convert percentage history to chart data, filtering for current month only
         const chartData = Object.entries(percentageHistory)
@@ -118,7 +116,6 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
         return (
             <View style={{ height: 220, width: '100%' }}>
                 <VictoryChart
-                    theme={VictoryTheme.material}
                     height={200}
                     padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
                     domain={{ x: [1, daysInMonth], y: [0, 100] }}
@@ -269,16 +266,19 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
             {showTitle && (
                 <View style={styles.headerRow}>
                     <Text style={styles.sectionTitle}>Activity Calendar</Text>
-                    <TouchableOpacity
-                        onPress={() => setShowCalendarAsGraph(!showCalendarAsGraph)}
-                        style={styles.toggleButton}
-                    >
-                        <MaterialCommunityIcons
-                            name={showCalendarAsGraph ? "chart-line" : "calendar"}
-                            size={24}
-                            color="#2196F3"
-                        />
-                    </TouchableOpacity>
+                    {/* Only show toggle button on web */}
+                    {Platform.OS === 'web' && (
+                        <TouchableOpacity
+                            onPress={() => setShowCalendarAsGraph(!showCalendarAsGraph)}
+                            style={styles.toggleButton}
+                        >
+                            <MaterialCommunityIcons
+                                name={showCalendarAsGraph ? "chart-line" : "calendar"}
+                                size={24}
+                                color="#2196F3"
+                            />
+                        </TouchableOpacity>
+                    )}
                 </View>
             )}
 
@@ -302,7 +302,8 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                 </TouchableOpacity>
             </View>
 
-            {showCalendarAsGraph ? renderGraph() : renderCalendar()}
+            {/* Only show graph on web, always show calendar on native */}
+            {Platform.OS === 'web' && showCalendarAsGraph ? renderGraph() : renderCalendar()}
 
             {!showCalendarAsGraph && (
                 <View style={styles.legendContainer}>
