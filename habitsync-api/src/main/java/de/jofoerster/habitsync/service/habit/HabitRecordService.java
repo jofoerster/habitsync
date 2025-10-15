@@ -24,15 +24,26 @@ public class HabitRecordService {
     private HabitRecordCompletion getHabitRecordStatus(Habit habit, HabitRecord habitRecord) {
         boolean completion = cachingHabitProgressService.getCompletionForDay(
                 LocalDate.ofEpochDay(habitRecord.getRecordDate()), habit);
-        if (habit.getDailyGoal() != null &&
-                habitRecord.getRecordValue() >= habit.getDailyGoal()) {
-            return HabitRecordCompletion.COMPLETED;
-        } else if (completion) {
-            return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
+        if (!habit.getIsNegative()) {
+            if (habit.getDailyGoal() != null &&
+                    habitRecord.getRecordValue() >= habit.getDailyGoal()) {
+                return HabitRecordCompletion.COMPLETED;
+            } else if (completion) {
+                return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
+            }
+            return habitRecord.getRecordValue() > 0
+                    ? HabitRecordCompletion.PARTIALLY_COMPLETED
+                    : HabitRecordCompletion.MISSED;
+        } else {
+            if (habitRecord.getRecordValue() == 0) {
+                return HabitRecordCompletion.COMPLETED;
+            } else if (completion) {
+                return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
+            } else if (habitRecord.getRecordValue() <= habit.getDailyGoal()) {
+                return HabitRecordCompletion.PARTIALLY_COMPLETED;
+            }
+            return HabitRecordCompletion.FAILED;
         }
-        return habitRecord.getRecordValue() > 0
-                ? HabitRecordCompletion.PARTIALLY_COMPLETED
-                : HabitRecordCompletion.MISSED;
     }
 
     public HabitRecordReadDTO getApiRecordFromRecord(Habit habit, HabitRecord habitRecord) {

@@ -50,12 +50,16 @@ const CHALLENGE_COMPUTATION_OPTIONS = [
 
 const TOOLTIP_TEXTS = {
     habitType: "Choose between a numerical habit (e.g., minutes, pages) or a boolean habit (e.g., done/not done)",
-    dailyGoal: "The target amount you want to achieve each day. This will be used as default entry for single clicks on fields in the habit tracker",
+    dailyGoal: "Value to be used as default entry for single clicks in the habit tracker. Add a + or - to increase or decrease the value by default",
     maxDailyValue: "The maximum value you can achieve in a single day/week/month. " +
         "This has to be achieved for a day to count as completed",
+    maxDailyValueNegative: "The maximum value you should reach in a single day/week/month. " +
+        "If this is exceeded the day will count as not completed",
     unit: "The unit of measurement for your habit (e.g., minutes, pages, reps)",
     targetDays: "Number of days used for progress calculation (default: 30). When computing the current progress " +
         "the last X days will be used, where X is the targetDays value",
+    isNegative: "Enable this for habits you want to reduce or avoid (e.g., snacks, coffee). " +
+        "Lower values will count as better progress",
     challengeComputation: "How the challenge winner will be determined. Absolute percentage means that the 'normal' percentage of completion is beeing used at the end of the month." +
         " Relative percentage means that the participant with the highest percentage counts as 100%. Highest value means that for each participant only the highest day-value ist counted",
     frequencySettings: "Configure how often you want to perform this habit.",
@@ -89,7 +93,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const [name, setName] = useState('');
         const [selectedColor, setSelectedColor] = useState<number>(1);
-        const [dailyGoal, setDailyGoal] = useState('');
+        const [dailyDefault, setDailyDefault] = useState('');
         const [dailyReachableValue, setDailyReachableValue] = useState('1');
         const [unit, setUnit] = useState('');
         const [targetDays, setTargetDays] = useState('30');
@@ -99,6 +103,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [timesPerXDays, setTimesPerXDays] = useState('');
 
         const [isNumericalHabit, setIsNumericalHabit] = useState(false);
+        const [isNegative, setIsNegative] = useState(false);
 
         const [isSharedWithOthers, setIsSharedWithOthers] = useState(false);
         const [modalVisible, setModalVisible] = useState(false);
@@ -198,7 +203,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     if (habit) {
                         setName(habit.name);
                         setSelectedColor(habit.color);
-                        setDailyGoal(habit.progressComputation.dailyGoal.toString());
+                        setDailyDefault(habit.progressComputation.dailyDefault.toString());
                         setDailyReachableValue(habit.progressComputation.dailyReachableValue?.toString() || '');
                         setUnit(habit.progressComputation.unit || '');
                         setTargetDays(habit.progressComputation.targetDays.toString());
@@ -208,6 +213,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setIsSharedWithOthers(!(habit.synchronizedSharedHabitId === undefined
                             || habit.synchronizedSharedHabitId === null));
                         setIsNumericalHabit(habit.progressComputation.dailyReachableValue !== 1);
+                        setIsNegative(habit.progressComputation.isNegative || false);
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
                             && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
@@ -237,7 +243,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const switchNumericalBooleanHabit = (value: boolean) => {
             setIsNumericalHabit(value);
             if (!value) {
-                setDailyGoal('1');
+                setDailyDefault('1');
                 setDailyReachableValue('1');
                 setUnit('');
                 setIsAsMuchAsPossibleChallenge(false);
@@ -273,8 +279,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 return;
             }
 
-            if (!dailyGoal) {
-                setDailyGoal(dailyReachableValue);
+            if (!dailyDefault) {
+                setDailyDefault(dailyReachableValue);
             }
 
             if (((!frequency && configType !== ConfigType.CHALLENGE) ||
@@ -305,14 +311,15 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 }
 
                 const progressComputation: ApiComputationReadWrite = {
-                    dailyGoal: parseFloat(dailyGoal),
+                    dailyDefault: dailyDefault,
                     dailyReachableValue: parseFloat(dailyReachableValue),
                     unit: unit.trim() || undefined,
                     targetDays: parseInt(targetDays),
                     frequencyType: frequencyType === FrequencyTypeDTO.DAILY ? FrequencyTypeDTO.X_TIMES_PER_Y_DAYS : frequencyType,
                     frequency: frequencyType === FrequencyTypeDTO.DAILY ? 1 : parseInt(frequency),
                     timesPerXDays: computedTimesPerXDays,
-                    challengeComputationType: challengeType
+                    challengeComputationType: challengeType,
+                    isNegative: isNegative
                 };
 
                 const habitData: ApiHabitWrite = {
@@ -600,7 +607,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                         onValueChange={switchAsMuchAsPossibleChallenge}
                                         disabled={isFieldLocked()}
                                         trackColor={{false: theme.disabled, true: theme.primaryLight}}
-                                        thumbColor={isAsMuchAsPossibleChallenge ? theme.primary : theme.surface}
+                                        thumbColor={theme.primary}
                                     />
                                 </View>
                             )}
@@ -617,16 +624,16 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                             >
                                                 <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
                                             </TouchableOpacity>
-                                            <Text style={styles.label}> Goal</Text>
+                                            <Text style={styles.label}> { isNegative ? "Max" : "Goal"}</Text>
                                         </View>
-                                        <HelpIcon tooltipKey="maxDailyValue"/>
+                                        {!isNegative ? (<HelpIcon tooltipKey="maxDailyValue"/>) : (<HelpIcon tooltipKey="maxDailyValueNegative"/>)}
                                         {isFieldLocked() && <LockIcon/>}
                                     </View>
                                     <TextInput
                                         style={[styles.input, isFieldLocked() && styles.lockedInput]}
                                         value={dailyReachableValue}
                                         onChangeText={isFieldLocked() ? undefined : (text) => {
-                                            const numericValue = text.replace(/[^0-9.]/g, '');
+                                            const numericValue = text.replace(/[^0-9.+-]/g, '');
                                             setDailyReachableValue(numericValue);
                                         }}
                                         placeholder="0"
@@ -640,15 +647,15 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {configType !== ConfigType.CHALLENGE && isNumericalHabit && (
                                 <View style={styles.halfInput}>
                                     <View style={styles.labelRow}>
-                                        <Text style={styles.label}>Default Value</Text>
+                                        <Text style={styles.label}>Default value/change</Text>
                                         <HelpIcon tooltipKey="dailyGoal"/>
                                     </View>
                                     <TextInput
                                         style={styles.input}
-                                        value={dailyGoal}
+                                        value={dailyDefault}
                                         onChangeText={(text) => {
-                                            const numericValue = text.replace(/[^0-9.]/g, '');
-                                            setDailyGoal(numericValue);
+                                            const numericValue = text.replace(/[^0-9.+-]/g, '');
+                                            setDailyDefault(numericValue);
                                         }}
                                         placeholder="0"
                                         placeholderTextColor="#999"
@@ -707,7 +714,21 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             </View>
                         )}
 
-                    {/* Target Days moved below frequency */}
+                    <View style={styles.inputContainer}>
+                        <View style={styles.labelRow}>
+                            <Text style={styles.label}>Negative Habit (Less is Better)</Text>
+                            <HelpIcon tooltipKey="isNegative"/>
+                            {isFieldLocked() && <LockIcon/>}
+                        </View>
+                        <Switch
+                            value={isNegative}
+                            onValueChange={setIsNegative}
+                            disabled={isFieldLocked()}
+                            trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                            thumbColor={theme.primary}
+                        />
+                    </View>
+
                     {configType !== ConfigType.CHALLENGE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>

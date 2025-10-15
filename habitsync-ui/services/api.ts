@@ -41,7 +41,7 @@ export interface ApiAccountSettingsReadWrite {
 }
 
 export interface ApiComputationReadWrite {
-    dailyGoal: number;
+    dailyDefault: string;
     dailyReachableValue: number;
     unit?: string;
     targetDays: number;
@@ -49,6 +49,7 @@ export interface ApiComputationReadWrite {
     frequency: number;
     timesPerXDays?: number;
     challengeComputationType?: ChallengeComputationType;
+    isNegative: boolean;
 }
 
 export enum FrequencyTypeDTO {
@@ -83,7 +84,8 @@ export enum HabitRecordCompletion {
     MISSED,
     COMPLETED,
     PARTIALLY_COMPLETED,
-    COMPLETED_BY_OTHER_RECORDS
+    COMPLETED_BY_OTHER_RECORDS,
+    FAILED
 }
 
 export interface ApiHabitRecordWrite {

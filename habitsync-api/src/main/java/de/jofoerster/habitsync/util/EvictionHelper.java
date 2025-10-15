@@ -17,8 +17,8 @@ public class EvictionHelper {
                 endDate = date.with(TemporalAdjusters.lastDayOfMonth());
             }
             case X_TIMES_PER_Y_DAYS -> {
-                startDate = date.minusDays(habit.parseCustomFrequency()[1] - 1);
-                endDate = date;
+                startDate = date;
+                endDate = date.plusDays(habit.parseCustomFrequency()[1] - 1);
             }
             default-> { // always WEEKLY
                 startDate = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));

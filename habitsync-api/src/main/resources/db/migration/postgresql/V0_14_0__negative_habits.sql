@@ -1,0 +1,3 @@
+ALTER TABLE habits ADD COLUMN is_negative BOOLEAN DEFAULT FALSE;
+
+ALTER TABLE habits ADD COLUMN default_daily_operation SMALLINT DEFAULT 0;
