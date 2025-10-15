@@ -35,12 +35,10 @@ public class HabitRecordService {
                     ? HabitRecordCompletion.PARTIALLY_COMPLETED
                     : HabitRecordCompletion.MISSED;
         } else {
-            if (habitRecord.getRecordValue() == 0) {
+            if (habitRecord.getRecordValue() <= habit.getDailyGoal()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
                 return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
-            } else if (habitRecord.getRecordValue() <= habit.getDailyGoal()) {
-                return HabitRecordCompletion.PARTIALLY_COMPLETED;
             }
             return HabitRecordCompletion.FAILED;
         }
