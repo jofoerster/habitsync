@@ -97,7 +97,7 @@ const HabitDetailsScreen = () => {
         } finally {
             setLoading(false);
         }
-    }, [habitUuid]);
+    }, [habitUuid, lastValueUpdate]);
 
     useFocusEffect(
         useCallback(() => {

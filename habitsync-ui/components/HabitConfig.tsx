@@ -659,7 +659,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                         }}
                                         placeholder="0"
                                         placeholderTextColor="#999"
-                                        keyboardType="numeric"
                                     />
                                 </View>
                             )}

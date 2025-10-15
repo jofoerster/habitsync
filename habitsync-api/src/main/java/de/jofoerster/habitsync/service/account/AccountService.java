@@ -1,6 +1,7 @@
 package de.jofoerster.habitsync.service.account;
 
 import de.jofoerster.habitsync.config.SecurityProperties;
+import de.jofoerster.habitsync.config.TokenAuthenticationException;
 import de.jofoerster.habitsync.dto.AccountSettingsReadWriteDTO;
 import de.jofoerster.habitsync.dto.LoginOptionsDTO;
 import de.jofoerster.habitsync.model.account.Account;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -44,7 +46,7 @@ public class AccountService {
         log.debug("Checking user authorization");
         if (authentication.getPrincipal() == null || authentication instanceof AnonymousAuthenticationToken) {
             log.debug("User is not authenticated");
-            return false;
+            throw new AuthenticationCredentialsNotFoundException("User is not authenticated");
         }
 
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
@@ -53,7 +55,7 @@ public class AccountService {
 
             if (!tokenService.isPublicIssuerJwtTokenValid(jwtAuth) &&
                     !tokenService.isOwnTokenValid(jwt.getTokenValue(), "access")) {
-                return false;
+                throw new TokenAuthenticationException("Invalid JWT token");
             }
 
             return getOrCreateAccountById(subject, jwtAuth).getAccountStatus() == AccountStatus.ACTIVE;

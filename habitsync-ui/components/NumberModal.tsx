@@ -317,7 +317,6 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         onChangeText={setInputValue}
                                         placeholder="Enter value"
                                         placeholderTextColor={theme.textSecondary || '#666'}
-                                        keyboardType="numeric"
                                     />
                                     <TouchableOpacity
                                         style={{

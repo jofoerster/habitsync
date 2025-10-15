@@ -45,15 +45,17 @@ public class CachingHabitRecordService {
     public HabitRecordReadDTO getHabitRecordByHabitAndEpochDay(Habit habit, Integer epochDay) {
         List<HabitRecord> records =
                 habitRecordRepository.findHabitRecordByParentUuidAndRecordDate(habit.getUuid(), epochDay);
+        HabitRecord record;
         if (records != null && !records.isEmpty()) {
-            HabitRecord record = records.getFirst();
-            return habitRecordService.getApiRecordFromRecord(habit, record);
+            record = records.getFirst();
+        } else {
+            record = HabitRecord.builder()
+                    .parentUuid(habit.getUuid())
+                    .recordDate(epochDay)
+                    .recordValue(0d)
+                    .build();
         }
-        return HabitRecordReadDTO.builder()
-                .habitUuid(habit.getUuid())
-                .epochDay(epochDay)
-                .recordValue(0d)
-                .build();
+        return habitRecordService.getApiRecordFromRecord(habit, record);
     }
 
     public HabitRecordReadDTO createRecord(Habit habit, HabitRecordWriteDTO recordDTO) {

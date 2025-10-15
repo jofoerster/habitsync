@@ -339,6 +339,9 @@ public class CachingHabitProgressService {
                 }
             }
         }
+        if (isNegative) {
+            return Math.min(1.0, currentValue); //goal is always 1 in negative habits
+        }
         return Math.min(1.0, currentValue / goal);
     }
 
