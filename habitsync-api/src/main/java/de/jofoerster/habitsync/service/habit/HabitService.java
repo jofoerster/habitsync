@@ -234,6 +234,7 @@ public class HabitService {
         }
         cachingHabitProgressService.onHabitChanged(habitOpt.get(), (int) LocalDate.now().toEpochDay());
         cachingHabitProgressHistoryService.evictCacheForHabit(habitOpt.get(), (int) LocalDate.now().toEpochDay());
+        cachingHabitRecordService.evictCache(habitOpt.get(), (int) LocalDate.now().toEpochDay());
         Habit habit = habitOpt.get();
         habit.applyChanges(apiHabitWrite);
         saveHabit(habit);

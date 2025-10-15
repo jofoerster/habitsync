@@ -383,11 +383,11 @@ const SharedHabitDetailsScreen = () => {
                                     </Text>
                                 </View>
 
-                                {progressComputation?.dailyGoal === 1 && (
+                                {progressComputation?.dailyDefault !== "1" && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="flag" size={20} color="#4CAF50"/>
                                         <Text style={styles.progressDetailText}>
-                                            {progressComputation?.dailyGoal} daily goal
+                                            {progressComputation?.dailyDefault} daily default
                                         </Text>
                                     </View>
                                 )}

@@ -13,7 +13,7 @@ import {useTheme} from "@/context/ThemeContext";
 
 interface DayButtonProps {
     day: string,
-    completion: 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'COMPLETED_BY_OTHER_RECORDS' | 'MISSED' | 'LOADING',
+    completion: 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'COMPLETED_BY_OTHER_RECORDS' | 'MISSED' | 'LOADING' | 'FAILED',
     value: number,
     onPress: () => void,
     onLongPress: () => void,
@@ -59,6 +59,16 @@ const DayButton: React.FC<DayButtonProps> = ({
             case 'COMPLETED_BY_OTHER_RECORDS':
                 return {
                     backgroundColor: '#a4cca6', borderColor: '#a4cca6', shadowColor: '#a4cca6',
+                    shadowOffset: {width: 0, height: 0},
+                    shadowOpacity: 0.7,
+                    shadowRadius: 8,
+                    elevation: 5
+                };
+            case 'FAILED':
+                return {
+                    backgroundColor: '#ff0000',
+                    borderColor: '#ff0000',
+                    shadowColor: '#ec5a5a',
                     shadowOffset: {width: 0, height: 0},
                     shadowOpacity: 0.7,
                     shadowRadius: 8,
@@ -211,7 +221,13 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 return handleDayLongPress(epochDay);
             }
             const oldRecord = getRecordForDay(epochDay);
-            const newRecordValue = oldRecord.recordValue == 0 ? habit.progressComputation.dailyGoal : 0
+            const prefixDefault = habit.progressComputation.dailyDefault.charAt(0);
+            let newRecordValue = 0;
+            if (prefixDefault === '+' || prefixDefault === '-') {
+                newRecordValue = oldRecord.recordValue + parseFloat(habit.progressComputation.dailyDefault);
+            } else {
+                newRecordValue = oldRecord.recordValue == 0 ? Math.abs(parseFloat(habit.progressComputation.dailyDefault)) : 0;
+            }
             const newRecord = await habitRecordApi.createRecord(habit.uuid, {
                 epochDay: epochDay,
                 recordValue: newRecordValue
@@ -372,7 +388,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                 onLongPress={() => handleDayLongPress(day.epochDay)}
                                                 disabled={isConnectedHabitView}
                                                 hideDates={hideDates}
-                                                showCheckMarkIcon={habit.progressComputation.dailyReachableValue === 1}
+                                                showCheckMarkIcon={habit.progressComputation.dailyReachableValue === 1 &&
+                                                    !habit.progressComputation.isNegative}
                                             />
                                         </View>
                                     );

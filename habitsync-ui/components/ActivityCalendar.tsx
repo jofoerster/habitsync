@@ -69,6 +69,8 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                 return '#addfb5';
             case "MISSED":
                 return '#F44336';
+            case "FAILED":
+                return '#D32F2F';
             default:
                 return '#E0E0E0';
         }

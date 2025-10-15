@@ -15,12 +15,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
-import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @EqualsAndHashCode(exclude = {"sharedHabits", "account"})
@@ -56,11 +52,15 @@ public class Habit {
     @JsonProperty("daily_goal")
     private Double dailyGoal;
 
+    private DefaultDailyOperation defaultDailyOperation;
+
     @JsonProperty("daily_goal_unit")
     private String dailyGoalUnit;
 
     @JsonProperty("daily_goal_extra")
     private Double dailyGoalExtra;
+
+    private Boolean isNegative;
 
     @JsonProperty("freq_type")
     private Integer freqType;
@@ -156,6 +156,25 @@ public class Habit {
         return this.sortPosition != null ? this.sortPosition : 999;
     }
 
+    public boolean getIsNegative() {
+        return this.isNegative != null ? this.isNegative : false;
+    }
+
+    public DefaultDailyOperation getDefaultDailyOperation() {
+        return this.defaultDailyOperation == null ? DefaultDailyOperation.SET
+                : this.defaultDailyOperation;
+    }
+
+    public String getDailyDefaultValueString() {
+        String prefix = switch (this.getDefaultDailyOperation()) {
+            case SET -> "";
+            case ADD -> "+";
+            case SUBTRACT -> "-";
+        };
+        return this.getDailyGoal() != null ? prefix + this.getDailyGoal() :
+                prefix + this.getReachableDailyValue();
+    }
+
     public void copyAttributesFromHabit(Habit iH) {
         if (iH.dailyGoal != null) {
             this.dailyGoal = iH.dailyGoal;
@@ -218,9 +237,11 @@ public class Habit {
                 .frequency(frequency)
                 .timesPerXDays(timesPerXDays)
                 .targetDays(this.getTargetDays())
-                .dailyGoal(this.getDailyGoal() != null ? this.getDailyGoal() : this.getReachableDailyValue())
+                .dailyDefault(this.getDailyDefaultValueString())
                 .dailyReachableValue(
-                        this.getReachableDailyValue() != null ? this.getReachableDailyValue() : this.getDailyGoal())
+                        this.getReachableDailyValue() != null ? this.getReachableDailyValue() :
+                                this.getDailyGoal())
+                .isNegative(this.isNegative)
                 .build();
     }
 
@@ -238,15 +259,26 @@ public class Habit {
 
     public void applyChanges(ComputationReadWriteDTO computationReadWriteDTO) {
         this.dailyGoalUnit = computationReadWriteDTO.getUnit();
-        this.dailyGoal = computationReadWriteDTO.getDailyGoal();
+        String dailyDefault =
+                computationReadWriteDTO.getDailyDefault().isBlank() ?
+                        String.valueOf(computationReadWriteDTO.getDailyReachableValue()) :
+                        computationReadWriteDTO.getDailyDefault();
+        this.dailyGoal = Math.abs(Double.parseDouble(dailyDefault));
+        if (!dailyDefault.equals("1")) {
+            this.defaultDailyOperation = switch (computationReadWriteDTO.getDailyDefault().charAt(0)) {
+                case '+' -> DefaultDailyOperation.ADD;
+                case '-' -> DefaultDailyOperation.SUBTRACT;
+                default -> DefaultDailyOperation.SET;
+            };
+        } else {
+            this.defaultDailyOperation = DefaultDailyOperation.SET;
+        }
         this.dailyGoalExtra = computationReadWriteDTO.getDailyReachableValue();
         if (this.dailyGoalExtra == null) {
             this.dailyGoalExtra = this.dailyGoal;
         }
-        if (this.dailyGoal == null) {
-            this.dailyGoal = this.dailyGoalExtra;
-        }
         this.targetDays = computationReadWriteDTO.getTargetDays();
+        this.isNegative = computationReadWriteDTO.getIsNegative() != null && computationReadWriteDTO.getIsNegative();
         if (computationReadWriteDTO.getFrequencyType() != null) {
             switch (computationReadWriteDTO.getFrequencyType()) {
                 case WEEKLY -> {

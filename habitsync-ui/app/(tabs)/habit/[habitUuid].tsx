@@ -69,7 +69,7 @@ const HabitDetailsScreen = () => {
     const isChallenge = habitDetail?.isChallengeHabit || habitDetail?.progressComputation?.challengeComputationType;
 
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
-        && habitDetail.progressComputation.dailyGoal === 1;
+        && habitDetail.progressComputation.dailyDefault === "1";
 
     const fetchData = useCallback(async () => {
         try {

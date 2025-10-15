@@ -4,5 +4,6 @@ public enum HabitRecordCompletion {
     MISSED,
     COMPLETED,
     PARTIALLY_COMPLETED,
-    COMPLETED_BY_OTHER_RECORDS
+    COMPLETED_BY_OTHER_RECORDS,
+    FAILED
 }

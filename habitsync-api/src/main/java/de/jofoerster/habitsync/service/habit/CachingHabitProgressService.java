@@ -1,6 +1,5 @@
 package de.jofoerster.habitsync.service.habit;
 
-import de.jofoerster.habitsync.dto.PercentageHistoryDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitRecord;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
@@ -11,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.Year;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
@@ -81,7 +79,8 @@ public class CachingHabitProgressService {
 
     public double getCompletionPercentageAtDateWithValuesInRange(Habit habit, Habit habitToUseValuesOf,
                                                                  LocalDate localDate,
-                                                                 LocalDate forcedStartDate, LocalDate forcedEndDate, boolean lookIntoFuture) {
+                                                                 LocalDate forcedStartDate, LocalDate forcedEndDate,
+                                                                 boolean lookIntoFuture) {
         if (habit.getTargetDays() == 0 || habit.getFreqCustom() == null ||
                 habit.getFreqCustom().isEmpty()) {
             return 0d;
@@ -127,17 +126,17 @@ public class CachingHabitProgressService {
         if (configHabit.getFreqType() == 1) {
             return calculateWeeklyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
         } else if (configHabit.getFreqType() == 2) {
             return calculateMonthlyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
         } else if (configHabit.getFreqType() == 3) {
             int[] customFreq = configHabit.parseCustomFrequency();
             return calculateCustomPeriodAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     customFreq[0],
                     customFreq[1],
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
         } else {
             throw new IllegalArgumentException("Invalid frequency type: " + configHabit.getFreqType());
         }
@@ -156,17 +155,19 @@ public class CachingHabitProgressService {
         if (configHabit.getFreqType() == 1) {
             return calculateWeeklyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("totalAchievement");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get(
+                    "totalAchievement");
         } else if (configHabit.getFreqType() == 2) {
             return calculateMonthlyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("totalAchievement");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get(
+                    "totalAchievement");
         } else if (configHabit.getFreqType() == 3) {
             int[] customFreq = configHabit.parseCustomFrequency();
             return calculateCustomPeriodAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     customFreq[0],
                     customFreq[1],
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate).get("totalAchievement");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("totalAchievement");
         } else {
             throw new IllegalArgumentException("Invalid frequency type: " + configHabit.getFreqType());
         }
@@ -175,7 +176,7 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateWeeklyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
                                                            int timesPerWeek, Habit habitToUseRecordsOf,
                                                            LocalDate forcedStartDate,
-                                                           LocalDate forcedEndDate) {
+                                                           LocalDate forcedEndDate, boolean isNegative) {
         LocalDate weekStart = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEnd = endDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
@@ -208,7 +209,7 @@ public class CachingHabitProgressService {
             totalWeight += weekWeight;
 
             List<LocalDate> daysInWeek = getDatesInRange(periodStart, periodEnd);
-            double achievedDays = countAchievedDays(daysInWeek, daily_goal, records);
+            double achievedDays = countAchievedDays(daysInWeek, daily_goal, records, isNegative);
 
             double weekAchievementPercentage = Math.min(1.0, achievedDays / timesPerWeek);
             totalAchievement += weekAchievementPercentage * weekWeight;
@@ -222,7 +223,7 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateMonthlyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
                                                             int timesPerMonth,
                                                             Habit habitToUseRecordsOf, LocalDate forcedStartDate,
-                                                            LocalDate forcedEndDate) {
+                                                            LocalDate forcedEndDate, boolean isNegative) {
         LocalDate monthStart = startDate.withDayOfMonth(1);
 
         List<HabitRecord> records;
@@ -257,7 +258,7 @@ public class CachingHabitProgressService {
             totalWeight += monthWeight;
 
             List<LocalDate> daysInMonthList = getDatesInRange(periodStart, periodEnd);
-            double achievedDays = countAchievedDays(daysInMonthList, daily_goal, records);
+            double achievedDays = countAchievedDays(daysInMonthList, daily_goal, records, isNegative);
 
             double monthAchievementPercentage = Math.min(1.0, achievedDays / timesPerMonth);
 
@@ -273,7 +274,7 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateCustomPeriodAchievement(LocalDate startDate, LocalDate endDate,
                                                                  double daily_goal, int times, int days,
                                                                  Habit habitToUseRecordsOf, LocalDate forcedStartDate,
-                                                                 LocalDate forcedEndDate) {
+                                                                 LocalDate forcedEndDate, boolean isNegative) {
         LocalDate periodStartBeforeTarget = startDate.minusDays(days - 1);
 
         List<HabitRecord> records;
@@ -296,7 +297,8 @@ public class CachingHabitProgressService {
                     forcedStartDate != null && forcedStartDate.isBefore(date) ?
                             Math.min(date.toEpochDay() - forcedStartDate.toEpochDay() + 1, times) :
                             times;
-            achievementOfDay.add(getCustomPeriodCompletionForDay(date, (int) timesNeeded, days, daily_goal, recordMap));
+            achievementOfDay.add(
+                    getCustomPeriodCompletionForDay(date, (int) timesNeeded, days, daily_goal, recordMap, isNegative));
             HabitRecord record = recordMap.get((int) date.toEpochDay());
             totalAchievement += record != null ? record.getRecordValue() : 0;
         }
@@ -308,15 +310,15 @@ public class CachingHabitProgressService {
     }
 
     private Double getCustomPeriodCompletionForDay(LocalDate date, int times, int days, double dailyReachableValue,
-                                                   List<HabitRecord> records) {
+                                                   List<HabitRecord> records, boolean isNegative) {
         Map<Integer, HabitRecord> recordMap = records.stream()
                 .collect(Collectors.toMap(HabitRecord::getRecordDate, record -> record,
                         (existing, replacement) -> existing));
-        return getCustomPeriodCompletionForDay(date, times, days, dailyReachableValue, recordMap);
+        return getCustomPeriodCompletionForDay(date, times, days, dailyReachableValue, recordMap, isNegative);
     }
 
     private Double getCustomPeriodCompletionForDay(LocalDate date, int times, int days, double dailyReachableValue,
-                                                   Map<Integer, HabitRecord> recordMap) {
+                                                   Map<Integer, HabitRecord> recordMap, boolean isNegative) {
         int endDate = (int) date.toEpochDay();
         int startDate = endDate - days + 1;
 
@@ -325,21 +327,35 @@ public class CachingHabitProgressService {
 
         for (int i = startDate; i <= endDate; i++) {
             HabitRecord record = recordMap.get(i);
-            if (record != null) {
-                currentValue += Math.min(record.getRecordValue(), dailyReachableValue);
+            if (!isNegative) {
+                if (record != null) {
+                    currentValue += Math.min(record.getRecordValue(), dailyReachableValue);
+                }
+            } else {
+                if (record == null) {
+                    currentValue += 1.0;
+                } else {
+                    currentValue += record.getRecordValue() <= dailyReachableValue ? 1.0 : 0.0;
+                }
             }
         }
         return Math.min(1.0, currentValue / goal);
     }
 
-    private double countAchievedDays(List<LocalDate> days, double daily_goal, List<HabitRecord> records) {
+    private double countAchievedDays(List<LocalDate> days, double daily_goal, List<HabitRecord> records,
+                                     boolean isNegative) {
         Map<LocalDate, Double> valuesByDay = removeDuplicateDates(records).stream()
                 .collect(Collectors.toMap(HabitRecord::getRecordDateAsDate, HabitRecord::getRecordValue));
         double totalAchievement = 0;
 
         for (LocalDate day : days) {
             double value = valuesByDay.get(day) != null ? valuesByDay.get(day) : 0;
-            double achievementRatio = Math.min(1.0, value / daily_goal);
+            double achievementRatio;
+            if (isNegative) {
+                achievementRatio = value <= daily_goal ? 1.0 : 0.0;
+            } else {
+                achievementRatio = Math.min(1.0, value / daily_goal);
+            }
             totalAchievement += achievementRatio;
         }
 
@@ -383,7 +399,7 @@ public class CachingHabitProgressService {
                         recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, weekStart, weekEnd);
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(weekStart, weekEnd), configHabit.getReachableDailyValue(),
-                                habitRecordsWeek);
+                                habitRecordsWeek, configHabit.getIsNegative());
             case 2:
                 LocalDate monthStart = date.withDayOfMonth(1);
                 LocalDate monthEnd = YearMonth.from(date).atEndOfMonth();
@@ -391,14 +407,14 @@ public class CachingHabitProgressService {
                         recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, monthStart, monthEnd);
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(monthStart, monthEnd), configHabit.getReachableDailyValue(),
-                                habitRecordsMonth);
+                                habitRecordsMonth, configHabit.getIsNegative());
             case 3:
                 LocalDate customStart = date.minusDays(configHabit.parseCustomFrequency()[1]).plusDays(1);
                 List<HabitRecord> habitRecordCustom =
                         recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, customStart, date);
                 yield 1 == getCustomPeriodCompletionForDay(date, configHabit.parseCustomFrequency()[0],
                         configHabit.parseCustomFrequency()[1],
-                        configHabit.getReachableDailyValue(), habitRecordCustom);
+                        configHabit.getReachableDailyValue(), habitRecordCustom, configHabit.getIsNegative());
             default:
                 yield false;
         };
