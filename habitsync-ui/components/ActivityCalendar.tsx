@@ -53,7 +53,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
         } catch (error) {
             console.error('Error fetching calendar data:', error);
         }
-    }, [currentMonth, habit.uuid]);
+    }, [currentMonth, habit]);
 
     useEffect(() => {
         fetchCalendarData();
