@@ -26,7 +26,7 @@ public class HabitRecordService {
                 LocalDate.ofEpochDay(habitRecord.getRecordDate()), habit);
         if (!habit.getIsNegative()) {
             if (habit.getDailyGoal() != null &&
-                    habitRecord.getRecordValue() >= habit.getDailyGoalExtra()) {
+                    habitRecord.getRecordValue() >= habit.getReachableDailyValue()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
                 return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
@@ -35,7 +35,7 @@ public class HabitRecordService {
                     ? HabitRecordCompletion.PARTIALLY_COMPLETED
                     : HabitRecordCompletion.MISSED;
         } else {
-            if (habitRecord.getRecordValue() <= habit.getDailyGoalExtra()) {
+            if (habitRecord.getRecordValue() <= habit.getReachableDailyValue()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
                 return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
