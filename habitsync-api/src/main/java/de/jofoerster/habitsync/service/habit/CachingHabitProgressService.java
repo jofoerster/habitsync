@@ -369,7 +369,7 @@ public class CachingHabitProgressService {
         List<LocalDate> dates = new ArrayList<>();
         LocalDate current = start;
 
-        while (!current.isAfter(end)) {
+        while (!current.isAfter(end) && !current.isAfter(LocalDate.now())) {
             dates.add(current);
             current = current.plusDays(1);
         }
