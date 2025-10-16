@@ -367,8 +367,8 @@ const ChallengesScreen = () => {
         );
     };
 
-    const renderFooter = () => {
-        if (!loading && activeTab === 'active' && challengeHabit && challengeOverview) {
+    const renderFooter = useCallback(() => {
+        if (activeTab === 'active' && challengeHabit && challengeOverview) {
             return (
                 <>
                     <HabitRow
@@ -443,7 +443,7 @@ const ChallengesScreen = () => {
             );
         }
         return null;
-    };
+    }, [activeTab, challengeHabit, challengeOverview, fetchData, currentUser?.authenticationId]);
 
     const renderSegmentedControl = () => {
         const counts = getTabCounts();
