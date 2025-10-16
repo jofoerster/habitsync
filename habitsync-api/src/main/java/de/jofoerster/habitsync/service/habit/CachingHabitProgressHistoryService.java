@@ -27,7 +27,7 @@ public class CachingHabitProgressHistoryService {
         LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
         Map<Integer, Double> dailyPercentages = new HashMap<>();
         for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
-            double percentage = cachingHabitProgressService.getCompletionPercentageAtDate(habit, date);
+            double percentage = cachingHabitProgressService.getCompletionPercentageAtDateWithoutFuture(habit, date);
             dailyPercentages.put((int) date.toEpochDay(), percentage);
         }
         return PercentageHistoryDTO.builder()
