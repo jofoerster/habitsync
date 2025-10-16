@@ -1,5 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {ActivityIndicator, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import {
     ApiAccountRead,
     ApiComputationReadWrite,
@@ -8,8 +9,7 @@ import {
     ApiSharedHabitMedalsRead,
     ApiSharedHabitRead,
     FrequencyTypeDTO,
-    habitApi,
-    habitRecordApi, NotificationConfig as NotificationConfigType,
+    NotificationConfig as NotificationConfigType,
     sharedHabitApi
 } from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
@@ -24,7 +24,14 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import NotificationConfigComponent from "@/components/NotificationConfig";
 import ShareHabitModal from "@/components/ShareHabitModal";
+import {
+    useHabit,
+    useDeleteHabit,
+    useCreateHabitRecord
+} from "@/hooks/useHabits";
+import {useSharedHabits} from "@/hooks/useSharedHabits";
 
+const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';
 
 const {width} = Dimensions.get('window');
 
@@ -36,8 +43,10 @@ const HabitDetailsScreen = () => {
     const habitUuid = useLocalSearchParams()['habitUuid'] as string;
     const isOwnHabit = useLocalSearchParams()['isOwnHabit'] as string;
 
-    const [habitDetail, setHabitDetail] = useState<ApiHabitRead>();
-    const [loading, setLoading] = useState(true);
+    const {data: habitDetail, isLoading: loading, refetch} = useHabit(habitUuid);
+    const deleteHabitMutation = useDeleteHabit();
+    const createHabitRecordMutation = useCreateHabitRecord();
+    const {data: allSharedHabits = []} = useSharedHabits();
 
     const [sharedHabits, setSharedHabits] = useState<ApiSharedHabitRead[]>([]);
     const [medals, setMedals] = useState<ApiSharedHabitMedalsRead[]>([]);
@@ -45,8 +54,6 @@ const HabitDetailsScreen = () => {
 
     const [numberModalVisible, setModalVisible] = useState(false);
     const [selectedEpochDay, setSelectedEpochDay] = useState<number | null>(null);
-
-    const [lastValueUpdate, setLastValueUpdate] = useState(Date.now());
 
     const [currentUser, setCurrentUser] = useState<ApiAccountRead | null>(null);
 
@@ -66,6 +73,33 @@ const HabitDetailsScreen = () => {
         getCurrentUser();
     }, []);
 
+    useEffect(() => {
+        if (habitDetail) {
+            setNotificationsEnabled((habitDetail.notificationFrequency !== null)
+                && (habitDetail.notificationFrequency.rules !== null) &&
+                habitDetail.notificationFrequency.rules.length > 0);
+        }
+    }, [habitDetail]);
+
+    useEffect(() => {
+        if (allSharedHabits) {
+            const filteredSharedHabits = allSharedHabits.filter(sh => sh.habits.map(h => h.uuid).includes(habitUuid));
+            setSharedHabits(filteredSharedHabits);
+
+            if (filteredSharedHabits.length > 0) {
+                const fetchMedals = async () => {
+                    try {
+                        const medalsData = await sharedHabitApi.getMedalsForSharedHabit(filteredSharedHabits[0].shareCode);
+                        setMedals(medalsData);
+                    } catch (error) {
+                        console.error('Error fetching medals:', error);
+                    }
+                };
+                fetchMedals();
+            }
+        }
+    }, [allSharedHabits, habitUuid]);
+
     const isChallenge = habitDetail?.isChallengeHabit || habitDetail?.progressComputation?.challengeComputationType;
 
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
@@ -73,31 +107,12 @@ const HabitDetailsScreen = () => {
 
     const fetchData = useCallback(async () => {
         try {
-            const habitData = await habitApi.getHabitByUuid(habitUuid);
-            setHabitDetail(habitData);
-            setNotificationsEnabled((habitData.notificationFrequency !== null)
-                && (habitData.notificationFrequency.rules !== null) &&
-                habitData.notificationFrequency.rules.length > 0)
-            const allSharedHabits = await sharedHabitApi.getAllUserSharedHabits();
-            const filteredSharedHabits = allSharedHabits.filter(sh => sh.habits.map(h => h.uuid).includes(habitUuid));
-            setSharedHabits(filteredSharedHabits);
-
-            if (filteredSharedHabits.length > 0) {
-                try {
-                    const medalsData = await sharedHabitApi.getMedalsForSharedHabit(filteredSharedHabits[0].shareCode);
-                    setMedals(medalsData);
-                } catch (error) {
-                    console.error('Error fetching medals:', error);
-                }
-            }
-
+            await refetch();
         } catch (error) {
             console.error('Error fetching habit details:', error);
             alert('Error', 'Failed to load habit details');
-        } finally {
-            setLoading(false);
         }
-    }, [habitUuid, lastValueUpdate]);
+    }, [refetch]);
 
     useFocusEffect(
         useCallback(() => {
@@ -190,7 +205,7 @@ const HabitDetailsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await habitApi.deleteHabit(habitDetail!.uuid);
+                            await deleteHabitMutation.mutateAsync(habitDetail!.uuid);
                             router.push(`/(tabs)/habits` as any);
                         } catch (error) {
                             console.error('Error deleting habit:', error);
@@ -231,16 +246,20 @@ const HabitDetailsScreen = () => {
     const handleNumberModalSubmit = async (value: number) => {
         setModalVisible(false);
         if (selectedEpochDay) {
-            await habitRecordApi.createRecord(habitUuid, {epochDay: selectedEpochDay, recordValue: value})
-            setLastValueUpdate(Date.now());
+            await createHabitRecordMutation.mutateAsync({
+                habitUuid,
+                record: {epochDay: selectedEpochDay, recordValue: value}
+            });
         }
     }
 
     const handleClickOnCalendarItem = async (record?: ApiHabitRecordRead, longClick?: boolean) => {
         if (isNonNummericHabit && !longClick && !isChallenge) {
             const value = record ? (record.recordValue === 1 ? 0 : 1) : 1;
-            await habitRecordApi.createRecord(habitUuid, {epochDay: record!.epochDay, recordValue: value})
-            setLastValueUpdate(Date.now());
+            await createHabitRecordMutation.mutateAsync({
+                habitUuid,
+                record: {epochDay: record!.epochDay, recordValue: value}
+            });
         } else {
             setModalVisible(true);
             if (record) {
@@ -394,11 +413,14 @@ const HabitDetailsScreen = () => {
                 </View>
             )}
 
-            <ActivityCalendar key={lastValueUpdate} handleClickOnCalendarItem={handleClickOnCalendarItem}
-                              handleLongClickOnCalendarItem={handleLongClickOnCalendarItem}
-                              habit={habitDetail} isBooleanHabit={isNonNummericHabit && !isChallenge}/>
+            <ActivityCalendar
+                handleClickOnCalendarItem={handleClickOnCalendarItem}
+                handleLongClickOnCalendarItem={handleLongClickOnCalendarItem}
+                habit={habitDetail!}
+                isBooleanHabit={isNonNummericHabit && !isChallenge}
+            />
 
-            {habitUuid && isOwnHabit === "true" && (
+            {habitUuid && isOwnHabit === "true" && habitDetail && (
                 <NumberModal
                     visible={numberModalVisible}
                     onClose={() => setModalVisible(false)}

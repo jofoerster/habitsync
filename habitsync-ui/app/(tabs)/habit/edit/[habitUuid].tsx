@@ -1,11 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {ActivityIndicator, Platform, ScrollView, StyleSheet, Text, View} from 'react-native';
-import {useRouter, useLocalSearchParams} from "expo-router";
-import {ApiHabitRead, ApiHabitWrite, habitApi} from "@/services/api";
+import {useLocalSearchParams, useRouter} from "expo-router";
+import {ApiHabitWrite} from "@/services/api";
 import alert from "@/services/alert";
 import HabitConfig, {ConfigType} from "@/components/HabitConfig";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {useCreateHabit, useHabit, useUpdateHabit} from "@/hooks/useHabits";
 
 const HabitEditScreen = () => {
     const {theme} = useTheme();
@@ -16,36 +17,18 @@ const HabitEditScreen = () => {
     const isNewHabit = !configParam || configParam === 'new';
     const habitUuid = isNewHabit ? undefined : configParam;
 
-
-    const [loading, setLoading] = useState(true);
-    const [habit, setHabit] = useState<ApiHabitRead | null>(null);
-
-    useEffect(() => {
-        const fetchHabit = async () => {
-            try {
-                const habit: ApiHabitRead = await habitApi.getHabitByUuid(habitUuid);
-                setHabit(habit);
-                setLoading(false);
-            } catch (error) {
-                alert('Error', 'Failed to fetch habit data');
-                router.back();
-            }
-        };
-
-        if (habitUuid) {
-            fetchHabit();
-        } else {
-            setLoading(false);
-        }
-    }, [habitUuid]);
+    const {data: habit, isLoading: loading} = useHabit(habitUuid || '', !isNewHabit);
+    const createHabitMutation = useCreateHabit();
+    const updateHabitMutation = useUpdateHabit();
 
     const handleUpdate = async (habitWrite: ApiHabitWrite) => {
         try {
             let newUuid = habitUuid;
             if (habitUuid) {
-                await habitApi.updateHabit(habitWrite);
+                await updateHabitMutation.mutateAsync(habitWrite);
             } else {
-                newUuid = (await habitApi.createHabit(habitWrite)).uuid;
+                const createdHabit = await createHabitMutation.mutateAsync(habitWrite);
+                newUuid = createdHabit.uuid;
             }
             router.push(`/habit/${newUuid}?isOwnHabit=true`);
         } catch (error) {

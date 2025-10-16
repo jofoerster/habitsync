@@ -4,7 +4,6 @@ import {
     ApiChallengeRead,
     ApiComputationReadWrite,
     ApiHabitRead,
-    challengeApi,
     ChallengeComputationType,
     ChallengeStatus,
     FrequencyTypeDTO
@@ -20,6 +19,13 @@ import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
 import {AuthService} from "@/services/auth";
 import {MAX_INTEGER} from "@/constants/numbers";
+import {
+    useChallengeOverview,
+    useChallengeHabit,
+    useVoteOnChallenge,
+    useProposeChallenge,
+    useDeleteChallenge
+} from "@/hooks/useChallenges";
 
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
@@ -28,12 +34,15 @@ const ChallengesScreen = () => {
     const styles = createStyles(theme);
 
     const router = useRouter();
-    const [challengeOverview, setChallengeOverview] = useState<ApiChallengeOverviewRead | null>(null);
+    const {data: challengeOverview, isLoading: loading, refetch} = useChallengeOverview();
+    const {data: challengeHabit} = useChallengeHabit();
+    const voteOnChallengeMutation = useVoteOnChallenge();
+    const proposeChallengeMutation = useProposeChallenge();
+    const deleteChallengeMutation = useDeleteChallenge();
+
     const [votes, setVotes] = useState<Map<number, boolean>>(new Map<number, boolean>);
-    const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'active' | 'proposed' | 'created'>('active');
-    const [challengeHabit, setChallengeHabit] = useState<ApiHabitRead | null>(null);
     const [currentTime, setCurrentTime] = useState(new Date());
 
     const [currentUser, setCurrentUser] = useState<ApiAccountRead | null>(null);
@@ -52,6 +61,13 @@ const ChallengesScreen = () => {
     }, []);
 
     useEffect(() => {
+        if (challengeOverview) {
+            setVotes(new Map(challengeOverview.proposedChallenges.filter(c => c.currentUserVote !== null)
+                .map(c => [c.id, c.currentUserVote!])));
+        }
+    }, [challengeOverview]);
+
+    useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
         }, 60000);
@@ -61,19 +77,14 @@ const ChallengesScreen = () => {
 
     const fetchData = useCallback(async () => {
         try {
-            const data = await challengeApi.getCurrentChallengeOverview();
-            setChallengeOverview(data);
-            setVotes(new Map(data.proposedChallenges.filter(c => c.currentUserVote !== null)
-                .map(c => [c.id, c.currentUserVote!])));
-            setChallengeHabit(await challengeApi.getChallengeHabit());
+            await refetch();
         } catch (error) {
             console.error('Error fetching challenges:', error);
             alert('Error', 'Failed to load challenges');
         } finally {
-            setLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [refetch]);
 
     const formatFrequency = (progressComputation: ApiComputationReadWrite) => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
@@ -113,7 +124,7 @@ const ChallengesScreen = () => {
     const handleVote = async (item: ApiChallengeRead, vote: boolean) => {
         try {
             setVotes(new Map(votes.set(item.id, vote)));
-            await challengeApi.voteOnChallenge(item.id, vote);
+            await voteOnChallengeMutation.mutateAsync({id: item.id, vote});
         } catch (error) {
             console.error('Error voting on challenge:', error);
             alert('Error', 'Failed to vote on challenge');
@@ -122,8 +133,7 @@ const ChallengesScreen = () => {
 
     const handleProposeChallenge = async (id: number) => {
         try {
-            await challengeApi.proposeChallenge(id);
-            fetchData();
+            await proposeChallengeMutation.mutateAsync(id);
         } catch (error) {
             console.error('Error proposing challenge:', error);
             alert('Error', 'Failed to propose challenge');
@@ -144,8 +154,7 @@ const ChallengesScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await challengeApi.deleteChallenge(id);
-                            fetchData();
+                            await deleteChallengeMutation.mutateAsync(id);
                         } catch (error) {
                             console.error('Error deleting challenge:', error);
                             alert('Error', 'Failed to delete challenge');
