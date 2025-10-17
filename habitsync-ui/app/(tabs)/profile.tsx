@@ -286,6 +286,18 @@ const UserSettingsComponent = () => {
                     )}
                 </TouchableOpacity>
 
+                <Link href="/profile-settings/import" asChild>
+                    <TouchableOpacity style={styles.importButton}>
+                        <MaterialCommunityIcons
+                            name="database-import"
+                            size={20}
+                            color={theme.textInverse}
+                            style={{marginRight: 8}}
+                        />
+                        <Text style={styles.importButtonText}>Import Data</Text>
+                    </TouchableOpacity>
+                </Link>
+
                 <Link href="/profile-settings/approve-accounts" asChild>
                     <TouchableOpacity style={styles.approveAccountsButton}>
                         <MaterialCommunityIcons
@@ -451,6 +463,26 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         backgroundColor: theme.disabled,
     },
     saveButtonText: {
+        color: theme.textInverse,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    importButton: {
+        backgroundColor: theme.info,
+        borderRadius: 12,
+        padding: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 8,
+        marginBottom: 12,
+        shadowColor: theme.shadow,
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: theme.shadowOpacity,
+        shadowRadius: 4,
+        elevation: theme.elevation.level2,
+    },
+    importButtonText: {
         color: theme.textInverse,
         fontSize: 16,
         fontWeight: '600',

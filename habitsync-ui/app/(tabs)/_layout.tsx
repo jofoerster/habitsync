@@ -56,6 +56,12 @@ export default function TabLayout() {
                     }}
                 />
                 <Tabs.Screen
+                    name="profile-settings/import"
+                    options={{
+                        href: null,
+                    }}
+                />
+                <Tabs.Screen
                     name="habits"
                     options={{
                         title: 'Habits',
