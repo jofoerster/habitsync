@@ -43,7 +43,7 @@ const ImportScreen = () => {
         try {
             setUploading(true);
             await importApi.importLoopHabit(file);
-            alert('Success', 'Import started... Your habits will be imported in the background.');
+            alert('Success', 'Habits imported successfully.');
         } catch (error) {
             console.error('Failed to upload file', error);
             alert('Error', 'Failed to upload file. Please make sure it\'s a valid Loop Habit Tracker backup file.');
@@ -99,8 +99,16 @@ const ImportScreen = () => {
                             <Text style={styles.featureText}>Habit completion records</Text>
                         </View>
                         <View style={styles.featureItem}>
-                            <MaterialCommunityIcons name="check-circle" size={16} color={theme.success} />
-                            <Text style={styles.featureText}>Frequency settings</Text>
+                            <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={16} color={theme.warning} />
+                            <Text style={styles.featureText}>Frequency settings (as far as compatible)</Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={16} color={theme.warning} />
+                            <Text style={styles.featureText}>Progress computation: Algorithms do not match entirely</Text>
+                        </View>
+                        <View style={styles.featureItem}>
+                            <MaterialCommunityIcons name="alert-circle" size={16} color={theme.error} />
+                            <Text style={styles.featureText}>Question, description, habit record notes</Text>
                         </View>
                     </View>
 

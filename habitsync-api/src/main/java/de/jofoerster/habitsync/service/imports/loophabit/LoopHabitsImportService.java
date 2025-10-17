@@ -62,14 +62,18 @@ public class LoopHabitsImportService {
                                Account account) {
         log.debug("Processing habit: {} with {} checkmarks", habitMap.get("name"), checkmarks.size());
 
+        boolean isYesNoHabit = ((int) habitMap.get("type")) == 0;
+
         ComputationReadWriteDTO computationReadWriteDTO = ComputationReadWriteDTO.builder()
                 .frequency((Integer) habitMap.get("freq_num"))
                 .timesPerXDays((Integer) habitMap.get("freq_den"))
-                .frequencyType(getFrequencyType((int) habitMap.get("type"), (int) habitMap.get(("freq_den"))))
+                .frequencyType(
+                        getFrequencyType((int) habitMap.get(("freq_den")), isYesNoHabit))
                 .isNegative(((int) habitMap.get("target_type")) == 1)
                 .targetDays(30)
                 .unit((String) habitMap.get("unit"))
-                .dailyReachableValue(getDailyReachableValue((int) habitMap.get("target_value")))
+                .dailyReachableValue(getDailyReachableValue((double) habitMap.get("target_value")))
+                .dailyDefault(String.valueOf(1))
                 .build();
 
         HabitWriteDTO habitWriteDTO = HabitWriteDTO
@@ -91,33 +95,48 @@ public class LoopHabitsImportService {
             log.debug("Checkmark - Date: {}, Value: {}", checkmarkMap.get("timestamp"), checkmarkMap.get("value"));
             cachingHabitRecordService.createRecord(habitCreated.get(), HabitRecordWriteDTO
                     .builder()
-                    .recordValue(getRecordValue((int) checkmarkMap.get("value")))
-                    .epochDay(getEpochDay((int) checkmarkMap.get("timestamp")))
+                    .recordValue(getRecordValue((Integer) checkmarkMap.get("value")))
+                    .epochDay(getEpochDay((Long) checkmarkMap.get("timestamp")))
                     .build());
         }
     }
 
-    private Double getDailyReachableValue(int targetValue) {
+    private Double getDailyReachableValue(double targetValue) {
         return targetValue == 0 ? 1.0 : (double) targetValue;
     }
 
     private double getRecordValue(int recordValueLoop) {
-        return recordValueLoop / 1000;
+        if (recordValueLoop == 0 || recordValueLoop == -1 || recordValueLoop == 3) {
+            return 0;
+        } else if (recordValueLoop == 2) {
+            return 1;
+        } else if (recordValueLoop >= 1000) {
+            return recordValueLoop / 1000.0;
+        } else {
+            return recordValueLoop;
+        }
+        // 2: fullfilled
+        // 3: skipped ??? -> does not exist in HabitSync
+        // 0: not fullfilled
     }
 
-    private int getEpochDay(int unixTimestamp) {
-        LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(unixTimestamp, 0, ZoneOffset.UTC);
+    private int getEpochDay(long unixTimestamp) {
+        LocalDateTime localDateTime = LocalDateTime.ofEpochSecond(unixTimestamp / 1000, 0, ZoneOffset.UTC);
         return (int) localDateTime.toLocalDate().toEpochDay();
     }
 
-    private FrequencyTypeDTO getFrequencyType(int type, int freqDen) {
-        return switch (type) {
-            case 1 -> freqDen == 7
-                    ? FrequencyTypeDTO.WEEKLY
-                    : FrequencyTypeDTO.MONTHLY;
-            case 0 -> FrequencyTypeDTO.X_TIMES_PER_Y_DAYS;
-            default -> throw new IllegalArgumentException("Unknown type: " + type);
-        };
+    private FrequencyTypeDTO getFrequencyType(int freqDen, boolean isYesNoHabit) {
+       if (isYesNoHabit) {
+           return FrequencyTypeDTO.X_TIMES_PER_Y_DAYS;
+       } else {
+           if (freqDen == 7) {
+               return FrequencyTypeDTO.WEEKLY;
+           } else if (freqDen == 1) {
+               return FrequencyTypeDTO.X_TIMES_PER_Y_DAYS;
+           } else {
+               return FrequencyTypeDTO.MONTHLY;
+           }
+       }
     }
 
 }
