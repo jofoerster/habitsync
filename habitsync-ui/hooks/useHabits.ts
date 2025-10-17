@@ -16,10 +16,12 @@ export const habitKeys = {
 };
 
 export const useHabits = () => {
+    console.log("refetch habits");
     return useQuery({
         queryKey: habitKeys.list(),
         queryFn: () => habitApi.getUserHabits(),
         staleTime: 1000 * 60 * 5,
+        refetchOnMount: 'always', // always refetch when component mounts
     });
 };
 
@@ -290,4 +292,3 @@ export const useDeclineHabitInvitation = () => {
         },
     });
 };
-

@@ -9,6 +9,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
+import {useConnectedHabits} from "@/hooks/useHabits";
 
 
 interface DayButtonProps {
@@ -117,7 +118,6 @@ interface HabitRowProps {
     habit: ApiHabitRead,
     isExpanded: boolean,
     onToggleExpand: () => void,
-    connectedHabits?: ApiHabitRead[],
     isConnectedHabitView?: boolean,
     isChallengeHabit?: boolean,
     onUpdate?: (habit: ApiHabitRead) => void,
@@ -134,7 +134,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                habit,
                                                isExpanded,
                                                onToggleExpand,
-                                               connectedHabits,
                                                isConnectedHabitView,
                                                isChallengeHabit,
                                                onUpdate,
@@ -156,6 +155,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const [records, setRecords] = useState<Map<number, ApiHabitRecordRead>>(new Map())
     const [loading, setLoading] = useState(true);
     const [hasConnectedHabits, setHasConnectedHabits] = useState(!isConnectedHabitView && !isChallengeHabit);
+    const {data: connectedHabits, isLoading: connectedHabitsLoading} = useConnectedHabits(habit.uuid, hasConnectedHabits);
     const [percentage, setPercentage] = useState(habit.currentPercentage);
     const [habitColor, setHabitColor] = useState(habit.color);
 

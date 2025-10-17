@@ -1,18 +1,13 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useState, useRef, useEffect} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View, Animated, Easing} from 'react-native';
-import {ApiHabitRead} from '@/services/api';
+import React, {useState} from 'react';
+import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Link} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {
-    useHabits,
-    useMoveHabitUp,
-    useMoveHabitDown
-} from "@/hooks/useHabits";
+import {useHabits, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
 
 const DateHeader = () => {
     const {theme} = useTheme();
@@ -54,51 +49,12 @@ const HabitTrackerScreen = () => {
     const styles = createStyles(theme);
 
     const {data: habits = [], isLoading: loading} = useHabits();
+
     const moveHabitUpMutation = useMoveHabitUp();
     const moveHabitDownMutation = useMoveHabitDown();
 
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
-    const [connectedHabitsData, setConnectedHabitsData] = useState<{ [key: string]: ApiHabitRead[] | undefined }>({});
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
-
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        let animationRef: Animated.CompositeAnimation | null = null;
-
-        if (loading) {
-            const startRotation = () => {
-                rotateAnim.setValue(0);
-                animationRef = Animated.timing(rotateAnim, {
-                    toValue: 1,
-                    duration: 5000,
-                    easing: Easing.linear,
-                    useNativeDriver: true,
-                });
-                animationRef.start(() => {
-                    if (loading) {
-                        startRotation();
-                    }
-                });
-            };
-            startRotation();
-        } else {
-            if (animationRef) {
-                animationRef.stop();
-            }
-        }
-
-        return () => {
-            if (animationRef) {
-                animationRef.stop();
-            }
-        };
-    }, [rotateAnim, loading]);
-
-    const rotateInterpolate = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
-    });
 
     const toggleHabitExpansion = async (habitUuid: string) => {
         const isExpanded = expandedHabits[habitUuid];
@@ -107,11 +63,6 @@ const HabitTrackerScreen = () => {
             ...prev,
             [habitUuid]: !isExpanded
         }));
-    };
-
-
-    const handleDragEnd = ({data}: { data: ApiHabitRead[] }) => {
-        // Note: This is not used anymore but kept for compatibility
     };
 
     const handleMoveUp = async (habitUuid: string) => {
@@ -138,7 +89,6 @@ const HabitTrackerScreen = () => {
                         source={require('@/assets/images/logo-transparent.png')}
                         style={[
                             styles.logo,
-                            loading && { transform: [{ rotate: rotateInterpolate }] }
                         ]}
                     />
                     <Text style={styles.header}>HabitSync</Text>
@@ -196,7 +146,6 @@ const HabitTrackerScreen = () => {
                             habit={item}
                             isExpanded={expandedHabits[item.uuid]}
                             onToggleExpand={() => toggleHabitExpansion(item.uuid)}
-                            connectedHabits={connectedHabitsData[item.uuid]}
                             isConnectedHabitView={false}
                             isChallengeHabit={item.isChallengeHabit}
                             hideDates={true}

@@ -18,50 +18,16 @@ import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
 import ThemeToggle from '@/components/ThemeToggle';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {useApiKey, useEvictApiKeys, useHabitInvitations, useUserSettings} from "@/hooks/useUser";
 
 
 const UserSettingsComponent = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const [settings, setSettings] = useState<ApiAccountSettingsReadWrite | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [displayName, setDisplayName] = useState('');
-    const [email, setEmail] = useState('');
-    const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(false);
-    const [isPushNotificationsEnabled, setIsPushNotificationsEnabled] = useState(false);
-    const [appriseTargetUrl, setAppriseTargetUrl] = useState("");
-    const [showAppriseField, setShowAppriseField] = useState(false);
-    const [habitInvitations, setHabitInvitations] = useState<ApiHabitRead[]>([]);
-    const [processingInvitation, setProcessingInvitation] = useState<string | null>(null);
-
-    useEffect(() => {
-        loadSettings();
-        loadHabitInvitations();
-        const loadConfig = async () => {
-            const config = await serverConfigApi.getServerConfig();
-            setShowAppriseField(config.appriseActive);
-        }
-        loadConfig();
-    }, []);
-
-    const loadSettings = async () => {
-        try {
-            setLoading(true);
-            const userSettings = await userApi.getUserSettings();
-            setSettings(userSettings);
-            setDisplayName(userSettings.displayName);
-            setEmail(userSettings.email);
-            setIsEmailNotificationsEnabled(userSettings.isEmailNotificationsEnabled);
-            setIsPushNotificationsEnabled(userSettings.isPushNotificationsEnabled);
-            setAppriseTargetUrl(userSettings.appriseTarget || "");
-        } catch (error) {
-            Alert.alert('Error', 'Failed to load settings');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const evictApiKeysMutation = useEvictApiKeys();
+    const {data: settings, isLoading: userSettingsLoading} = useUserSettings();
+    const {data: habitInvitations, isLoading: habitInvitationsLoading} = useHabitInvitations();
 
     const loadHabitInvitations = async () => {
         try {
