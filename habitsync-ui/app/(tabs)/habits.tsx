@@ -1,7 +1,7 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Link} from 'expo-router';
+import {Link, useFocusEffect} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
@@ -48,13 +48,20 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const {data: habits = [], isLoading: loading} = useHabits();
+    const {data: habits = [], isLoading: loading, refetch} = useHabits();
 
     const moveHabitUpMutation = useMoveHabitUp();
     const moveHabitDownMutation = useMoveHabitDown();
 
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            console.log("Focus gained, refetch");
+            console.log(habits);
+        }, [refetch])
+    );
 
     const toggleHabitExpansion = async (habitUuid: string) => {
         const isExpanded = expandedHabits[habitUuid];
@@ -68,7 +75,7 @@ const HabitTrackerScreen = () => {
     const handleMoveUp = async (habitUuid: string) => {
         try {
             await moveHabitUpMutation.mutateAsync(habitUuid);
-        } catch (error) {
+        } catch (_error) {
             alert('Error', 'Failed to move habit up');
         }
     };
@@ -76,7 +83,7 @@ const HabitTrackerScreen = () => {
     const handleMoveDown = async (habitUuid: string) => {
         try {
             await moveHabitDownMutation.mutateAsync(habitUuid);
-        } catch (error) {
+        } catch (_error) {
             alert('Error', 'Failed to move habit down');
         }
     };
@@ -122,7 +129,6 @@ const HabitTrackerScreen = () => {
                             habit={item}
                             isExpanded={expandedHabits[item.uuid]}
                             onToggleExpand={() => toggleHabitExpansion(item.uuid)}
-                            connectedHabits={connectedHabitsData[item.uuid]}
                             isConnectedHabitView={false}
                             isChallengeHabit={item.isChallengeHabit}
                             hideDates={true}
