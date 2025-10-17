@@ -1,4 +1,4 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
     ActivityIndicator,
     Dimensions,
@@ -10,19 +10,9 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import {
-    ApiAccountRead,
-    ApiComputationReadWrite,
-    ApiHabitRead,
-    ApiHabitWrite,
-    ApiSharedHabitRead,
-    FrequencyTypeDTO,
-    habitApi,
-    sharedHabitApi,
-    userApi
-} from '@/services/api';
+import {ApiAccountRead, ApiComputationReadWrite, ApiHabitRead, FrequencyTypeDTO, sharedHabitApi} from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import {useFocusEffect, useLocalSearchParams, useRouter} from "expo-router";
+import {useLocalSearchParams, useRouter} from "expo-router";
 import {getColorById} from "@/constants/colors";
 import alert from "@/services/alert";
 import * as Clipboard from 'expo-clipboard';
@@ -31,6 +21,9 @@ import SharedHabitParticipants from "@/components/SharedHabitParticipants";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
+import {AuthService} from "@/services/auth";
+import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
+import {useHabits} from "@/hooks/useHabits";
 
 const {width} = Dimensions.get('window');
 
@@ -43,11 +36,14 @@ const SharedHabitDetailsScreen = () => {
 
     const editModeEnabled = useLocalSearchParams()['edit'] === 'true';
 
-    const [sharedHabit, setSharedHabit] = useState<ApiSharedHabitRead>();
-    const [progressComputation, setProgressComputation] = useState<ApiComputationReadWrite>();
+    const {data: sharedHabit, isLoading: sharedHabitLoading} = useSharedHabit(shareCode);
+    const {data: userHabits, isLoading: userHabitsLoading} = useHabits();
+
+    const updateSharedHabit = useUpdateSharedHabit();
+    const joinSharedHabit = useJoinSharedHabit();
+    const deleteSharedHabit = useDeleteSharedHabit();
+
     const [currentUser, setCurrentUser] = useState<ApiAccountRead>();
-    const [userHabits, setUserHabits] = useState<ApiHabitRead[]>([]);
-    const [loading, setLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(editModeEnabled);
     const [editedTitle, setEditedTitle] = useState('');
     const [editedDescription, setEditedDescription] = useState('');
@@ -56,50 +52,30 @@ const SharedHabitDetailsScreen = () => {
 
     const habitConfigRef = useRef<HabitConfigRef>(null);
 
-    useFocusEffect(
-        useCallback(() => {
-            fetchData();
-        }, [shareCode])
-    );
+    useEffect(() => {
+        const getCurrentUser = async () => {
+            try {
+                const user = await AuthService.getInstance().getCurrentUser();
+                console.log("current user", user);
+                setCurrentUser(user);
+            } catch (error) {
+                console.error('Error fetching current user:', error);
+            }
+        };
+        getCurrentUser();
+    }, []);
 
-    const updateProgressComputation = (habit: ApiHabitWrite) => {
-        setProgressComputation(habit.progressComputation);
-    }
-
-    const getHabitForProgressComputation = (): ApiHabitRead => {
+    const getHabitForProgressComputation = (): Partial<ApiHabitRead> => {
         return {
             account: {displayName: "", authenticationId: "", email: ""},
             color: 0,
             currentPercentage: 0,
             name: "",
             uuid: "",
-            progressComputation: progressComputation!,
+            progressComputation: sharedHabit!.progressComputation!,
             sortPosition: 0
         }
     }
-
-    const fetchData = async () => {
-        try {
-            const [sharedHabitData, userData, habitsData] = await Promise.all([
-                sharedHabitApi.getSharedHabitByShareCode(shareCode),
-                userApi.getUserInfo(),
-                habitApi.getUserHabits()
-            ]);
-
-            setSharedHabit(sharedHabitData);
-            setProgressComputation(sharedHabitData.progressComputation);
-            setCurrentUser(userData);
-            setUserHabits(habitsData);
-            setEditedTitle(sharedHabitData.title);
-            setEditedDescription(sharedHabitData.description || '');
-            setAllowEditingOfAllUsers(sharedHabitData.allowEditingOfAllUsers);
-        } catch (error) {
-            console.error('Error fetching shared habit details:', error);
-            alert('Error', 'Failed to load shared habit details');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const userHasHabitInSharedHabit = () => {
         if (!sharedHabit || !currentUser) return false;
@@ -119,16 +95,15 @@ const SharedHabitDetailsScreen = () => {
             const updatedHabitData = await habitConfigRef.current?.save();
             if (!updatedHabitData) return;
 
-            const updatedSharedHabit = await sharedHabitApi.updateSharedHabit({
-                title: editedTitle,
-                habitUuid: sharedHabit.habits.find(h => h.account.authenticationId === sharedHabit.owner.authenticationId)?.uuid,
-                description: editedDescription,
-                allowEditingOfAllUsers: allowEditingOfAllUsers,
-                progressComputation: updatedHabitData.progressComputation
-            }, shareCode);
-
-            setSharedHabit(updatedSharedHabit);
-            setProgressComputation(updatedHabitData.progressComputation);
+            await updateSharedHabit.mutateAsync({
+                sharedHabit: {
+                    title: editedTitle,
+                    habitUuid: sharedHabit.habits.find(h => h.account.authenticationId === sharedHabit.owner.authenticationId)?.uuid,
+                    description: editedDescription,
+                    allowEditingOfAllUsers: allowEditingOfAllUsers,
+                    progressComputation: updatedHabitData.progressComputation
+                }, shareCode
+            })
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating shared habit:', error);
@@ -138,9 +113,8 @@ const SharedHabitDetailsScreen = () => {
 
     const handleJoinWithNewHabit = async () => {
         try {
-            await sharedHabitApi.joinSharedHabit(shareCode);
+            await joinSharedHabit.mutateAsync({shareCode})
             setShowJoinModal(false);
-            fetchData(); // Refresh data
             alert('Success', 'Successfully joined with new habit!');
         } catch (error) {
             console.error('Error joining with new habit:', error);
@@ -161,9 +135,8 @@ const SharedHabitDetailsScreen = () => {
                     text: 'Join',
                     onPress: async () => {
                         try {
-                            await sharedHabitApi.joinSharedHabit(shareCode, habitUuid);
+                            await joinSharedHabit.mutateAsync({shareCode, habitUuid})
                             setShowJoinModal(false);
-                            fetchData(); // Refresh data
                             alert('Success', 'Successfully joined with existing habit!');
                         } catch (error) {
                             console.error('Error joining with existing habit:', error);
@@ -191,13 +164,15 @@ const SharedHabitDetailsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await sharedHabitApi.deleteSharedHabit({
-                                title: sharedHabit.title,
-                                habitUuid: sharedHabit.habits.find(h => h.account.authenticationId === sharedHabit.owner.authenticationId)?.uuid,
-                                description: sharedHabit.description,
-                                allowEditingOfAllUsers: sharedHabit.allowEditingOfAllUsers,
-                                progressComputation: progressComputation!
-                            }, shareCode);
+                            await deleteSharedHabit.mutateAsync({
+                                sharedHabit: {
+                                    title: sharedHabit.title,
+                                    habitUuid: sharedHabit.habits.find(h => h.account.authenticationId === sharedHabit.owner.authenticationId)?.uuid,
+                                    description: sharedHabit.description,
+                                    allowEditingOfAllUsers: sharedHabit.allowEditingOfAllUsers,
+                                    progressComputation: sharedHabit.progressComputation!
+                                }, shareCode
+                            })
                             router.push('/habits');
                         } catch (error) {
                             console.error('Error deleting shared habit:', error);
@@ -241,7 +216,7 @@ const SharedHabitDetailsScreen = () => {
                         <Text style={styles.modalButtonText}>Create New Habit</Text>
                     </TouchableOpacity>
 
-                    {userHabits.length > 0 && (
+                    {userHabits && userHabits.length > 0 && (
                         <>
                             <Text style={styles.modalSectionTitle}>Or connect an existing habit:</Text>
                             {userHabits.map(habit => (
@@ -275,7 +250,7 @@ const SharedHabitDetailsScreen = () => {
         }
     };
 
-    if (loading) {
+    if (sharedHabitLoading || userHabitsLoading) {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#2196F3"/>
@@ -372,31 +347,31 @@ const SharedHabitDetailsScreen = () => {
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="target" size={20} color="#2196F3"/>
                                     <Text style={styles.progressDetailText}>
-                                        Percentage of last {progressComputation?.targetDays} days
+                                        Percentage of last {sharedHabit.progressComputation?.targetDays} days
                                     </Text>
                                 </View>
 
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="calendar-clock" size={20} color="#FF9800"/>
                                     <Text style={styles.progressDetailText}>
-                                        {formatFrequency(progressComputation!)}
+                                        {formatFrequency(sharedHabit.progressComputation!)}
                                     </Text>
                                 </View>
 
-                                {progressComputation?.dailyDefault !== "1" && (
+                                {sharedHabit.progressComputation?.dailyDefault !== "1" && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="flag" size={20} color="#4CAF50"/>
                                         <Text style={styles.progressDetailText}>
-                                            {progressComputation?.dailyDefault} daily default
+                                            {sharedHabit.progressComputation?.dailyDefault} daily default
                                         </Text>
                                     </View>
                                 )}
 
-                                {progressComputation?.unit && (
+                                {sharedHabit.progressComputation?.unit && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
-                                            {progressComputation.dailyReachableValue} {progressComputation.unit}
+                                            {sharedHabit.progressComputation.dailyReachableValue} {sharedHabit.progressComputation.unit}
                                         </Text>
                                     </View>
                                 )}
