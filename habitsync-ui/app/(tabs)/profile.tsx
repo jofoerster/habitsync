@@ -189,7 +189,7 @@ const UserSettingsComponent = () => {
                         <Text style={styles.label}>Display Name</Text>
                         <TextInput
                             style={styles.input}
-                            value={settings?.displayName}
+                            value={updatedSettings?.displayName}
                             onChangeText={(text) => setUpdatedSettings({
                                 ...updatedSettings,
                                 displayName: text,
@@ -203,7 +203,7 @@ const UserSettingsComponent = () => {
                         <Text style={styles.label}>Email</Text>
                         <TextInput
                             style={styles.input}
-                            value={settings?.email}
+                            value={updatedSettings?.email}
                             onChangeText={(mail) => setUpdatedSettings({
                                 ...updatedSettings,
                                 email: mail,
@@ -227,7 +227,7 @@ const UserSettingsComponent = () => {
                     <View style={styles.switchField}>
                         <Text style={styles.label}>Email Notifications</Text>
                         <Switch
-                            value={settings?.isEmailNotificationsEnabled}
+                            value={updatedSettings?.isEmailNotificationsEnabled}
                             onValueChange={(bool) => setUpdatedSettings({
                                 ...updatedSettings,
                                 isEmailNotificationsEnabled: bool,
