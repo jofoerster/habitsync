@@ -4,9 +4,11 @@ import {MaterialCommunityIcons} from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
-import {ApiAccountRead, ApiHabitRead, ApiSharedHabitRead, habitApi, sharedHabitApi,} from '@/services/api';
-import {getBackendBaseUrl, getUiBaseUrl, UI_BASE_URL} from '@/public/config';
+import {ApiHabitRead, ApiSharedHabitRead,} from '@/services/api';
+import {getUiBaseUrl} from '@/public/config';
 import alert from '@/services/alert';
+import {useHabitParticipants, useInviteParticipant, useRemoveParticipant} from "@/hooks/useHabits";
+import {useCreateSharedHabit} from "@/hooks/useSharedHabits";
 
 interface ShareHabitModalProps {
     visible: boolean;
@@ -30,7 +32,10 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
     const [activeTab, setActiveTab] = useState<'share' | 'participants'>('share');
     const [inviteAuthId, setInviteAuthId] = useState('');
-    const [participants, setParticipants] = useState<ApiAccountRead[]>([]);
+    const {data: participants, isLoading: loadingParticipantsData} = useHabitParticipants(habitDetail.uuid);
+    const inviteParticipantMutation = useInviteParticipant();
+    const removeParticipantMutation = useRemoveParticipant();
+    const createSharedHabitMutation = useCreateSharedHabit();
     const [loadingParticipants, setLoadingParticipants] = useState(false);
     const [inviting, setInviting] = useState(false);
     const [shareUrl, setShareUrl] = useState('loading...');
@@ -39,9 +44,6 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
     useEffect(() => {
         loadBackendUrl();
-        if (visible && sharedHabit && isOwnHabit) {
-            loadParticipants();
-        }
     }, [visible, sharedHabit]);
 
     const loadBackendUrl = async () => {
@@ -49,27 +51,13 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
         setShareUrl(sharedHabit ? `${uiBaseUrl}/share/${sharedHabit.shareCode}` : '');
     }
 
-    const loadParticipants = async () => {
-        if (!habitDetail?.uuid) return;
-
-        setLoadingParticipants(true);
-        try {
-            const participantList = await habitApi.listParticipants(habitDetail.uuid);
-            setParticipants(participantList);
-        } catch (error) {
-            console.error('Error loading participants:', error);
-        } finally {
-            setLoadingParticipants(false);
-        }
-    };
-
     const handleCreateShare = async () => {
         try {
-            await sharedHabitApi.createSharedHabit({
+            await createSharedHabitMutation.mutateAsync({
                 habitUuid: habitDetail.uuid,
                 title: habitDetail.name,
                 progressComputation: habitDetail.progressComputation,
-            });
+            })
             onUpdate();
             alert('Success', 'Shared habit created successfully!');
         } catch (error) {
@@ -89,12 +77,10 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
             alert('Error', 'Please enter an authentication ID');
             return;
         }
-
         setInviting(true);
         try {
-            await habitApi.inviteParticipant(habitDetail.uuid, inviteAuthId.trim());
+            await inviteParticipantMutation.mutateAsync({uuid: habitDetail.uuid, authId: inviteAuthId.trim()});
             setInviteAuthId('');
-            await loadParticipants();
             alert('Success', 'Invitation sent successfully!');
         } catch (error) {
             console.error('Error inviting participant:', error);
@@ -115,8 +101,10 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await habitApi.removeParticipant(habitDetail.uuid, authId);
-                            await loadParticipants();
+                            await removeParticipantMutation.mutateAsync({
+                                uuid: habitDetail.uuid,
+                                authId: authId,
+                            })
                             alert('Success', 'Participant removed successfully!');
                         } catch (error) {
                             console.error('Error removing participant:', error);

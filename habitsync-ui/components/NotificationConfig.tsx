@@ -4,7 +4,6 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {
     FixedTimeNotificationConfigRule,
-    notificationApi,
     NotificationConfig as NotificationConfigType,
     NotificationConfigRule,
     OvertakeNotificationConfigRule,
@@ -15,6 +14,7 @@ import FrequencyPicker from "./FrequencyPicker";
 import alert from "@/services/alert";
 import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {useUpdateNotificationForHabit} from "@/hooks/useNotifications";
 
 const NOTIFICATION_TYPES = [
     {
@@ -55,6 +55,8 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
     const [appriseUrl, setAppriseUrl] = useState(currentConfig?.appriseTarget || '');
     const [rules, setRules] = useState<NotificationConfigRule[]>(currentConfig?.rules || []);
     const [config, setConfig] = useState<NotificationConfigType | null>(currentConfig);
+
+    const updateNotificationForHabitMutation = useUpdateNotificationForHabit();
 
     // Modal states
     const [helpModalVisible, setHelpModalVisible] = useState(false);
@@ -195,7 +197,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
             };
             setConfig(config);
 
-            await notificationApi.updateNotificationForHabit(habitUuid, config);
+            await updateNotificationForHabitMutation.mutateAsync({habitUuid, config})
         } catch {
             alert('Error', 'Failed to update notification settings');
         } finally {
@@ -232,14 +234,14 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         <View style={styles.container}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
 
-            <Text style={styles.title}>Notification Settings</Text>
+                <Text style={styles.title}>Notification Settings</Text>
 
-            <TouchableOpacity
-                style={styles.closeButton}
-                onPress={() => onModalClose(config)}
-            >
-                <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
-            </TouchableOpacity>
+                <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => onModalClose(config)}
+                >
+                    <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
+                </TouchableOpacity>
             </View>
 
             {/* Apprise URL Field */}

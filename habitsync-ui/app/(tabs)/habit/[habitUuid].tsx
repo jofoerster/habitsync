@@ -1,10 +1,8 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {ActivityIndicator, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import * as Clipboard from 'expo-clipboard';
 import {
     ApiAccountRead,
     ApiComputationReadWrite,
-    ApiHabitRead,
     ApiHabitRecordRead,
     ApiSharedHabitMedalsRead,
     ApiSharedHabitRead,
@@ -24,12 +22,8 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import NotificationConfigComponent from "@/components/NotificationConfig";
 import ShareHabitModal from "@/components/ShareHabitModal";
-import {
-    useHabit,
-    useDeleteHabit,
-    useCreateHabitRecord
-} from "@/hooks/useHabits";
-import {useSharedHabits} from "@/hooks/useSharedHabits";
+import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
+import {useLeaveSharedHabit, useSharedHabits} from "@/hooks/useSharedHabits";
 
 const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';
 
@@ -42,6 +36,8 @@ const HabitDetailsScreen = () => {
     const router = useRouter();
     const habitUuid = useLocalSearchParams()['habitUuid'] as string;
     const isOwnHabit = useLocalSearchParams()['isOwnHabit'] as string;
+
+    const leaveSharedHabitMutation = useLeaveSharedHabit();
 
     const {data: habitDetail, isLoading: loading, refetch} = useHabit(habitUuid);
     const deleteHabitMutation = useDeleteHabit();
@@ -105,14 +101,14 @@ const HabitDetailsScreen = () => {
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
         && habitDetail.progressComputation.dailyDefault === "1";
 
-    const fetchData = useCallback(async () => {
+    const fetchData = async () => {
         try {
             await refetch();
         } catch (error) {
             console.error('Error fetching habit details:', error);
             alert('Error', 'Failed to load habit details');
         }
-    }, [refetch]);
+    };
 
     useFocusEffect(
         useCallback(() => {
@@ -148,43 +144,6 @@ const HabitDetailsScreen = () => {
             return "Monthly";
         }
     }
-
-    const handleShareHabit = async () => {
-        if (sharedHabits.length > 0) {
-            setShowShareModal(true);
-        } else {
-            await createNewSharedHabit();
-        }
-    };
-
-    const createNewSharedHabit = async () => {
-        try {
-            if (!habitDetail?.name || !habitDetail?.progressComputation) {
-                alert('Error', 'Habit details not available');
-                return;
-            }
-
-            const response = await sharedHabitApi.createSharedHabit({
-                habitUuid: habitUuid,
-                title: habitDetail.name,
-                progressComputation: habitDetail.progressComputation,
-            });
-
-            router.push(`/share/${response.shareCode}`);
-        } catch (error) {
-            console.error('Error sharing habit:', error);
-            alert('Error', 'Failed to share habit');
-        }
-    };
-
-    const handleCopyShareCode = async (sharedHabit: ApiSharedHabitRead) => {
-        await Clipboard.setStringAsync(`${UI_BASE_URL}/share/${sharedHabit.shareCode}`);
-    };
-
-
-    const handleCancel = () => {
-        setShowShareModal(false);
-    };
 
     const handleDeleteHabit = () => {
         if (!habitDetail?.uuid) {
@@ -231,7 +190,7 @@ const HabitDetailsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await sharedHabitApi.leaveSharedHabit(sharedHabits[0].shareCode);
+                            await leaveSharedHabitMutation.mutateAsync(sharedHabits[0].shareCode);
                             await fetchData();
                         } catch (error) {
                             console.error('Error leaving shared habit:', error);
@@ -285,10 +244,9 @@ const HabitDetailsScreen = () => {
         setShowNotificationModal(true);
     };
 
-    const handleCloseNotificationModal = (notificationConfig: NotificationConfigType) => {
+    const handleCloseNotificationModal = async (notificationConfig: NotificationConfigType) => {
         setShowNotificationModal(false);
-        setNotificationsEnabled(notificationConfig.rules.length >0);
-        setHabitDetail(prev => prev ? { ...prev, notificationFrequency: notificationConfig } : prev);
+        setNotificationsEnabled(notificationConfig.rules.length > 0);
     }
 
     const NotificationModal = () => (
