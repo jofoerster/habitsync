@@ -5,6 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import {useEffect} from 'react';
 import {ThemeProvider} from "@/context/ThemeContext";
 import {AlertProvider} from "@/context/AlertContext";
+import {ReactQueryProvider} from "@/context/ReactQueryContext";
 import {StatusBar} from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import {Platform} from 'react-native';
@@ -36,12 +37,14 @@ export default function RootLayout() {
 
     return (
         <ThemeProvider>
-            <AlertProvider>
-                <AuthProvider>
-                    <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-                    <Stack screenOptions={{headerShown: false}}/>
-                </AuthProvider>
-            </AlertProvider>
+            <ReactQueryProvider>
+                <AlertProvider>
+                    <AuthProvider>
+                        <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
+                        <Stack screenOptions={{headerShown: false}}/>
+                    </AuthProvider>
+                </AlertProvider>
+            </ReactQueryProvider>
         </ThemeProvider>
     );
 }

@@ -1,12 +1,19 @@
-import React, {useCallback, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
-import {ApiChallengeRead, ApiChallengeWrite, ApiHabitRead, challengeApi} from '@/services/api';
+import {ApiChallengeRead, ApiChallengeWrite, ApiHabitRead} from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useFocusEffect, useLocalSearchParams, useRouter} from "expo-router";
 import alert from "@/services/alert";
 import HabitConfig, {ConfigType, HabitConfigRef} from "@/components/HabitConfig";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
+import {
+    useChallenge,
+    useCreateChallenge,
+    useUpdateChallenge,
+    useProposeChallenge,
+    useDeleteChallenge
+} from "@/hooks/useChallenges";
 
 const EditChallengeScreen = () => {
     const {theme} = useTheme();
@@ -16,41 +23,30 @@ const EditChallengeScreen = () => {
     const challengeId = useLocalSearchParams()['challengeId'] as string;
     const isNewChallenge = !challengeId || challengeId === 'new';
 
-    const [challenge, setChallenge] = useState<ApiChallengeRead | null>(null);
-    const [loading, setLoading] = useState(!isNewChallenge);
+    const {data: challenge, isLoading: loading} = useChallenge(
+        parseInt(challengeId),
+        !isNewChallenge
+    );
+    const createChallengeMutation = useCreateChallenge();
+    const updateChallengeMutation = useUpdateChallenge();
+    const proposeChallengeMutation = useProposeChallenge();
+    const deleteChallengeMutation = useDeleteChallenge();
+
     const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
 
     const habitConfigRef = useRef<HabitConfigRef>(null);
 
-    useFocusEffect(
-        useCallback(() => {
-            if (!isNewChallenge) {
-                fetchChallenge();
-            } else {
-                setTitle('');
-                setDescription('');
-            }
-        }, [challengeId, isNewChallenge])
-    );
-
-    const fetchChallenge = async () => {
-        try {
-            setLoading(true);
-            const challengeData = await challengeApi.getChallengeById(parseInt(challengeId));
-
-            setChallenge(challengeData);
-            setTitle(challengeData.title);
-            setDescription(challengeData.description);
-        } catch (error) {
-            console.error('Error fetching challenge:', error);
-            alert('Error', 'Failed to load challenge details');
-            router.push("/challenges");
-        } finally {
-            setLoading(false);
+    useEffect(() => {
+        if (challenge) {
+            setTitle(challenge.title);
+            setDescription(challenge.description);
+        } else if (isNewChallenge) {
+            setTitle('');
+            setDescription('');
         }
-    };
+    }, [challenge, isNewChallenge]);
 
     const validateForm = (): boolean => {
         if (!title.trim()) {
@@ -83,9 +79,9 @@ const EditChallengeScreen = () => {
 
             let result: ApiChallengeRead;
             if (isNewChallenge) {
-                result = await challengeApi.createChallenge(challengeData);
+                result = await createChallengeMutation.mutateAsync(challengeData);
             } else {
-                result = await challengeApi.updateChallenge(challengeData);
+                result = await updateChallengeMutation.mutateAsync(challengeData);
             }
             if (result) {
                 router.push(`/challenge/edit/${result.id}`);
@@ -105,7 +101,7 @@ const EditChallengeScreen = () => {
 
         try {
             setSaving(true);
-            await challengeApi.proposeChallenge(challenge.id);
+            await proposeChallengeMutation.mutateAsync(challenge.id);
             alert('Success', 'Challenge proposed successfully!');
             router.push("/challenges");
         } catch (error) {
@@ -133,7 +129,7 @@ const EditChallengeScreen = () => {
                     onPress: async () => {
                         try {
                             setSaving(true);
-                            await challengeApi.deleteChallenge(challenge.id);
+                            await deleteChallengeMutation.mutateAsync(challenge.id);
                             alert('Success', 'Challenge deleted successfully!');
                             router.push("/challenges");
                         } catch (error) {
@@ -148,7 +144,7 @@ const EditChallengeScreen = () => {
         );
     };
 
-    const getHabitForProgressComputation = (): ApiHabitRead | undefined => {
+    const getHabitForProgressComputation = (): Partial<ApiHabitRead> | undefined => {
         return challenge ? {
             account: {displayName: "", authenticationId: "", email: ""},
             color: 0,
@@ -218,12 +214,12 @@ const EditChallengeScreen = () => {
             </View>
 
             {/* Configuration Section */}
-                <HabitConfig
-                    ref={habitConfigRef}
-                    configType={ConfigType.CHALLENGE}
-                    showSaveButton={false}
-                    habit={getHabitForProgressComputation()}
-                />
+            <HabitConfig
+                ref={habitConfigRef}
+                configType={ConfigType.CHALLENGE}
+                showSaveButton={false}
+                habit={getHabitForProgressComputation()}
+            />
 
             {/* Action Buttons */}
             <View style={styles.actionsSection}>
@@ -416,3 +412,4 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
 }));
 
 export default EditChallengeScreen;
+

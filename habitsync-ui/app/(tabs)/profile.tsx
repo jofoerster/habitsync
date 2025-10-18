@@ -18,75 +18,48 @@ import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
 import ThemeToggle from '@/components/ThemeToggle';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {useApiKey, useEvictApiKeys, useHabitInvitations, useUpdateUserSettings, useUserSettings} from "@/hooks/useUser";
+import {useAcceptHabitInvitation, useDeclineHabitInvitation} from "@/hooks/useHabits";
 
 
 const UserSettingsComponent = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const [settings, setSettings] = useState<ApiAccountSettingsReadWrite | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [saving, setSaving] = useState(false);
-    const [displayName, setDisplayName] = useState('');
-    const [email, setEmail] = useState('');
-    const [isEmailNotificationsEnabled, setIsEmailNotificationsEnabled] = useState(false);
-    const [isPushNotificationsEnabled, setIsPushNotificationsEnabled] = useState(false);
-    const [appriseTargetUrl, setAppriseTargetUrl] = useState("");
-    const [showAppriseField, setShowAppriseField] = useState(false);
-    const [habitInvitations, setHabitInvitations] = useState<ApiHabitRead[]>([]);
+    const evictApiKeysMutation = useEvictApiKeys();
+    const updateUserProfile = useUpdateUserSettings();
+    const acceptInvitation = useAcceptHabitInvitation();
+    const declineInvitation = useDeclineHabitInvitation();
+
+    const {data: settings, isLoading: loading} = useUserSettings();
+    const {data: habitInvitations, isLoading: habitInvitationsLoading} = useHabitInvitations();
     const [processingInvitation, setProcessingInvitation] = useState<string | null>(null);
+    const [useApprise, setUseApprise] = useState<boolean>(false);
+    const [saving, setSaving] = useState<boolean>(false);
+
+    const [updatedSettings, setUpdatedSettings] = useState<ApiAccountSettingsReadWrite>({});
 
     useEffect(() => {
-        loadSettings();
-        loadHabitInvitations();
-        const loadConfig = async () => {
-            const config = await serverConfigApi.getServerConfig();
-            setShowAppriseField(config.appriseActive);
+        if (settings) setUpdatedSettings(settings);
+    }, [settings]);
+
+    useEffect(() => {
+        const fetchServerConfig = async () => {
+            try {
+                const config = await serverConfigApi.getServerConfig();
+                setUseApprise(config.appriseActive);
+            } catch (error) {
+                console.error('Failed to fetch server config', error);
+            }
         }
-        loadConfig();
+        fetchServerConfig();
     }, []);
 
-    const loadSettings = async () => {
-        try {
-            setLoading(true);
-            const userSettings = await userApi.getUserSettings();
-            setSettings(userSettings);
-            setDisplayName(userSettings.displayName);
-            setEmail(userSettings.email);
-            setIsEmailNotificationsEnabled(userSettings.isEmailNotificationsEnabled);
-            setIsPushNotificationsEnabled(userSettings.isPushNotificationsEnabled);
-            setAppriseTargetUrl(userSettings.appriseTarget || "");
-        } catch (error) {
-            Alert.alert('Error', 'Failed to load settings');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const loadHabitInvitations = async () => {
-        try {
-            const invitations = await userApi.getHabitInvitations();
-            setHabitInvitations(invitations);
-        } catch (error) {
-            console.error('Failed to load habit invitations', error);
-        }
-    };
-
     const saveSettings = async () => {
-        if (!settings) return;
-
+        setSaving(true);
+        if (!updatedSettings) return;
         try {
-            setSaving(true);
-            const updatedSettings = {
-                ...settings,
-                displayName,
-                email,
-                isEmailNotificationsEnabled,
-                isPushNotificationsEnabled,
-                appriseTarget: appriseTargetUrl,
-            };
-
-            await userApi.updateUserSettings(updatedSettings);
+            await updateUserProfile.mutateAsync(updatedSettings);
             alert('Success', 'Settings updated successfully');
         } catch (error) {
             alert('Error', 'Failed to update settings');
@@ -98,9 +71,8 @@ const UserSettingsComponent = () => {
     const handleAcceptInvitation = async (habitUuid: string) => {
         try {
             setProcessingInvitation(habitUuid);
-            await habitApi.acceptInvitation(habitUuid);
+            await acceptInvitation.mutateAsync(habitUuid);
             alert('Success', 'Invitation accepted');
-            await loadHabitInvitations();
         } catch (error) {
             alert('Error', 'Failed to accept invitation');
         } finally {
@@ -111,9 +83,8 @@ const UserSettingsComponent = () => {
     const handleDeclineInvitation = async (habitUuid: string) => {
         try {
             setProcessingInvitation(habitUuid);
-            await habitApi.declineInvitation(habitUuid);
+            await declineInvitation.mutateAsync(habitUuid);
             alert('Success', 'Invitation declined');
-            await loadHabitInvitations();
         } catch (error) {
             alert('Error', 'Failed to decline invitation');
         } finally {
@@ -164,13 +135,13 @@ const UserSettingsComponent = () => {
                 <ThemeToggle/>
 
                 {/* Habit Invitations Section */}
-                {habitInvitations.length > 0 && (
+                {habitInvitations && habitInvitations.length > 0 && (
                     <View style={styles.section}>
                         <Text style={styles.sectionTitle}>Habit Invitations</Text>
                         {habitInvitations.map((habit) => (
                             <View key={habit.uuid} style={styles.invitationItem}>
                                 <View style={styles.invitationHeader}>
-                                    <View style={[styles.habitColorDot, {backgroundColor: `#${habit.color.toString(16).padStart(6, '0')}`}]} />
+                                    <View style={[styles.habitColorDot, {backgroundColor: `#${habit.color?.toString(16).padStart(6, '0')}`}]} />
                                     <Text style={styles.invitationHabitName}>{habit.name}</Text>
                                 </View>
                                 <Text style={styles.invitationFrom}>
@@ -218,8 +189,11 @@ const UserSettingsComponent = () => {
                         <Text style={styles.label}>Display Name</Text>
                         <TextInput
                             style={styles.input}
-                            value={displayName}
-                            onChangeText={setDisplayName}
+                            value={updatedSettings?.displayName}
+                            onChangeText={(text) => setUpdatedSettings({
+                                ...updatedSettings,
+                                displayName: text,
+                            })}
                             placeholder="Enter display name"
                             placeholderTextColor={theme.textTertiary}
                         />
@@ -229,8 +203,11 @@ const UserSettingsComponent = () => {
                         <Text style={styles.label}>Email</Text>
                         <TextInput
                             style={styles.input}
-                            value={email}
-                            onChangeText={setEmail}
+                            value={updatedSettings?.email}
+                            onChangeText={(mail) => setUpdatedSettings({
+                                ...updatedSettings,
+                                email: mail,
+                            })}
                             placeholder="Enter email"
                             placeholderTextColor={theme.textTertiary}
                             keyboardType="email-address"
@@ -250,20 +227,26 @@ const UserSettingsComponent = () => {
                     <View style={styles.switchField}>
                         <Text style={styles.label}>Email Notifications</Text>
                         <Switch
-                            value={isEmailNotificationsEnabled}
-                            onValueChange={setIsEmailNotificationsEnabled}
+                            value={updatedSettings?.isEmailNotificationsEnabled}
+                            onValueChange={(bool) => setUpdatedSettings({
+                                ...updatedSettings,
+                                isEmailNotificationsEnabled: bool,
+                            })}
                             trackColor={{false: theme.disabled, true: theme.primaryLight}}
                             thumbColor={theme.text}
                         />
                     </View>
 
-                    {showAppriseField && (
+                    {useApprise && (
                         <View style={styles.field}>
                             <Text style={styles.label}>Apprise Target URL</Text>
                             <TextInput
                                 style={styles.input}
-                                value={appriseTargetUrl}
-                                onChangeText={setAppriseTargetUrl}
+                                value={settings?.appriseTarget}
+                                onChangeText={(apprise) => setUpdatedSettings({
+                                    ...updatedSettings,
+                                    appriseTarget: apprise,
+                                })}
                                 placeholder="Enter Apprise target URL (optional)"
                                 placeholderTextColor={theme.textTertiary}
                                 autoCapitalize="none"

@@ -6,31 +6,16 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {useHabit} from "@/hooks/useHabits";
+import {useApproveUser, useUnapprovedUsers} from "@/hooks/useUser";
 
 
 const ApproveAccountsScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const [unapprovedUsers, setUnapprovedUsers] = useState<ApiAccountRead[]>([]);
-    const [loading, setLoading] = useState(true);
-
-    useFocusEffect(
-        useCallback(() => {
-            loadUnapprovedUsers();
-        }, [])
-    );
-
-    const loadUnapprovedUsers = async () => {
-        try {
-            const users = await userApi.getUnapprovedUsers();
-            setUnapprovedUsers(users);
-        } catch (error) {
-            alert('Error', 'Failed to load unapproved users');
-        } finally {
-            setLoading(false);
-        }
-    };
+    const {data: unapprovedUsers, isLoading: loading} = useUnapprovedUsers();
+    const approveUserMutation = useApproveUser();
 
     const handleApproveUser = async (user: ApiAccountRead) => {
         alert(
@@ -46,9 +31,8 @@ const ApproveAccountsScreen = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            await userApi.approveUser(user.authenticationId);
+                            await approveUserMutation.mutateAsync(user.authenticationId);
                             alert('Success', `${user.displayName} has been approved`);
-                            loadUnapprovedUsers();
                         } catch (error) {
                             alert('Error', 'Failed to approve user');
                         }
@@ -85,7 +69,7 @@ const ApproveAccountsScreen = () => {
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Approve Accounts</Text>
-            {unapprovedUsers.length === 0 ? (
+            {!unapprovedUsers || unapprovedUsers.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="account-check" size={64} color="#ccc"/>
                     <Text style={styles.emptyStateText}>No pending approvals</Text>

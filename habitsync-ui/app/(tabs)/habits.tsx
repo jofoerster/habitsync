@@ -1,13 +1,13 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useCallback, useState, useRef, useEffect} from 'react';
-import {FlatList, StyleSheet, Text, TouchableOpacity, View, Animated, Easing} from 'react-native';
-import {ApiHabitRead, habitApi} from '@/services/api';
+import React, {useCallback, useState} from 'react';
+import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Link, useFocusEffect} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
+import {useHabits, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
 
 const DateHeader = () => {
     const {theme} = useTheme();
@@ -48,79 +48,16 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const [habits, setHabits] = useState<ApiHabitRead[]>([]);
+    const {data: habits = [], isLoading: loading, refetch} = useHabits();
+
+    const moveHabitUpMutation = useMoveHabitUp();
+    const moveHabitDownMutation = useMoveHabitDown();
+
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
-    const [connectedHabits, setConnectedHabits] = useState<{ [key: string]: ApiHabitRead[] | undefined }>({});
-    const [loading, setLoading] = useState(true);
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
-
-    const rotateAnim = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        let animationRef: Animated.CompositeAnimation | null = null;
-
-        if (loading) {
-            const startRotation = () => {
-                rotateAnim.setValue(0);
-                animationRef = Animated.timing(rotateAnim, {
-                    toValue: 1,
-                    duration: 5000,
-                    easing: Easing.linear,
-                    useNativeDriver: true,
-                });
-                animationRef.start(() => {
-                    if (loading) {
-                        startRotation();
-                    }
-                });
-            };
-            startRotation();
-        } else {
-            if (animationRef) {
-                animationRef.stop();
-            }
-        }
-
-        return () => {
-            if (animationRef) {
-                animationRef.stop();
-            }
-        };
-    }, [rotateAnim, loading]);
-
-    const rotateInterpolate = rotateAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: ['0deg', '360deg'],
-    });
-
-    useFocusEffect(
-        useCallback(() => {
-            loadHabits();
-        }, [])
-    );
-
-    const loadHabits = async () => {
-        try {
-            const userHabits = await habitApi.getUserHabits();
-            setHabits(userHabits);
-        } catch (error) {
-            alert('Error', 'Failed to load habits');
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const toggleHabitExpansion = async (habitUuid: string) => {
         const isExpanded = expandedHabits[habitUuid];
-
-        if (!isExpanded) {
-            try {
-                const connected = await habitApi.getConnectedHabits(habitUuid);
-                setConnectedHabits(prev => ({...prev, [habitUuid]: connected}));
-            } catch (error) {
-                alert('Error', 'Failed to load connected habits');
-            }
-        }
 
         setExpandedHabits(prev => ({
             ...prev,
@@ -128,51 +65,19 @@ const HabitTrackerScreen = () => {
         }));
     };
 
-
-    const handleDragEnd = ({data}: { data: ApiHabitRead[] }) => {
-        setHabits(data);
-    };
-
     const handleMoveUp = async (habitUuid: string) => {
         try {
-            const currentIndex = habits.findIndex(h => h.uuid === habitUuid);
-            if (currentIndex <= 0) return;
-
-            const currentHabit = habits[currentIndex];
-            const aboveHabit = habits[currentIndex - 1];
-
-            const updatedHabits = [...habits];
-            updatedHabits[currentIndex] = {...currentHabit, sortPosition: aboveHabit.sortPosition};
-            updatedHabits[currentIndex - 1] = {...aboveHabit, sortPosition: currentHabit.sortPosition};
-            updatedHabits.sort((a, b) => a.sortPosition - b.sortPosition);
-            setHabits(updatedHabits);
-
-            await habitApi.moveHabitUp(habitUuid);
-        } catch (error) {
+            await moveHabitUpMutation.mutateAsync(habitUuid);
+        } catch (_error) {
             alert('Error', 'Failed to move habit up');
-            loadHabits();
         }
     };
 
     const handleMoveDown = async (habitUuid: string) => {
         try {
-            const currentIndex = habits.findIndex(h => h.uuid === habitUuid);
-            if (currentIndex >= habits.length - 1 || currentIndex === -1) return; // Already at bottom or not found
-
-            const currentHabit = habits[currentIndex];
-            const belowHabit = habits[currentIndex + 1];
-
-            const updatedHabits = [...habits];
-            updatedHabits[currentIndex] = {...currentHabit, sortPosition: belowHabit.sortPosition};
-            updatedHabits[currentIndex + 1] = {...belowHabit, sortPosition: currentHabit.sortPosition};
-            updatedHabits.sort((a, b) => a.sortPosition - b.sortPosition);
-            setHabits(updatedHabits);
-
-            await habitApi.moveHabitDown(habitUuid);
-        } catch (error) {
+            await moveHabitDownMutation.mutateAsync(habitUuid);
+        } catch (_error) {
             alert('Error', 'Failed to move habit down');
-            // Revert on error
-            loadHabits();
         }
     };
 
@@ -184,7 +89,6 @@ const HabitTrackerScreen = () => {
                         source={require('@/assets/images/logo-transparent.png')}
                         style={[
                             styles.logo,
-                            loading && { transform: [{ rotate: rotateInterpolate }] }
                         ]}
                     />
                     <Text style={styles.header}>HabitSync</Text>
@@ -218,7 +122,6 @@ const HabitTrackerScreen = () => {
                             habit={item}
                             isExpanded={expandedHabits[item.uuid]}
                             onToggleExpand={() => toggleHabitExpansion(item.uuid)}
-                            connectedHabits={connectedHabits[item.uuid]}
                             isConnectedHabitView={false}
                             isChallengeHabit={item.isChallengeHabit}
                             hideDates={true}
@@ -242,7 +145,6 @@ const HabitTrackerScreen = () => {
                             habit={item}
                             isExpanded={expandedHabits[item.uuid]}
                             onToggleExpand={() => toggleHabitExpansion(item.uuid)}
-                            connectedHabits={connectedHabits[item.uuid]}
                             isConnectedHabitView={false}
                             isChallengeHabit={item.isChallengeHabit}
                             hideDates={true}

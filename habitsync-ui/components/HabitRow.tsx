@@ -1,7 +1,7 @@
 import {ChevronDown, ChevronUp} from "lucide-react-native";
-import React, {useEffect, useState} from "react";
+import React, {useState} from "react";
 import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import {ApiHabitRead, ApiHabitRecordRead, habitApi, habitRecordApi} from "../services/api";
+import {ApiHabitRead} from "../services/api";
 import NumberModal from "./NumberModal";
 import ProgressRing from "./ProgressRing";
 import {Link} from 'expo-router';
@@ -9,6 +9,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
+import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
 
 
 interface DayButtonProps {
@@ -117,7 +118,6 @@ interface HabitRowProps {
     habit: ApiHabitRead,
     isExpanded: boolean,
     onToggleExpand: () => void,
-    connectedHabits?: ApiHabitRead[],
     isConnectedHabitView?: boolean,
     isChallengeHabit?: boolean,
     onUpdate?: (habit: ApiHabitRead) => void,
@@ -134,7 +134,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                habit,
                                                isExpanded,
                                                onToggleExpand,
-                                               connectedHabits,
                                                isConnectedHabitView,
                                                isChallengeHabit,
                                                onUpdate,
@@ -148,24 +147,21 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                            }) => {
     const {theme} = useTheme();
 
+    const updateHabitRecordMutation = useCreateHabitRecord();
+
     const [modalVisible, setModalVisible] = useState(false);
     const [modalConfig, setModalConfig] = useState({
         epochDay: null,
         habitUuid: null,
     });
-    const [records, setRecords] = useState<Map<number, ApiHabitRecordRead>>(new Map())
-    const [loading, setLoading] = useState(true);
-    const [hasConnectedHabits, setHasConnectedHabits] = useState(!isConnectedHabitView && !isChallengeHabit);
-    const [percentage, setPercentage] = useState(habit.currentPercentage);
-    const [habitColor, setHabitColor] = useState(habit.color);
+    const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit.hasConnectedHabits;
+    const {
+        data: connectedHabits,
+        isLoading: connectedHabitsLoading
+    } = useConnectedHabits(habit.uuid, hasConnectedHabits);
 
-    useEffect(() => {
-        loadHabitRecords();
-    }, []);
-
-    useEffect(() => {
-        checkIfHasConnectedHabits();
-    }, []);
+    const {data: habitFetched, isLoading: loading} = useHabit(habit.uuid, true);
+    const records = loading ? new Map() : new Map(habitFetched!.records.map(record => [record.epochDay, record]));
 
     const formatDate = (date: Date): string =>
         date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}).replace('/', '.');
@@ -189,25 +185,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
         createDay(2, 'dayBeforeYesterday')
     ];
 
-    const loadHabitRecords = async (habitNew: ApiHabitRead | null = null) => {
-        try {
-            const habitToUse = habitNew || habit;
-            setRecords(new Map(habitToUse.records.map(r => [r.epochDay, r])));
-        } catch (error) {
-            alert('Error', 'Failed to load habit records');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const checkIfHasConnectedHabits = async () => {
-        if (isConnectedHabitView || isChallengeHabit) {
-            setHasConnectedHabits(false);
-            return;
-        }
-        setHasConnectedHabits(habit.hasConnectedHabits);
-    }
-
     const getRecordForDay = (epochDay) => {
         if (loading) {
             return {completion: 'LOADING', recordValue: "?"};
@@ -228,12 +205,12 @@ const HabitRow: React.FC<HabitRowProps> = ({
             } else {
                 newRecordValue = oldRecord.recordValue == 0 ? Math.abs(parseFloat(habit.progressComputation.dailyDefault)) : 0;
             }
-            const newRecord = await habitRecordApi.createRecord(habit.uuid, {
-                epochDay: epochDay,
-                recordValue: newRecordValue
+            await updateHabitRecordMutation.mutateAsync({
+                habitUuid: habit.uuid, record: {
+                    epochDay: epochDay,
+                    recordValue: newRecordValue
+                }
             })
-            const updatedHabit = await handleHabitUpdate(habit);
-            await loadHabitRecords(updatedHabit);
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -253,30 +230,16 @@ const HabitRow: React.FC<HabitRowProps> = ({
         try {
             const epochDay = modalConfig.epochDay;
 
-            const newRecord = await habitRecordApi.createRecord(habit.uuid, {
-                epochDay: epochDay,
-                recordValue: parseFloat(value) || 0
-            });
-            const updatedHabit = await handleHabitUpdate(habit);
-            await loadHabitRecords(updatedHabit);
+            updateHabitRecordMutation.mutateAsync({
+                habitUuid: habit.uuid, record: {
+                    epochDay: epochDay,
+                    recordValue: parseFloat(value) || 0
+                }
+            })
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
     };
-
-    const handleHabitUpdate = async (habit: ApiHabitRead) => {
-        try {
-            const updatedHabit = await habitApi.getHabitByUuid(habit.uuid);
-            setPercentage(updatedHabit.currentPercentage);
-            setHabitColor(updatedHabit.color);
-            if (onUpdate) {
-                onUpdate(updatedHabit);
-            }
-            return updatedHabit;
-        } catch (error) {
-            alert('Error', 'Failed to update habit');
-        }
-    }
 
     return (
         <View style={{marginBottom: 16}}>
@@ -301,7 +264,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                         <Pressable style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
                             <View style={{paddingRight: 10}}>
                                 {!hideProgressRing && (
-                                    <ProgressRing color={habitColor} percentage={percentage}/>)}
+                                    <ProgressRing color={habit.color} percentage={habit.currentPercentage}/>)}
                             </View>
                             <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
