@@ -260,12 +260,12 @@ public class Habit {
     public void applyChanges(ComputationReadWriteDTO computationReadWriteDTO) {
         this.dailyGoalUnit = computationReadWriteDTO.getUnit();
         String dailyDefault =
-                computationReadWriteDTO.getDailyDefault().isBlank() ?
+                computationReadWriteDTO.getDailyDefault() == null || computationReadWriteDTO.getDailyDefault().isBlank() ?
                         String.valueOf(computationReadWriteDTO.getDailyReachableValue()) :
                         computationReadWriteDTO.getDailyDefault();
         this.dailyGoal = Math.abs(Double.parseDouble(dailyDefault));
         if (!dailyDefault.equals("1")) {
-            this.defaultDailyOperation = switch (computationReadWriteDTO.getDailyDefault().charAt(0)) {
+            this.defaultDailyOperation = switch (dailyDefault.charAt(0)) {
                 case '+' -> DefaultDailyOperation.ADD;
                 case '-' -> DefaultDailyOperation.SUBTRACT;
                 default -> DefaultDailyOperation.SET;

@@ -672,6 +672,27 @@ export const serverConfigApi = {
     }
 }
 
+// Import API
+export const importApi = {
+    importLoopHabit: async (file: File | Blob): Promise<void> => {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const accessToken = await auth.getAccessToken();
+        const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
+
+        const response = await fetch(`${baseUrl}/api/import/loop-habit`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+            },
+            body: formData,
+        });
+
+        if (!response.ok) throw new Error('Failed to import Loop Habit data');
+    }
+}
+
 const getAuthHeaders = async (): Promise<HeadersInit> => {
     const accessToken = await auth.getAccessToken();
     const headers: HeadersInit = {
