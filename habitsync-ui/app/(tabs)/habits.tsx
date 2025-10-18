@@ -56,13 +56,6 @@ const HabitTrackerScreen = () => {
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
 
-    useFocusEffect(
-        useCallback(() => {
-            console.log("Focus gained, refetch");
-            console.log(habits);
-        }, [refetch])
-    );
-
     const toggleHabitExpansion = async (habitUuid: string) => {
         const isExpanded = expandedHabits[habitUuid];
 

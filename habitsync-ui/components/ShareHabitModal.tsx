@@ -32,7 +32,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
     const [activeTab, setActiveTab] = useState<'share' | 'participants'>('share');
     const [inviteAuthId, setInviteAuthId] = useState('');
-    const {data: participants, isLoading: loadingParticipantsData} = useHabitParticipants(habitDetail.uuid);
+    const {data: participants, isLoading: loadingParticipantsData} = useHabitParticipants(isOwnHabit ? habitDetail.uuid : undefined);
     const inviteParticipantMutation = useInviteParticipant();
     const removeParticipantMutation = useRemoveParticipant();
     const createSharedHabitMutation = useCreateSharedHabit();
@@ -40,7 +40,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
     const [inviting, setInviting] = useState(false);
     const [shareUrl, setShareUrl] = useState('loading...');
 
-    const sharedHabit = sharedHabits.length > 0 ? sharedHabits[0] : null;
+    const sharedHabit = sharedHabits && sharedHabits.length > 0 ? sharedHabits[0] : null;
 
     useEffect(() => {
         loadBackendUrl();
@@ -250,7 +250,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                     <View style={styles.loadingContainer}>
                                         <ActivityIndicator size="small" color={theme.primary}/>
                                     </View>
-                                ) : participants.length > 0 ? (
+                                ) : participants && participants.length > 0 ? (
                                     <View style={styles.participantsList}>
                                         {participants.map((participant) => (
                                             <View key={participant.authenticationId} style={styles.participantItem}>

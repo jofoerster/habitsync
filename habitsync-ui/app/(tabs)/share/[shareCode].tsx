@@ -56,7 +56,6 @@ const SharedHabitDetailsScreen = () => {
         const getCurrentUser = async () => {
             try {
                 const user = await AuthService.getInstance().getCurrentUser();
-                console.log("current user", user);
                 setCurrentUser(user);
             } catch (error) {
                 console.error('Error fetching current user:', error);

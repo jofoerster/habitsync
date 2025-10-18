@@ -141,7 +141,7 @@ const UserSettingsComponent = () => {
                         {habitInvitations.map((habit) => (
                             <View key={habit.uuid} style={styles.invitationItem}>
                                 <View style={styles.invitationHeader}>
-                                    <View style={[styles.habitColorDot, {backgroundColor: `#${habit.color.toString(16).padStart(6, '0')}`}]} />
+                                    <View style={[styles.habitColorDot, {backgroundColor: `#${habit.color?.toString(16).padStart(6, '0')}`}]} />
                                     <Text style={styles.invitationHabitName}>{habit.name}</Text>
                                 </View>
                                 <Text style={styles.invitationFrom}>

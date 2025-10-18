@@ -35,7 +35,7 @@ const HabitDetailsScreen = () => {
 
     const router = useRouter();
     const habitUuid = useLocalSearchParams()['habitUuid'] as string;
-    const isOwnHabit = useLocalSearchParams()['isOwnHabit'] as string;
+    const [isOwnHabit, setIsOwnHabit] = useState<boolean>(false);
 
     const leaveSharedHabitMutation = useLeaveSharedHabit();
 
@@ -60,7 +60,6 @@ const HabitDetailsScreen = () => {
         const getCurrentUser = async () => {
             try {
                 const user = await AuthService.getInstance().getCurrentUser();
-                console.log("current user", user);
                 setCurrentUser(user);
             } catch (error) {
                 console.error('Error fetching current user:', error);
@@ -76,6 +75,12 @@ const HabitDetailsScreen = () => {
                 habitDetail.notificationFrequency.rules.length > 0);
         }
     }, [habitDetail]);
+
+    useEffect(() => {
+        if (currentUser && habitDetail) {
+            setIsOwnHabit(currentUser.authenticationId === habitDetail.account?.authenticationId);
+        }
+    }, [currentUser, habitDetail]);
 
     useEffect(() => {
         if (allSharedHabits) {
@@ -228,7 +233,6 @@ const HabitDetailsScreen = () => {
     }
 
     const handleLongClickOnCalendarItem = async (record?: ApiHabitRecordRead) => {
-        console.log("long click on record", record);
         await handleClickOnCalendarItem(record, true);
     }
 
@@ -290,7 +294,7 @@ const HabitDetailsScreen = () => {
                     </View>
 
                     {/* Action Buttons in Header */}
-                    {isOwnHabit === "true" && !isChallenge && (
+                    {isOwnHabit && !isChallenge && (
                         <View style={styles.headerActions}>
                             <TouchableOpacity
                                 style={styles.headerButton}
@@ -378,7 +382,7 @@ const HabitDetailsScreen = () => {
                 isBooleanHabit={isNonNummericHabit && !isChallenge}
             />
 
-            {habitUuid && isOwnHabit === "true" && habitDetail && (
+            {habitUuid && isOwnHabit && habitDetail && (
                 <NumberModal
                     visible={numberModalVisible}
                     onClose={() => setModalVisible(false)}
@@ -407,7 +411,7 @@ const HabitDetailsScreen = () => {
             )}
 
             {/* Action Buttons */}
-            {isOwnHabit === "true" && !isChallenge && (
+            {isOwnHabit && !isChallenge && (
                 <View style={styles.actionsSection}>
                     <View style={styles.secondaryButtons}>
                         <TouchableOpacity style={styles.secondaryButton} onPress={handleEditHabit}>
@@ -424,7 +428,7 @@ const HabitDetailsScreen = () => {
                         )}
                     </View>
 
-                    {sharedHabits.length > 0 && (
+                    {isOwnHabit && sharedHabits.length > 0 && (
                         <TouchableOpacity style={[styles.secondaryButton, styles.leaveSharedButton]}
                                           onPress={handleLeaveSharedHabit}>
                             <MaterialCommunityIcons name="exit-to-app" size={20} color="#FF9800"/>

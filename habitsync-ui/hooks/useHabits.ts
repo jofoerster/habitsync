@@ -16,7 +16,6 @@ export const habitKeys = {
 };
 
 export const useHabits = () => {
-    console.log("refetch habits");
     return useQuery({
         queryKey: habitKeys.list(),
         queryFn: () => habitApi.getUserHabits(),
@@ -77,10 +76,10 @@ export const useConnectedHabitsCount = (uuid: string, enabled = true) => {
 /**
  * Get habit participants
  */
-export const useHabitParticipants = (uuid: string) => {
+export const useHabitParticipants = (uuid?: string) => {
     return useQuery({
-        queryKey: habitKeys.participants(uuid),
-        queryFn: () => habitApi.listParticipants(uuid),
+        queryKey: habitKeys.participants(uuid!),
+        queryFn: () => habitApi.listParticipants(uuid!),
         enabled: !!uuid,
         staleTime: 1000 * 60 * 2,
     });
