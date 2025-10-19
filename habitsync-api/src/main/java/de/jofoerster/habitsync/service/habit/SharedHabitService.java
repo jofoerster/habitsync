@@ -194,6 +194,15 @@ public class SharedHabitService {
 
     public SharedHabitReadDTO createNewSharedHabit(SharedHabitWriteDTO sharedHabitWrite, Account account,
                                                    HabitService habitService) {
+        Optional<Habit> habitToShareOpt = habitService.getHabitByUuid(sharedHabitWrite.getHabitUuid());
+        if (habitToShareOpt.isEmpty()) {
+            throw new IllegalArgumentException("Habit to share not found with uuid: " + sharedHabitWrite.getHabitUuid());
+        } else {
+            List<SharedHabit> shts = this.getSharedHabitsByHabit(habitService.getHabitByUuid(sharedHabitWrite.getHabitUuid()).get());
+            if (!shts.isEmpty()) {
+                throw new IllegalArgumentException("Habit is already shared in a shared habit.");
+            }
+        }
         SharedHabit sharedHabit = new SharedHabit();
         sharedHabit.setTitle(sharedHabitWrite.getTitle());
         sharedHabit.setDescription(sharedHabitWrite.getDescription());
