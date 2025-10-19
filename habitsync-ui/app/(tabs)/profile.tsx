@@ -10,6 +10,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import {ApiAccountSettingsReadWrite, ApiHabitRead, habitApi, serverConfigApi, userApi} from "@/services/api";
 import alert from "@/services/alert";
 import {AuthService} from "@/services/auth";
@@ -99,7 +100,18 @@ const UserSettingsComponent = () => {
     const handleCreateApiKey = async () => {
         try {
             const apiKey = await userApi.getApiKey();
-            alert('API Key Created', `Your API Key: ${apiKey}\n\nPlease save this key securely. You won't be able to see it again.`);
+            alert('API Key Created', `Your API Key: ${apiKey}\n\nPlease save this key securely. You won't be able to see it again.`, [
+                {
+                    text: 'Copy',
+                    onPress: async () => {
+                        await Clipboard.setStringAsync(apiKey);
+                    },
+                },
+                {
+                    text: 'OK',
+                    style: 'cancel',
+                },
+            ]);
         } catch (error) {
             alert('Error', 'Failed to create API key');
         }
