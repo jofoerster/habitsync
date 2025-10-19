@@ -122,8 +122,6 @@ password `PASSWORD`.
 
 ### Docker Compose (Recommended for production use)
 
-See `docker-compose.yml` for more details on how to run the application using Docker Compose.
-
 ```
 services:
   web:
