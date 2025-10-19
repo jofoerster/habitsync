@@ -1,6 +1,6 @@
 import {Plus, X} from "lucide-react-native";
 import React, {useCallback, useEffect, useRef, useState} from "react";
-import {Modal, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {Modal, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead, habitNumberModalApi} from "../services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
@@ -162,45 +162,29 @@ const NumberModal: React.FC<NumberModalProps> = ({
     return (
         <Modal visible={visible} transparent animationType={"fade"}>
             <TouchableOpacity
-                style={{
-                    flex: 1,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    justifyContent: 'center',
-                    alignItems: 'center'
-                }}
+                style={styles.modalOverlay}
                 activeOpacity={1}
                 onPress={onClose}
             >
                 <TouchableOpacity
-                    style={{
-                        backgroundColor: theme.surfaceTertiary,
-                        borderRadius: 12,
-                        padding: 20,
-                        width: '90%',
-                        maxWidth: 400
-                    }}
+                    style={[styles.modalContent, {backgroundColor: theme.surfaceTertiary}]}
                     activeOpacity={1}
                     onPress={(e) => e.stopPropagation()}
                 >
-                    <View style={{
-                        flexDirection: 'row',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        marginBottom: 20
-                    }}>
-                        <View style={{flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap'}}>
+                    <View style={styles.header}>
+                        <View style={styles.headerTitleContainer}>
                             <TouchableOpacity onPress={onShowValueFields}>
-                                <Text style={{fontSize: 18, fontWeight: 'bold', color: '#2196F3'}}>
+                                <Text style={styles.headerTitleValue}>
                                     Set Value
                                 </Text>
                             </TouchableOpacity>
 
                             {showStopwatch && (
-                                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                                    <Text style={{fontSize: 18, fontWeight: 'bold'}}> or </Text>
+                                <View style={styles.headerTitleRow}>
+                                    <Text style={styles.headerTitleOr}> or </Text>
                                     <TouchableOpacity onPress={onUseTimer}>
-                                        <Text style={{color: '#d36666', fontSize: 18, fontWeight: 'bold'}}>
-                                            Start Stopwatch <MaterialCommunityIcons style={{fontSize: 18}}
+                                        <Text style={styles.headerTitleStopwatch}>
+                                            Start Stopwatch <MaterialCommunityIcons style={styles.timerIcon}
                                                                                     name={"timer"}/>
                                         </Text>
                                     </TouchableOpacity>
@@ -214,121 +198,59 @@ const NumberModal: React.FC<NumberModalProps> = ({
 
                     {showValueFields ? (
                         <View>
-                            <View style={{
+                            <View style={[styles.section, {
                                 backgroundColor: theme.surface,
-                                borderRadius: 12,
-                                padding: 16,
-                                marginBottom: 20,
-                                borderWidth: 1,
                                 borderColor: theme.border || '#e0e0e0'
-                            }}>
-                                <Text style={{
-                                    fontSize: 16,
-                                    fontWeight: '600',
-                                    color: theme.text,
-                                    marginBottom: 12,
-                                    textAlign: 'center'
-                                }}>
+                            }]}>
+                                <Text style={[styles.sectionTitle, {color: theme.text}]}>
                                     Quick Values
                                 </Text>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    flexWrap: 'wrap',
-                                    justifyContent: 'center',
-                                    gap: 8
-                                }}>
+                                <View style={styles.quickValuesContainer}>
                                     {numbers.map((num) => (
                                         <TouchableOpacity
                                             key={num}
-                                            style={{
-                                                backgroundColor: theme.primary || '#2196F3',
-                                                borderRadius: 12,
-                                                paddingVertical: 14,
-                                                paddingHorizontal: 18,
-                                                minWidth: 60,
-                                                alignItems: 'center',
-                                                shadowColor: '#000',
-                                                shadowOffset: {width: 0, height: 2},
-                                                shadowOpacity: 0.1,
-                                                shadowRadius: 4,
-                                                elevation: 3
-                                            }}
+                                            style={[styles.quickValueButton, {
+                                                backgroundColor: theme.primary || '#2196F3'
+                                            }]}
                                             onPress={() => handleSubmit(num)}
                                             onLongPress={() => handleRemoveNumber(num)}
                                         >
-                                            <Text style={{
-                                                fontSize: 18,
-                                                fontWeight: '700',
-                                                color: 'white'
-                                            }}>
+                                            <Text style={styles.quickValueText}>
                                                 {num}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
                                 </View>
                                 {numbers.length === 0 && (
-                                    <Text style={{
-                                        textAlign: 'center',
-                                        color: theme.textSecondary || '#666',
-                                        fontStyle: 'italic',
-                                        marginTop: 8
-                                    }}>
+                                    <Text style={[styles.emptyText, {color: theme.textSecondary || '#666'}]}>
                                         No quick values added yet
                                     </Text>
                                 )}
                             </View>
 
-                            <View style={{
+                            <View style={[styles.section, {
                                 backgroundColor: theme.surface,
-                                borderRadius: 12,
-                                padding: 16,
-                                marginBottom: 20,
-                                borderWidth: 1,
                                 borderColor: theme.border || '#e0e0e0'
-                            }}>
-                                <Text style={{
-                                    fontSize: 16,
-                                    fontWeight: '600',
-                                    color: theme.text,
-                                    marginBottom: 12,
-                                    textAlign: 'center'
-                                }}>
+                            }]}>
+                                <Text style={[styles.sectionTitle, {color: theme.text}]}>
                                     Custom Value
                                 </Text>
-                                <View style={{
-                                    flexDirection: 'row',
-                                    alignItems: 'center',
-                                    gap: 12
-                                }}>
+                                <View style={styles.customValueRow}>
                                     <TextInput
-                                        style={{
-                                            flex: 1,
-                                            borderWidth: 2,
+                                        style={[styles.textInput, {
                                             borderColor: theme.border || '#e0e0e0',
-                                            borderRadius: 10,
-                                            padding: 16,
-                                            fontSize: 16,
                                             color: theme.text,
-                                            backgroundColor: theme.background,
-                                            textAlign: 'center',
-                                            width: '100%'
-                                        }}
+                                            backgroundColor: theme.background
+                                        }]}
                                         value={inputValue}
                                         onChangeText={setInputValue}
                                         placeholder="Enter value"
                                         placeholderTextColor={theme.textSecondary || '#666'}
                                     />
                                     <TouchableOpacity
-                                        style={{
-                                            backgroundColor: theme.secondary || '#FF9800',
-                                            borderRadius: 10,
-                                            padding: 16,
-                                            shadowColor: '#000',
-                                            shadowOffset: {width: 0, height: 2},
-                                            shadowOpacity: 0.1,
-                                            shadowRadius: 4,
-                                            elevation: 3
-                                        }}
+                                        style={[styles.addButton, {
+                                            backgroundColor: theme.secondary || '#FF9800'
+                                        }]}
                                         onPress={handleAddNumber}
                                     >
                                         <Plus size={20} color="white"/>
@@ -337,61 +259,24 @@ const NumberModal: React.FC<NumberModalProps> = ({
                             </View>
                         </View>
                     ) : (
-                        <View style={{
-                            backgroundColor: '#1a1a1a',
-                            borderRadius: 16,
-                            padding: 24,
-                            marginBottom: 20,
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            minHeight: 120,
-                            shadowColor: '#000',
-                            shadowOffset: {width: 0, height: 2},
-                            shadowOpacity: 0.25,
-                            shadowRadius: 4,
-                            elevation: 5
-                        }}>
+                        <View style={styles.timerDisplay}>
                             {isDelayedStartActive ? (
-                                <View style={{alignItems: 'center'}}>
-                                    <Text style={{
-                                        fontSize: 48,
-                                        fontWeight: '700',
-                                        color: '#ff6b35',
-                                        fontFamily: 'monospace',
-                                        textAlign: 'center'
-                                    }}>
+                                <View style={styles.timerContent}>
+                                    <Text style={styles.delayedCountdownText}>
                                         {delayedStartCountdown}
                                     </Text>
-                                    <Text style={{
-                                        fontSize: 16,
-                                        color: '#888',
-                                        marginTop: 8,
-                                        textAlign: 'center'
-                                    }}>
+                                    <Text style={styles.delayedCountdownLabel}>
                                         Starting in...
                                     </Text>
                                 </View>
                             ) : (
-                                <View style={{alignItems: 'center'}}>
-                                    <Text style={{
-                                        fontSize: 42,
-                                        fontWeight: '600',
-                                        color: '#00ff88',
-                                        fontFamily: 'monospace',
-                                        textAlign: 'center',
-                                        letterSpacing: 2
-                                    }}>
+                                <View style={styles.timerContent}>
+                                    <Text style={styles.timerMainText}>
                                         {hours.toString().padStart(2, '0')}:
                                         {minutes.toString().padStart(2, '0')}:
                                         {seconds.toString().padStart(2, '0')}
                                     </Text>
-                                    <Text style={{
-                                        fontSize: 24,
-                                        fontWeight: '400',
-                                        color: '#888',
-                                        fontFamily: 'monospace',
-                                        marginTop: 4
-                                    }}>
+                                    <Text style={styles.timerMilliseconds}>
                                         .{milliseconds.toString().padStart(2, '0')}
                                     </Text>
                                 </View>
@@ -401,61 +286,37 @@ const NumberModal: React.FC<NumberModalProps> = ({
 
                     {showValueFields ? (
                         <TouchableOpacity
-                            style={{
-                                backgroundColor: theme.success || '#4CAF50',
-                                borderRadius: 12,
-                                padding: 18,
-                                alignItems: 'center',
-                                shadowColor: '#000',
-                                shadowOffset: {width: 0, height: 2},
-                                shadowOpacity: 0.15,
-                                shadowRadius: 4,
-                                elevation: 4
-                            }}
+                            style={[styles.submitButton, {
+                                backgroundColor: theme.success || '#4CAF50'
+                            }]}
                             onPress={() => handleSubmit(inputValue)}
                         >
-                            <Text style={{
-                                color: 'white',
-                                fontSize: 18,
-                                fontWeight: '700'
-                            }}>
+                            <Text style={styles.submitButtonText}>
                                 Submit Value
                             </Text>
                         </TouchableOpacity>
                     ) : (
-                        <View style={{flexDirection: 'row', gap: 8}}>
-                            <View style={{flex: 1, gap: 8}}>
+                        <View style={styles.timerControls}>
+                            <View style={styles.timerControlsLeft}>
                                 <TouchableOpacity
-                                    style={{
-                                        backgroundColor: isTimerRunning ? '#da0430' : '#4CAF50',
-                                        borderRadius: 8,
-                                        paddingVertical: 16,
-                                        paddingHorizontal: 12,
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        minHeight: 50
-                                    }}
+                                    style={[styles.timerButton, {
+                                        backgroundColor: isTimerRunning ? '#da0430' : '#4CAF50'
+                                    }]}
                                     onPress={() => startAndStopTimer()}
                                 >
-                                    <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>
+                                    <Text style={styles.timerButtonText}>
                                         {isTimerRunning ? 'Stop' : 'Start'}
                                     </Text>
                                 </TouchableOpacity>
 
                                 {!isTimerRunning && (
                                     <TouchableOpacity
-                                        style={{
-                                            backgroundColor: isDelayedStartActive ? '#ff6b35' : '#FF9800',
-                                            borderRadius: 8,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 12,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            minHeight: 50
-                                        }}
+                                        style={[styles.timerButton, {
+                                            backgroundColor: isDelayedStartActive ? '#ff6b35' : '#FF9800'
+                                        }]}
                                         onPress={startDelayedTimer}
                                     >
-                                        <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>
+                                        <Text style={styles.timerButtonText}>
                                             {isDelayedStartActive ? 'Cancel' : 'Delayed Start'}
                                         </Text>
                                     </TouchableOpacity>
@@ -463,55 +324,41 @@ const NumberModal: React.FC<NumberModalProps> = ({
 
                                 {(!isTimerRunning && timerTime !== 0) && (
                                     <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#ea3b4e',
-                                            borderRadius: 8,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 12,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            minHeight: 50
-                                        }}
+                                        style={[styles.timerButton, styles.timerResetButton]}
                                         onPress={() => resetTimer()}
                                     >
-                                        <Text style={{color: 'white', fontSize: 16, fontWeight: 'bold'}}>Reset</Text>
+                                        <Text style={styles.timerButtonText}>Reset</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
-                            <View style={{gap: 8, justifyContent: 'flex-start'}}>
+                            <View style={styles.timerControlsRight}>
                                 {(!isTimerRunning && timerTime !== 0) && (
                                     <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#4998a7',
-                                            borderRadius: 8,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 12,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            minHeight: 50
-                                        }}
+                                        style={[styles.timerButton, styles.timerSubmitButton]}
                                         onPress={() => handleSubmit(Math.floor(timerTime / 1000).toString())}
                                     >
-                                        <Text style={{color: 'white', fontSize: 14, fontWeight: 'bold'}}>
+                                        <Text style={styles.timerSubmitButtonText}>
                                             Submit: {Math.floor(timerTime / 1000)}s
                                         </Text>
                                     </TouchableOpacity>
                                 )}
                                 {(!isTimerRunning && timerTime >= 60000) && (
                                     <TouchableOpacity
-                                        style={{
-                                            backgroundColor: '#4998a7',
-                                            borderRadius: 8,
-                                            paddingVertical: 16,
-                                            paddingHorizontal: 12,
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            minHeight: 50
-                                        }}
+                                        style={[styles.timerButton, styles.timerSubmitButton]}
                                         onPress={() => handleSubmit(Math.floor(timerTime / 60000).toString())}
                                     >
-                                        <Text style={{color: 'white', fontSize: 14, fontWeight: 'bold'}}>
+                                        <Text style={styles.timerSubmitButtonText}>
                                             Submit: {Math.floor(timerTime / 60000)}m
+                                        </Text>
+                                    </TouchableOpacity>
+                                )}
+                                {(!isTimerRunning && timerTime >= 60000) && (
+                                    <TouchableOpacity
+                                        style={[styles.timerButton, styles.timerSubmitButton]}
+                                        onPress={() => handleSubmit((Math.round((timerTime / 60000) * 100) / 100).toString())}
+                                    >
+                                        <Text style={styles.timerSubmitButtonText}>
+                                            Submit: {Math.round((timerTime / 60000) * 100) / 100}m
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -525,4 +372,211 @@ const NumberModal: React.FC<NumberModalProps> = ({
     );
 };
 
+const styles = StyleSheet.create({
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        borderRadius: 12,
+        padding: 20,
+        width: '90%',
+        maxWidth: 400,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    headerTitleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+    headerTitleRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    headerTitleValue: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#2196F3',
+    },
+    headerTitleOr: {
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    headerTitleStopwatch: {
+        color: '#d36666',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    timerIcon: {
+        fontSize: 18,
+    },
+    section: {
+        borderRadius: 12,
+        padding: 16,
+        marginBottom: 20,
+        borderWidth: 1,
+    },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    quickValuesContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    quickValueButton: {
+        borderRadius: 12,
+        paddingVertical: 14,
+        paddingHorizontal: 18,
+        minWidth: 60,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    quickValueText: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: 'white',
+    },
+    emptyText: {
+        textAlign: 'center',
+        fontStyle: 'italic',
+        marginTop: 8,
+    },
+    customValueRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+    },
+    textInput: {
+        flex: 1,
+        borderWidth: 2,
+        borderRadius: 10,
+        padding: 16,
+        fontSize: 16,
+        textAlign: 'center',
+        width: '100%',
+    },
+    addButton: {
+        borderRadius: 10,
+        padding: 16,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    timerDisplay: {
+        backgroundColor: '#1a1a1a',
+        borderRadius: 16,
+        padding: 24,
+        marginBottom: 20,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 120,
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    timerContent: {
+        alignItems: 'center',
+    },
+    delayedCountdownText: {
+        fontSize: 48,
+        fontWeight: '700',
+        color: '#ff6b35',
+        fontFamily: 'monospace',
+        textAlign: 'center',
+    },
+    delayedCountdownLabel: {
+        fontSize: 16,
+        color: '#888',
+        marginTop: 8,
+        textAlign: 'center',
+    },
+    timerMainText: {
+        fontSize: 42,
+        fontWeight: '600',
+        color: '#00ff88',
+        fontFamily: 'monospace',
+        textAlign: 'center',
+        letterSpacing: 2,
+    },
+    timerMilliseconds: {
+        fontSize: 24,
+        fontWeight: '400',
+        color: '#888',
+        fontFamily: 'monospace',
+        marginTop: 4,
+    },
+    submitButton: {
+        borderRadius: 12,
+        padding: 18,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {width: 0, height: 2},
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    submitButtonText: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '700',
+    },
+    timerControls: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    timerControlsLeft: {
+        flex: 1,
+        gap: 8,
+    },
+    timerControlsRight: {
+        gap: 8,
+        justifyContent: 'flex-start',
+    },
+    timerButton: {
+        borderRadius: 8,
+        paddingVertical: 16,
+        paddingHorizontal: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: 50,
+    },
+    timerResetButton: {
+        backgroundColor: '#ea3b4e',
+    },
+    timerSubmitButton: {
+        backgroundColor: '#4998a7',
+    },
+    timerButtonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
+    timerSubmitButtonText: {
+        color: 'white',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+});
+
 export default NumberModal;
+
