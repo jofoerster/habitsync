@@ -175,8 +175,8 @@ public class Habit {
                 prefix + this.getReachableDailyValue();
     }
 
-    public void copyAttributesFromHabit(Habit iH) {
-        if (iH.dailyGoal != null) {
+    public void copyAttributesFromHabit(Habit iH, boolean isSharedHabitSync) {
+        if (iH.dailyGoal != null && !isSharedHabitSync) {
             this.dailyGoal = iH.dailyGoal;
         }
         if (iH.dailyGoalExtra != null) {

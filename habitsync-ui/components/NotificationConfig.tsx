@@ -368,7 +368,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                     />
                                 </View>
                                 <View style={styles.switchContainer}>
-                                    <Text style={styles.switchLabel}>Notify only when streak will be lost</Text>
+                                    <Text style={styles.switchLabel}>Notify only when not completed by streak</Text>
                                     <Switch
                                         value={tempFixedConfig.triggerOnlyWhenStreakLost || false}
                                         onValueChange={(value) => setTempFixedConfig(prev => ({
