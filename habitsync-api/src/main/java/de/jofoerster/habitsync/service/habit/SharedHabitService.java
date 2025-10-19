@@ -120,7 +120,7 @@ public class SharedHabitService {
         if (notificationRuleOpt.isEmpty() || notificationRuleOpt.get().getInternalHabitForComputationOfGoal() == null) {
             return false;
         }
-        habit.copyAttributesFromHabit(notificationRuleOpt.get().getInternalHabitForComputationOfGoal());
+        habit.copyAttributesFromHabit(notificationRuleOpt.get().getInternalHabitForComputationOfGoal(), true);
         habitRepository.save(habit);
         return true;
     }
