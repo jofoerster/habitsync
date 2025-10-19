@@ -45,6 +45,7 @@ tracking.
 
 - **Flexible habit tracking** with customizable goals and frequencies
 - **Variety of habit types**: daily, weekly, monthly, or custom intervals
+- **Negative habits** to track and reduce unwanted behaviors
 
 ### 👥 **Social & Sharing Features**
 
@@ -75,9 +76,15 @@ tracking.
 - **Easy Docker deployment** for quick setup
 - **API-first architecture** swagger docs available, ready for external integrations (see [API](#api-documentation))
 
+### 📥 **Import**
+- **Import your data** from Loop Habit Tracker
+
 ## Download mobile App
 
 [<img alt="Get it on GitHub" src="https://raw.githubusercontent.com/Kunzisoft/Github-badge/main/get-it-on-github.png" width="240">](https://github.com/jofoerster/habitsync/releases/latest)
+
+I recommend using [Obtainium](https://github.com/ImranR98/Obtainium) to keep the app updated.
+Please be aware that the mobile app is in development and needs to be kept up to date with the server version.
 
 ## Integrate with Home Assistant
 
