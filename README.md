@@ -8,6 +8,18 @@
 
 </div>
 
+<p align="center">
+    <a href="https://github.com/jofoerster/habitsync/actions/workflows/release.yml">
+        <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/jofoerster/habitsync/release.yml">
+    </a>
+    <a href="https://ghcr.io/jofoerster/habitsync">
+       <img alt="Docker Pulls" src="https://img.shields.io/badge/dynamic/json?url=https://ghcr-badge.elias.eu.org/api/jofoerster/habitsync/habitsync&query=downloadCount&label=docker%20pulls">
+    </a>
+    <a href="https://github.com/jofoerster/habitsync/releases/latest">
+        <img alt="latest release" src="https://img.shields.io/github/release/jofoerster/habitsync.svg">
+    </a>
+</p>
+
 <div align="center">
   A powerful, self-hostable habit tracking platform with social features.
 
