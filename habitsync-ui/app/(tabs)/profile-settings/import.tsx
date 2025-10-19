@@ -92,7 +92,7 @@ const ImportScreen = () => {
                         <Text style={styles.featuresTitle}>What will be imported:</Text>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="check-circle" size={16} color={theme.success} />
-                            <Text style={styles.featureText}>Habit names and colors</Text>
+                            <Text style={styles.featureText}>Habits</Text>
                         </View>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="check-circle" size={16} color={theme.success} />
