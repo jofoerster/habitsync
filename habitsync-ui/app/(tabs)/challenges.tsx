@@ -41,7 +41,6 @@ const ChallengesScreen = () => {
     const deleteChallengeMutation = useDeleteChallenge();
 
     const [votes, setVotes] = useState<Map<number, boolean>>(new Map<number, boolean>);
-    const [refreshing, setRefreshing] = useState(false);
     const [activeTab, setActiveTab] = useState<'active' | 'proposed' | 'created'>('active');
     const [currentTime, setCurrentTime] = useState(new Date());
 
@@ -75,17 +74,6 @@ const ChallengesScreen = () => {
         return () => clearInterval(timer);
     }, []);
 
-    const fetchData = useCallback(async () => {
-        try {
-            await refetch();
-        } catch (error) {
-            console.error('Error fetching challenges:', error);
-            alert('Error', 'Failed to load challenges');
-        } finally {
-            setRefreshing(false);
-        }
-    }, [refetch]);
-
     const formatFrequency = (progressComputation: ApiComputationReadWrite) => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
 
@@ -114,12 +102,6 @@ const ChallengesScreen = () => {
             return "Monthly";
         }
     }
-
-    useFocusEffect(
-        useCallback(() => {
-            fetchData();
-        }, [fetchData])
-    );
 
     const handleVote = async (item: ApiChallengeRead, vote: boolean) => {
         try {
@@ -386,7 +368,6 @@ const ChallengesScreen = () => {
                         isExpanded={false}
                         onToggleExpand={() => {
                         }}
-                        onUpdate={() => fetchData()}
                         connectedHabits={[]}
                         isConnectedHabitView={false}
                         isChallengeHabit={true}
@@ -452,7 +433,7 @@ const ChallengesScreen = () => {
             );
         }
         return null;
-    }, [activeTab, challengeHabit, challengeOverview, fetchData, currentUser?.authenticationId]);
+    }, [activeTab, challengeHabit, challengeOverview, currentUser?.authenticationId]);
 
     const renderSegmentedControl = () => {
         const counts = getTabCounts();
@@ -632,8 +613,6 @@ const ChallengesScreen = () => {
                 data={challenges}
                 renderItem={renderChallengeItem}
                 keyExtractor={item => item.id.toString()}
-                refreshing={refreshing}
-                onRefresh={fetchData}
                 contentContainerStyle={styles.listContent}
                 ListFooterComponent={renderFooter}
                 showsVerticalScrollIndicator={false}
