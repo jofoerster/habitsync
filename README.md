@@ -8,6 +8,18 @@
 
 </div>
 
+<p align="center">
+    <a href="https://github.com/jofoerster/habitsync/actions/workflows/release.yml">
+        <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/jofoerster/habitsync/release.yml">
+    </a>
+    <a href="https://ghcr.io/jofoerster/habitsync">
+       <img alt="Docker Pulls" src="https://img.shields.io/badge/dynamic/json?url=https://ghcr-badge.elias.eu.org/api/jofoerster/habitsync/habitsync&query=downloadCount&label=docker%20pulls">
+    </a>
+    <a href="https://github.com/jofoerster/habitsync/releases/latest">
+        <img alt="latest release" src="https://img.shields.io/github/release/jofoerster/habitsync.svg">
+    </a>
+</p>
+
 <div align="center">
   A powerful, self-hostable habit tracking platform with social features.
 
@@ -110,8 +122,6 @@ password `PASSWORD`.
 
 ### Docker Compose (Recommended for production use)
 
-See `docker-compose.yml` for more details on how to run the application using Docker Compose.
-
 ```
 services:
   web:
@@ -122,6 +132,7 @@ services:
       # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
       # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback
       # more than one issuer can be configured
+      # scopes: openid, profile, email
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_NEEDS-CONFIRMATION=true # New users need to to be 'let in' by other user, default: true 
@@ -179,10 +190,9 @@ To use PostgreSQL, set the following environment variables:
 ## API Documentation
 
 The API is incomplete and may change. Please create an issue if a specific endpoint is needed/missing.
-The Swagger API documentation is available at `/swagger-ui/index.html` (
-or [here](https://demo.habitsync.de/swagger-ui/index.html)).
+The Swagger API documentation is available at `/swagger-ui/index.html` (or [here](https://demo.habitsync.de/swagger-ui/index.html)).
 To access the API, you can use either Basic Auth
-or (WIP) generate an access token by using the `GET /api/user/api-key` endpoint.
+or generate an access token in the ui (profile page) or by using the `GET /api/user/api-key` endpoint.
 
 ## Contributing and Help
 
