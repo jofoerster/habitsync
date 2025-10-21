@@ -861,10 +861,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         justifyContent: 'space-between',
     },
     colorOption: {
-        width: (width - 80) / 5 - 8,
+        width: (width - 95) / 5 - 8,
         height: 50,
         borderRadius: 25,
         marginBottom: 12,
+        marginHorizontal: 7.5,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: theme.shadow,
