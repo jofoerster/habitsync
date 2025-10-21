@@ -244,9 +244,22 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             setIsNumericalHabit(value);
             if (!value) {
                 setDailyDefault('1');
-                setDailyReachableValue('1');
                 setUnit('');
                 setIsAsMuchAsPossibleChallenge(false);
+                if (!isNegative) {
+                    setDailyReachableValue('1');
+                } else {
+                    setDailyReachableValue('0');
+                    setDailyDefault("1");
+                }
+            }
+        };
+
+        const switchNegativeHabit = (value: boolean) => {
+            setIsNegative(value);
+            if (value) {
+                setDailyReachableValue('0');
+                setDailyDefault("1");
             }
         };
 
@@ -721,7 +734,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                         <Switch
                             value={isNegative}
-                            onValueChange={setIsNegative}
+                            onValueChange={switchNegativeHabit}
                             disabled={isFieldLocked()}
                             trackColor={{false: theme.disabled, true: theme.primaryLight}}
                             thumbColor={theme.primary}
