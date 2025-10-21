@@ -26,7 +26,7 @@
 Transform your daily routines into lasting habits while connecting with friends through shared challenges and progress
 tracking.
 
-**Try the Demo: [https://demo.habitsync.de](https://demo.habitsync.de)** (back soon)
+**Try the Demo: [https://demo.habitsync.de](https://demo.habitsync.de)**
 
 </div>
 
