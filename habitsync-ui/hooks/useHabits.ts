@@ -1,5 +1,6 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiHabitRead, ApiHabitRecordWrite, ApiHabitWrite, habitApi, habitRecordApi,} from '@/services/api';
+import {challengeKeys} from "@/hooks/useChallenges";
 
 export const habitKeys = {
     all: ['habits'] as const,
@@ -228,6 +229,11 @@ export const useCreateHabitRecord = () => {
             queryClient.invalidateQueries({
                 queryKey: [...habitKeys.detail(habitUuid), 'percentage-history']
             });
+
+            // Invalidate challenge view
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview()
+            })
         },
     });
 };

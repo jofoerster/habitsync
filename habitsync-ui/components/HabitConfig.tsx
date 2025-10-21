@@ -244,9 +244,22 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             setIsNumericalHabit(value);
             if (!value) {
                 setDailyDefault('1');
-                setDailyReachableValue('1');
                 setUnit('');
                 setIsAsMuchAsPossibleChallenge(false);
+                if (!isNegative) {
+                    setDailyReachableValue('1');
+                } else {
+                    setDailyReachableValue('0');
+                    setDailyDefault("1");
+                }
+            }
+        };
+
+        const switchNegativeHabit = (value: boolean) => {
+            setIsNegative(value);
+            if (value) {
+                setDailyReachableValue('0');
+                setDailyDefault("1");
             }
         };
 
@@ -721,7 +734,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                         <Switch
                             value={isNegative}
-                            onValueChange={setIsNegative}
+                            onValueChange={switchNegativeHabit}
                             disabled={isFieldLocked()}
                             trackColor={{false: theme.disabled, true: theme.primaryLight}}
                             thumbColor={theme.primary}
@@ -861,10 +874,11 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         justifyContent: 'space-between',
     },
     colorOption: {
-        width: (width - 80) / 5 - 8,
+        width: (width - 95) / 5 - 8,
         height: 50,
         borderRadius: 25,
         marginBottom: 12,
+        marginHorizontal: 7.5,
         justifyContent: 'center',
         alignItems: 'center',
         shadowColor: theme.shadow,

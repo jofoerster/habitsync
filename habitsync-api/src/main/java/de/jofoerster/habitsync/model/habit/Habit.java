@@ -208,7 +208,7 @@ public class Habit {
     }
 
     public Double getReachableDailyValue() {
-        if (dailyGoalExtra == null || dailyGoalExtra == 0) {
+        if (dailyGoalExtra == null || (dailyGoalExtra == 0 && !getIsNegative())) {
             return getDailyGoal();
         } else {
             return dailyGoalExtra;
