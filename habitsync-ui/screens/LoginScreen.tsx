@@ -75,7 +75,7 @@ const LoginScreen = () => {
     const handleOAuth2Login = async (provider: SupportedOIDCIssuer) => {
         try {
             await loginWithOAuth2Provider(provider, redirectPath || '/');
-            console.log('OAuth login successful');
+            console.log('OAuth login completed');
         } catch (error) {
             console.error('OAuth2 login failed:', error);
             alert(

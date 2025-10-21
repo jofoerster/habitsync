@@ -1,10 +1,7 @@
 import * as AuthSession from 'expo-auth-session';
 import {DiscoveryDocument} from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import {SupportedOIDCIssuer} from "@/services/api";
 import {secureStorage} from "@/services/storage";
-
-WebBrowser.maybeCompleteAuthSession();
 
 export interface AuthResult {
     type: 'success' | 'error' | 'cancel';
@@ -34,12 +31,20 @@ export class OAuthService {
         redirectPath?: string
     ): Promise<AuthResult> {
         try {
+            console.log('[OAuth] Starting login with provider:', provider.name);
+
             if (!provider.clientId) {
                 return {type: 'error', error: `Client ID not configured for ${provider.name}`};
             }
 
             const redirectUri = this.getRedirectUri();
+            console.log('[OAuth] Redirect URI:', redirectUri);
+
             const discovery = await this.getDiscoveryDocument(provider);
+            console.log('[OAuth] Discovery endpoints:', {
+                auth: discovery.authorizationEndpoint,
+                token: discovery.tokenEndpoint
+            });
 
             const request = new AuthSession.AuthRequest({
                 clientId: provider.clientId,
@@ -53,12 +58,14 @@ export class OAuthService {
                 usePKCE: true,
             });
 
+            console.log('[OAuth] Calling promptAsync, waiting for user authentication...');
             const result = await request.promptAsync(discovery);
+            console.log('[OAuth] promptAsync completed with type:', result.type);
 
             return this.handleAuthResult(result, request, discovery, provider);
 
         } catch (error) {
-            console.error('OAuth login error:', error);
+            console.error('[OAuth] Login error:', error);
             return {
                 type: 'error',
                 error: error instanceof Error ? error.message : 'Unknown OAuth error',
@@ -72,9 +79,12 @@ export class OAuthService {
         discovery: AuthSession.DiscoveryDocument,
         provider: SupportedOIDCIssuer
     ): Promise<AuthResult> {
+        console.log('[OAuth] Handling auth result, type:', result.type);
+
         if (result.type === 'success') {
+            console.log('[OAuth] Success! Has code:', !!result.params?.code);
             try {
-                const tokenExchangeParams = {
+                const tokenExchangeParams: any = {
                     clientId: request.clientId,
                     code: result.params.code,
                     redirectUri: request.redirectUri,
@@ -87,11 +97,13 @@ export class OAuthService {
                     tokenExchangeParams.clientSecret = provider.clientSecret;
                 }
 
+                console.log('[OAuth] Exchanging code for tokens...');
                 const tokenResponse = await AuthSession.exchangeCodeAsync(
                     tokenExchangeParams,
                     discovery
                 );
 
+                console.log('[OAuth] Token exchange successful, has accessToken:', !!tokenResponse.accessToken);
                 return {
                     type: 'success',
                     accessToken: tokenResponse.accessToken,
@@ -100,18 +112,34 @@ export class OAuthService {
                     tokenResponse,
                 };
             } catch (error) {
-                console.error('Token exchange error:', error);
+                console.error('[OAuth] Token exchange error:', error);
                 return {
                     type: 'error',
                     error: error instanceof Error ? error.message : 'Token exchange failed',
                 };
             }
         } else if (result.type === 'cancel') {
+            console.log('[OAuth] User cancelled authentication');
             return {type: 'cancel'};
-        } else {
+        } else if (result.type === 'dismiss') {
+            console.log('[OAuth] Auth session was dismissed (browser closed or timed out)');
+            console.log('[OAuth] Result details:', JSON.stringify(result, null, 2));
             return {
                 type: 'error',
-                error: 'Authentication failed',
+                error: 'Authentication was dismissed. The browser window may have closed unexpectedly.',
+            };
+        } else if (result.type === 'error') {
+            console.error('[OAuth] Auth error from provider:', result.params);
+            return {
+                type: 'error',
+                error: result.params?.error_description || result.params?.error || 'Authentication error from provider',
+            };
+        } else {
+            console.log('[OAuth] Unexpected result type:', result.type);
+            console.log('[OAuth] Full result:', JSON.stringify(result, null, 2));
+            return {
+                type: 'error',
+                error: `Authentication failed. Result type: ${result.type}. Please check console logs for details.`,
             };
         }
     }

@@ -1,12 +1,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 
 export default function AuthCallback() {
     const router = useRouter();
 
     useEffect(() => {
-        router.replace('/');
+        WebBrowser.maybeCompleteAuthSession();
+
+        const timer = setTimeout(() => {
+            router.replace('/');
+        }, 1000);
+
+        return () => clearTimeout(timer);
     }, [router]);
 
     return (
