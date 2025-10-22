@@ -422,7 +422,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {tempFrequencyType !== FrequencyTypeDTO.DAILY && (
                                 <View style={[styles.inputContainer, {marginBottom: 5}]}>
                                     <TextInput
-                                        style={[styles.input, FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && tempTimesPerXDays &&
+                                        style={[styles.input, tempFrequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && tempTimesPerXDays &&
                                         tempFrequency > tempTimesPerXDays && {color: "red"}]}
                                         value={tempFrequency}
                                         onChangeText={(text) => {
