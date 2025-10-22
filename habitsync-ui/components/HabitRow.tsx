@@ -88,6 +88,37 @@ const DayButton: React.FC<DayButtonProps> = ({
         }
     };
 
+    const getValueString = (value: number | undefined) => {
+        if (typeof value !== 'number' || isNaN(value)) {
+            return value;
+        }
+        if (Number.isInteger(value)) {
+            return value.toString();
+        } else {
+            return value.toFixed(2);
+        }
+    }
+
+    const getFontSize = (value: number | undefined) => {
+        if (typeof value !== 'number' || isNaN(value)) {
+            return 18;
+        }
+        if (Number.isInteger(value)) {
+            if (value >= 1000) {
+                return 14;
+            } else {
+                return 18;
+            }
+        } else {
+            if (value >= 10) {
+                return 12;
+            } else {
+                return 14;
+            }
+        }
+
+    }
+
     return (
         <TouchableOpacity
             style={[{
@@ -106,8 +137,8 @@ const DayButton: React.FC<DayButtonProps> = ({
                 <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
                     {getIcon(completion)}
                 </Text>) : (
-                <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
-                    {value}
+                <Text style={{color: 'white', fontSize: getFontSize(value), fontWeight: 'bold'}}>
+                    {getValueString(value)}
                 </Text>
             )}
         </TouchableOpacity>
