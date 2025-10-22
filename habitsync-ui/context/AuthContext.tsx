@@ -8,6 +8,7 @@ interface AuthContextType {
     loginWithUsernamePassword: (username: string, password: string, redirectPath?: string) => Promise<void>;
     logout: () => Promise<void>;
     refreshAuthState: () => Promise<void>;
+    setTokens: (accessToken: string, refreshToken: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,6 +20,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
         const unsubscribe = auth.subscribe(setAuthState);
         return unsubscribe;
     }, []);
+
+    const setTokens = async (accessToken: string, refreshToken: string) => {
+        try {
+            await auth.setTokens(accessToken, refreshToken);
+        } catch (error) {
+            console.error('Setting tokens failed:', error);
+        }
+    }
 
     const loginWithOAuth2Provider = async (provider: SupportedOIDCIssuer, redirectPath?: string) => {
         try {
@@ -63,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({children}
             loginWithOAuth2Provider,
             loginWithUsernamePassword,
             logout,
+            setTokens,
             refreshAuthState
         }}>
             {children}
