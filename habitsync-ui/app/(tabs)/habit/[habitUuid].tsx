@@ -143,7 +143,6 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
-        console.log(progressComputation.frequency)
         if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
             (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1)) {
             return "Daily";

@@ -24,23 +24,32 @@ public class HabitRecordService {
     private HabitRecordCompletion getHabitRecordStatus(Habit habit, HabitRecord habitRecord) {
         boolean completion = cachingHabitProgressService.getCompletionForDay(
                 LocalDate.ofEpochDay(habitRecord.getRecordDate()), habit);
+        boolean disabledByFilter = false;
+        if (!habit.getDayFilterWhitelistAsList().isEmpty()) {
+            LocalDate recordDate = LocalDate.ofEpochDay(habitRecord.getRecordDate());
+            if (!habit.getDayFilterWhitelistAsList().contains(recordDate.getDayOfWeek().getValue())) {
+                disabledByFilter = true;
+            }
+        }
         if (!habit.getIsNegative()) {
-            if (habit.getDailyGoal() != null &&
+            if (!disabledByFilter && habit.getDailyGoal() != null &&
                     habitRecord.getRecordValue() >= habit.getReachableDailyValue()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
-                return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
+                return disabledByFilter ? HabitRecordCompletion.DISABLED_COMPLETED_BY_OTHER_RECORDS :
+                        HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
             }
-            return habitRecord.getRecordValue() > 0
+            return disabledByFilter ? HabitRecordCompletion.DISABLED : habitRecord.getRecordValue() > 0
                     ? HabitRecordCompletion.PARTIALLY_COMPLETED
                     : HabitRecordCompletion.MISSED;
         } else {
-            if (habitRecord.getRecordValue() <= habit.getReachableDailyValue()) {
+            if (!disabledByFilter && habitRecord.getRecordValue() <= habit.getReachableDailyValue()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
-                return HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
+                return disabledByFilter ? HabitRecordCompletion.DISABLED_COMPLETED_BY_OTHER_RECORDS :
+                        HabitRecordCompletion.COMPLETED_BY_OTHER_RECORDS;
             }
-            return HabitRecordCompletion.FAILED;
+            return disabledByFilter ? HabitRecordCompletion.DISABLED : HabitRecordCompletion.FAILED;
         }
     }
 

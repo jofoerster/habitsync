@@ -4,6 +4,8 @@ import de.jofoerster.habitsync.model.challenge.ChallengeComputationType;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class ComputationReadWriteDTO {
@@ -17,6 +19,8 @@ public class ComputationReadWriteDTO {
     private Integer timesPerXDays; //only needed with FrequencyTypeDTO.X_TIMES_PER_Y_DAYS
 
     private Boolean isNegative;
+
+    private List<Integer> weekdayFilterWhitelist;
 
     private ChallengeComputationType challengeComputationType; //only needed for challenges
 }

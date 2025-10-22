@@ -126,17 +126,20 @@ public class CachingHabitProgressService {
         if (configHabit.getFreqType() == 1) {
             return calculateWeeklyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get("percentage");
         } else if (configHabit.getFreqType() == 2) {
             return calculateMonthlyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get("percentage");
         } else if (configHabit.getFreqType() == 3) {
             int[] customFreq = configHabit.parseCustomFrequency();
             return calculateCustomPeriodAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     customFreq[0],
                     customFreq[1],
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("percentage");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get("percentage");
         } else {
             throw new IllegalArgumentException("Invalid frequency type: " + configHabit.getFreqType());
         }
@@ -155,19 +158,23 @@ public class CachingHabitProgressService {
         if (configHabit.getFreqType() == 1) {
             return calculateWeeklyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get(
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get(
                     "totalAchievement");
         } else if (configHabit.getFreqType() == 2) {
             return calculateMonthlyAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     configHabit.parseFrequencyValue(),
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get(
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get(
                     "totalAchievement");
         } else if (configHabit.getFreqType() == 3) {
             int[] customFreq = configHabit.parseCustomFrequency();
             return calculateCustomPeriodAchievement(startDate, endDate, configHabit.getReachableDailyValue(),
                     customFreq[0],
                     customFreq[1],
-                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative()).get("totalAchievement");
+                    habitToUseRecordsOf, forcedStartDate, forcedEndDate, configHabit.getIsNegative(),
+                    configHabit.getDayFilterWhitelistAsList()).get(
+                    "totalAchievement");
         } else {
             throw new IllegalArgumentException("Invalid frequency type: " + configHabit.getFreqType());
         }
@@ -176,16 +183,13 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateWeeklyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
                                                            int timesPerWeek, Habit habitToUseRecordsOf,
                                                            LocalDate forcedStartDate,
-                                                           LocalDate forcedEndDate, boolean isNegative) {
+                                                           LocalDate forcedEndDate, boolean isNegative,
+                                                           List<Integer> weekdayFilterWhitelist) {
         LocalDate weekStart = startDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         LocalDate weekEnd = endDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
 
-        List<HabitRecord> records;
-        if (forcedStartDate != null && forcedEndDate != null) {
-            records = recordsSupplier.getHabitRecordsInRange(habitToUseRecordsOf, forcedStartDate, forcedEndDate);
-        } else {
-            records = recordsSupplier.getHabitRecords(habitToUseRecordsOf, weekStart);
-        }
+        List<HabitRecord> records =
+                getHabitRecords(habitToUseRecordsOf, forcedStartDate, forcedEndDate, weekStart, weekdayFilterWhitelist);
 
         double totalAchievement = 0;
         double totalWeight = 0;
@@ -223,15 +227,14 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateMonthlyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
                                                             int timesPerMonth,
                                                             Habit habitToUseRecordsOf, LocalDate forcedStartDate,
-                                                            LocalDate forcedEndDate, boolean isNegative) {
+                                                            LocalDate forcedEndDate, boolean isNegative,
+                                                            List<Integer> weekdayFilterWhitelist) {
         LocalDate monthStart = startDate.withDayOfMonth(1);
 
-        List<HabitRecord> records;
-        if (forcedStartDate != null && forcedEndDate != null) {
-            records = recordsSupplier.getHabitRecordsInRange(habitToUseRecordsOf, forcedStartDate, forcedEndDate);
-        } else {
-            records = recordsSupplier.getHabitRecords(habitToUseRecordsOf, monthStart);
-        }
+        List<HabitRecord> records =
+                getHabitRecords(habitToUseRecordsOf, forcedStartDate, forcedEndDate, monthStart,
+                        weekdayFilterWhitelist);
+
 
         double totalAchievementComplete = records.stream().map(HabitRecord::getRecordValue).reduce(0.0, Double::sum);
         double totalAchievement = 0;
@@ -274,16 +277,13 @@ public class CachingHabitProgressService {
     private Map<String, Double> calculateCustomPeriodAchievement(LocalDate startDate, LocalDate endDate,
                                                                  double daily_goal, int times, int days,
                                                                  Habit habitToUseRecordsOf, LocalDate forcedStartDate,
-                                                                 LocalDate forcedEndDate, boolean isNegative) {
+                                                                 LocalDate forcedEndDate, boolean isNegative,
+                                                                 List<Integer> weekdayFilterWhitelist) {
         LocalDate periodStartBeforeTarget = startDate.minusDays(days - 1);
 
-        List<HabitRecord> records;
-
-        if (forcedStartDate != null && forcedEndDate != null) {
-            records = recordsSupplier.getHabitRecordsInRange(habitToUseRecordsOf, forcedStartDate, forcedEndDate);
-        } else {
-            records = recordsSupplier.getHabitRecords(habitToUseRecordsOf, periodStartBeforeTarget);
-        }
+        List<HabitRecord> records =
+                getHabitRecords(habitToUseRecordsOf, forcedStartDate, forcedEndDate, periodStartBeforeTarget,
+                        weekdayFilterWhitelist);
 
         Map<Integer, HabitRecord> recordMap = records.stream()
                 .collect(Collectors.toMap(HabitRecord::getRecordDate, record -> record,
@@ -307,6 +307,24 @@ public class CachingHabitProgressService {
 
         return Map.of("percentage", averageAchievement * 100, "totalAchievement",
                 totalAchievement);
+    }
+
+    private List<HabitRecord> getHabitRecords(Habit habitToUseRecordsOf, LocalDate forcedStartDate,
+                                              LocalDate forcedEndDate, LocalDate since,
+                                              List<Integer> weekdayFilterWhitelist) {
+        List<HabitRecord> records;
+        if (forcedStartDate != null && forcedEndDate != null) {
+            records = recordsSupplier.getHabitRecordsInRange(habitToUseRecordsOf, forcedStartDate, forcedEndDate);
+        } else {
+            records = recordsSupplier.getHabitRecords(habitToUseRecordsOf, since);
+        }
+        if (weekdayFilterWhitelist != null && !weekdayFilterWhitelist.isEmpty()) {
+            records = records.stream()
+                    .filter(record -> weekdayFilterWhitelist.contains(
+                            record.getRecordDateAsDate().getDayOfWeek().getValue()))
+                    .collect(Collectors.toList());
+        }
+        return records;
     }
 
     private Double getCustomPeriodCompletionForDay(LocalDate date, int times, int days, double dailyReachableValue,
@@ -378,7 +396,7 @@ public class CachingHabitProgressService {
     }
 
     public Double getMaxValue(Habit habit, LocalDate startDate, LocalDate endDate) {
-        List<HabitRecord> habitRecordList = recordsSupplier.getHabitRecordsInRange(habit, startDate, endDate);
+        List<HabitRecord> habitRecordList = getHabitRecords(habit, startDate, endDate, null, null);
         return habitRecordList.stream()
                 .map(HabitRecord::getRecordValue)
                 .max(Double::compareTo)
@@ -399,7 +417,8 @@ public class CachingHabitProgressService {
                 LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
                 LocalDate weekEnd = date.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));
                 List<HabitRecord> habitRecordsWeek =
-                        recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, weekStart, weekEnd);
+                        getHabitRecords(habitToUseValuesOf, weekStart, weekEnd, null,
+                                configHabit.getDayFilterWhitelistAsList());
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(weekStart, weekEnd), configHabit.getReachableDailyValue(),
                                 habitRecordsWeek, configHabit.getIsNegative());
@@ -407,14 +426,16 @@ public class CachingHabitProgressService {
                 LocalDate monthStart = date.withDayOfMonth(1);
                 LocalDate monthEnd = YearMonth.from(date).atEndOfMonth();
                 List<HabitRecord> habitRecordsMonth =
-                        recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, monthStart, monthEnd);
+                        getHabitRecords(habitToUseValuesOf, monthStart, monthEnd, null,
+                                configHabit.getDayFilterWhitelistAsList());
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(monthStart, monthEnd), configHabit.getReachableDailyValue(),
                                 habitRecordsMonth, configHabit.getIsNegative());
             case 3:
                 LocalDate customStart = date.minusDays(configHabit.parseCustomFrequency()[1]).plusDays(1);
                 List<HabitRecord> habitRecordCustom =
-                        recordsSupplier.getHabitRecordsInRange(habitToUseValuesOf, customStart, date);
+                        getHabitRecords(habitToUseValuesOf, customStart, date, null,
+                                configHabit.getDayFilterWhitelistAsList());
                 yield 1 == getCustomPeriodCompletionForDay(date, configHabit.parseCustomFrequency()[0],
                         configHabit.parseCustomFrequency()[1],
                         configHabit.getReachableDailyValue(), habitRecordCustom, configHabit.getIsNegative());

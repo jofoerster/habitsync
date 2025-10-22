@@ -98,6 +98,9 @@ public class Habit {
     @JsonIgnore
     private Long connectedSharedHabitId;
 
+    @JsonIgnore
+    private String weekdayFilterWhitelist; // Comma separated list of weekdays (1-7)
+
     // Only used for importing
     @Transient
     @JsonDeserialize(using = HabitRecordsDeserializer.class)
@@ -112,6 +115,27 @@ public class Habit {
 
     public LocalDate getStartDateAsDate() {
         return LocalDate.ofEpochDay(startDate);
+    }
+
+    public List<Integer> getDayFilterWhitelistAsList() {
+        if (weekdayFilterWhitelist == null || weekdayFilterWhitelist.isEmpty()) {
+            return List.of();
+        }
+        String[] parts = weekdayFilterWhitelist.split(";");
+        return java.util.Arrays.stream(parts)
+                .map(Integer::parseInt)
+                .toList();
+    }
+
+    public void setDayFilterWhitelistFromList(List<Integer> whitelist) {
+        if (whitelist == null || whitelist.isEmpty()) {
+            this.weekdayFilterWhitelist = "";
+            return;
+        }
+        this.weekdayFilterWhitelist = whitelist.stream()
+                .map(String::valueOf)
+                .reduce((a, b) -> a + ";" + b)
+                .orElse("");
     }
 
     public Integer parseFrequencyValue() {
@@ -242,6 +266,7 @@ public class Habit {
                         this.getReachableDailyValue() != null ? this.getReachableDailyValue() :
                                 this.getDailyGoal())
                 .isNegative(this.isNegative)
+                .weekdayFilterWhitelist(this.getDayFilterWhitelistAsList())
                 .build();
     }
 
@@ -298,6 +323,10 @@ public class Habit {
         } else {
             this.freqType = null;
             this.freqCustom = null;
+        }
+
+        if (computationReadWriteDTO.getWeekdayFilterWhitelist() != null) {
+            setDayFilterWhitelistFromList(computationReadWriteDTO.getWeekdayFilterWhitelist());
         }
     }
 

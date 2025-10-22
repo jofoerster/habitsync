@@ -14,7 +14,7 @@ import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHab
 
 interface DayButtonProps {
     day: string,
-    completion: 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'COMPLETED_BY_OTHER_RECORDS' | 'MISSED' | 'LOADING' | 'FAILED',
+    completion: 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'COMPLETED_BY_OTHER_RECORDS' | 'MISSED' | 'DISABLED' | 'LOADING' | 'FAILED' | 'DISABLED_COMPLETED_BY_OTHER_RECORDS',
     value: number,
     onPress: () => void,
     onLongPress: () => void,
@@ -58,6 +58,7 @@ const DayButton: React.FC<DayButtonProps> = ({
                     elevation: 5
                 };
             case 'COMPLETED_BY_OTHER_RECORDS':
+            case 'DISABLED_COMPLETED_BY_OTHER_RECORDS':
                 return {
                     backgroundColor: '#a4cca6', borderColor: '#a4cca6', shadowColor: '#a4cca6',
                     shadowOffset: {width: 0, height: 0},
@@ -65,6 +66,16 @@ const DayButton: React.FC<DayButtonProps> = ({
                     shadowRadius: 8,
                     elevation: 5
                 };
+            case 'DISABLED':
+                return {
+                    backgroundColor: isDark ? '#424141' : '#f1efef',
+                    borderColor: isDark ? '#424141' : '#f1efef',
+                    shadowColor: isDark ? '#424141' : '#f1efef',
+                    shadowOffset: {width: 0, height: 0},
+                    shadowOpacity: 0.7,
+                    shadowRadius: 8,
+                    elevation: 5
+                }
             case 'FAILED':
                 return {
                     backgroundColor: '#ff0000',
@@ -135,7 +146,7 @@ const DayButton: React.FC<DayButtonProps> = ({
         >
             {value == 0 || (value == 1 && showCheckMarkIcon) ? (
                 <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
-                    {getIcon(completion)}
+                    {getIcon(completion, value)}
                 </Text>) : (
                 <Text style={{color: 'white', fontSize: getFontSize(value), fontWeight: 'bold'}}>
                     {getValueString(value)}

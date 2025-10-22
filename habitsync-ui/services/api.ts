@@ -50,6 +50,7 @@ export interface ApiComputationReadWrite {
     timesPerXDays?: number;
     challengeComputationType?: ChallengeComputationType;
     isNegative: boolean;
+    weekdayFilterWhitelist: number[];
 }
 
 export enum FrequencyTypeDTO {
@@ -85,7 +86,8 @@ export enum HabitRecordCompletion {
     COMPLETED,
     PARTIALLY_COMPLETED,
     COMPLETED_BY_OTHER_RECORDS,
-    FAILED
+    FAILED,
+    DISABLED
 }
 
 export interface ApiHabitRecordWrite {
