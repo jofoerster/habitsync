@@ -2,6 +2,8 @@ import * as AuthSession from 'expo-auth-session';
 import {DiscoveryDocument} from 'expo-auth-session';
 import {SupportedOIDCIssuer} from "@/services/api";
 import {secureStorage} from "@/services/storage";
+import {Platform} from 'react-native';
+import WebOAuthService from './oauth-web';
 
 export interface AuthResult {
     type: 'success' | 'error' | 'cancel';
@@ -30,8 +32,21 @@ export class OAuthService {
         provider: SupportedOIDCIssuer,
         redirectPath?: string
     ): Promise<AuthResult> {
+        if (Platform.OS === 'web') {
+            console.log('[OAuth] Using web-specific implementation');
+            return WebOAuthService.loginWithOAuthProvider(provider, redirectPath);
+        }
+
+        return this.loginWithOAuthProviderNative(provider, redirectPath);
+    }
+
+    private async loginWithOAuthProviderNative(
+        provider: SupportedOIDCIssuer,
+        redirectPath?: string
+    ): Promise<AuthResult> {
         try {
             console.log('[OAuth] Starting login with provider:', provider.name);
+            console.log('[OAuth] Platform:', Platform.OS);
 
             if (!provider.clientId) {
                 return {type: 'error', error: `Client ID not configured for ${provider.name}`};
@@ -59,6 +74,7 @@ export class OAuthService {
             });
 
             console.log('[OAuth] Calling promptAsync, waiting for user authentication...');
+
             const result = await request.promptAsync(discovery);
             console.log('[OAuth] promptAsync completed with type:', result.type);
 
@@ -66,6 +82,7 @@ export class OAuthService {
 
         } catch (error) {
             console.error('[OAuth] Login error:', error);
+            console.error('[OAuth] Error stack:', error instanceof Error ? error.stack : 'No stack trace');
             return {
                 type: 'error',
                 error: error instanceof Error ? error.message : 'Unknown OAuth error',

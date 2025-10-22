@@ -135,6 +135,8 @@ export class AuthService {
                     userInfo: userInfo || null,
                     error: null,
                 });
+            } else if (result.type === 'cancel') {
+                console.log('[Auth] OAuth redirect initiated (web platform)');
             } else {
                 this.setState({
                     isLoading: false,
@@ -197,7 +199,7 @@ export class AuthService {
         return await secureStorage.getItem(ACCESS_TOKEN_KEY);
     }
 
-    private async setTokens(accessToken: string, refreshToken: string): Promise<void> {
+    public async setTokens(accessToken: string, refreshToken: string): Promise<void> {
         await secureStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
         await secureStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
     }
