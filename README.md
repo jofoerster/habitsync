@@ -141,7 +141,7 @@ services:
       - APP_SECURITY_ISSUERS_GOOGLE_URL=https://accounts.google.com
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_GOOGLE_CLIENT-SECRET=<client-secret> # ONLY AS WORKAROUND FOR GOOGLE, PUBLICALLY AVAILABLE TO CLIENTS!
-      # Login using username and password (basic auth), recommended for api access
+      # Login using username and password (basic auth)
       # Create hash using: htpasswd -bnBC 10 "" password123 | tr -d ':\n' | sed 's/\$/\$\$/g'
       # $ get replaced with $$ to work in env variables. This might be different in other environments
       - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash>
