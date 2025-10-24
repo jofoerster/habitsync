@@ -67,7 +67,8 @@ const TOOLTIP_TEXTS = {
         " Monthly: 'Y times per month', Custom Period: 'Y times per X days'",
     frequency: "The Y in 'Y times per X days'.",
     customDays: "The X in 'Y times per X days'.",
-    asMuchAsPossible: "A challenge where you can log as much as you want each day. The user with the highest total value wins"
+    asMuchAsPossible: "A challenge where you can log as much as you want each day. The user with the highest total value wins",
+    weekdayFilter: "Select specific weekdays when this habit should be tracked. If at least one day is selected, only those days will count towards habit completion."
 };
 
 type HabitConfigProps = {
@@ -119,6 +120,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [notificationFrequency, setNotificationFrequency] = useState<NotificationConfigType | null>(null);
 
         const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
+
+        const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
 
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
@@ -217,6 +220,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setIsAsMuchAsPossibleChallenge(configType === ConfigType.CHALLENGE
                             && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
+                        setSelectedWeekdays(habit.progressComputation.weekdayFilterWhitelist || []);
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -260,6 +264,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             if (value) {
                 setDailyReachableValue('0');
                 setDailyDefault("1");
+            } else {
+                setDailyReachableValue('1');
             }
         };
 
@@ -275,6 +281,26 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setChallengeType(ChallengeComputationType.ABSOLUTE);
             }
         }
+
+        const toggleWeekday = (day: number) => {
+            if (isFieldLocked()) return;
+
+            setSelectedWeekdays(prev => {
+                if (prev.includes(day)) {
+                    if (prev.length > 1) {
+                        setFrequencyType(FrequencyTypeDTO.WEEKLY);
+                        setFrequency((prev.length - 1).toString())
+                        setGoalType('Daily');
+                    }
+                    return prev.filter(d => d !== day);
+                } else {
+                    setFrequencyType(FrequencyTypeDTO.WEEKLY);
+                    setFrequency((prev.length + 1).toString());
+                    setGoalType('Daily');
+                    return [...prev, day].sort();
+                }
+            });
+        };
 
         const handleUpdate = async (): Promise<ApiHabitWrite | undefined> => {
             if (configType === ConfigType.HABIT && !name.trim()) {
@@ -332,7 +358,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     frequency: frequencyType === FrequencyTypeDTO.DAILY ? 1 : parseInt(frequency),
                     timesPerXDays: computedTimesPerXDays,
                     challengeComputationType: challengeType,
-                    isNegative: isNegative
+                    isNegative: isNegative,
+                    weekdayFilterWhitelist: selectedWeekdays
                 };
 
                 const habitData: ApiHabitWrite = {
@@ -422,7 +449,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {tempFrequencyType !== FrequencyTypeDTO.DAILY && (
                                 <View style={[styles.inputContainer, {marginBottom: 5}]}>
                                     <TextInput
-                                        style={[styles.input, FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && tempTimesPerXDays &&
+                                        style={[styles.input, tempFrequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && tempTimesPerXDays &&
                                         tempFrequency > tempTimesPerXDays && {color: "red"}]}
                                         value={tempFrequency}
                                         onChangeText={(text) => {
@@ -605,6 +632,21 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     )}
 
+                    <View style={styles.inputContainer}>
+                        <View style={styles.labelRow}>
+                            <Text style={styles.label}>Negative Habit (Less is Better)</Text>
+                            <HelpIcon tooltipKey="isNegative"/>
+                            {isFieldLocked() && <LockIcon/>}
+                        </View>
+                        <Switch
+                            value={isNegative}
+                            onValueChange={switchNegativeHabit}
+                            disabled={isFieldLocked()}
+                            trackColor={{false: theme.disabled, true: theme.primaryLight}}
+                            thumbColor={theme.primary}
+                        />
+                    </View>
+
                     {challengeType !== ChallengeComputationType.MAX_VALUE && (
 
                         <View style={styles.row}>
@@ -726,21 +768,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             </View>
                         )}
 
-                    <View style={styles.inputContainer}>
-                        <View style={styles.labelRow}>
-                            <Text style={styles.label}>Negative Habit (Less is Better)</Text>
-                            <HelpIcon tooltipKey="isNegative"/>
-                            {isFieldLocked() && <LockIcon/>}
-                        </View>
-                        <Switch
-                            value={isNegative}
-                            onValueChange={switchNegativeHabit}
-                            disabled={isFieldLocked()}
-                            trackColor={{false: theme.disabled, true: theme.primaryLight}}
-                            thumbColor={theme.primary}
-                        />
-                    </View>
-
                     {configType !== ConfigType.CHALLENGE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
@@ -762,6 +789,42 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             />
                         </View>
                     )}
+                    <View style={styles.labelRow}>
+                        <Text style={styles.label}>Weekday Filter (Optional)</Text>
+                        <HelpIcon tooltipKey="weekdayFilter"/>
+                        {isFieldLocked() && <LockIcon/>}
+                    </View>
+                    <View style={styles.weekdayContainer}>
+                        {[
+                            { day: 1, label: 'Mon' },
+                            { day: 2, label: 'Tue' },
+                            { day: 3, label: 'Wed' },
+                            { day: 4, label: 'Thu' },
+                            { day: 5, label: 'Fri' },
+                            { day: 6, label: 'Sat' },
+                            { day: 7, label: 'Sun' }
+                        ].map(({ day, label }) => (
+                            <TouchableOpacity
+                                key={day}
+                                style={[
+                                    styles.weekdayButton,
+                                    selectedWeekdays.includes(day) && styles.selectedWeekdayButton,
+                                    isFieldLocked() && styles.lockedButton
+                                ]}
+                                onPress={() => toggleWeekday(day)}
+                                disabled={isFieldLocked()}
+                                activeOpacity={0.7}
+                            >
+                                <Text style={[
+                                    styles.weekdayButtonText,
+                                    selectedWeekdays.includes(day) && styles.selectedWeekdayButtonText,
+                                    isFieldLocked() && styles.lockedButtonText
+                                ]}>
+                                    {label}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
                 </View>
 
                 {
@@ -1140,6 +1203,35 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     clickableText: {
         color: '#4ECDC4',
         fontWeight: '600',
+    },
+    weekdayContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        maxWidth: 1000,
+    },
+    weekdayButton: {
+        width: '12%',
+        maxHeight: 60,
+        aspectRatio: 1,
+        borderRadius: 8,
+        marginBottom: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: theme.border,
+    },
+    selectedWeekdayButton: {
+        backgroundColor: '#4ECDC4',
+        borderColor: '#4ECDC4',
+    },
+    weekdayButtonText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: theme.text,
+    },
+    selectedWeekdayButtonText: {
+        color: theme.textInverse,
     },
 }));
 

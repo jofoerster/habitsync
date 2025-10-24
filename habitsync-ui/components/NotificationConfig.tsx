@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Modal, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
@@ -69,13 +69,6 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
     const [tempThresholdConfig, setTempThresholdConfig] = useState<Partial<ThresholdNotificationConfigRule>>({});
 
     const [showAppriseField, setShowAppriseField] = useState(false);
-
-    useEffect(() => {
-        if (currentConfig) {
-            setAppriseUrl(currentConfig.appriseTarget || '');
-            setRules(currentConfig.rules || []);
-        }
-    }, [currentConfig]);
 
     useEffect(() => {
         const loadConfig = async () => {
@@ -210,6 +203,10 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         setHelpModalVisible(true);
     };
 
+    const handleFrequencyPickerChange = useCallback((config: Partial<FixedTimeNotificationConfigRule>) => {
+        setTempFixedConfig(prev => ({...prev, ...config}));
+    }, []);
+
     const getRuleStatusText = (type: 'fixed' | 'threshold' | 'overtake') => {
         const rule = getRuleByType(type);
         if (!rule || !rule.enabled) return 'Off';
@@ -238,7 +235,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
                 <TouchableOpacity
                     style={styles.closeButton}
-                    onPress={() => onModalClose(config)}
+                    onPress={() => onModalClose(config || currentConfig || {rules: []})}
                 >
                     <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                 </TouchableOpacity>
@@ -348,7 +345,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                         {configType === 'fixed' && (
                             <View style={styles.configContent}>
                                 <FrequencyPicker
-                                    onChange={(config) => setTempFixedConfig(prev => ({...prev, ...config}))}
+                                    onChange={handleFrequencyPickerChange}
                                     hideFrequency={false}
                                     hideWeekdays={false}
                                     notificationConfigRule={tempFixedConfig as FixedTimeNotificationConfigRule}

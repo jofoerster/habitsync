@@ -1,5 +1,9 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiAccountRead, ApiAccountSettingsReadWrite, userApi,} from '@/services/api';
+import {habitKeys} from './useHabits';
+import {challengeKeys} from './useChallenges';
+import {sharedHabitKeys} from './useSharedHabits';
+import {notificationKeys, numberModalKeys} from './useNotifications';
 
 export const userKeys = {
     all: ['user'] as const,
@@ -90,3 +94,10 @@ export const useEvictApiKeys = () => {
     });
 };
 
+export const useClearAllCache = () => {
+    const queryClient = useQueryClient();
+
+    return () => {
+        queryClient.clear();
+    };
+};

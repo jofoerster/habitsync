@@ -1,7 +1,7 @@
-import {ApiHabitRead, ApiHabitRecordRead, habitRecordApi, habitApi} from "@/services/api";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import React, { useEffect, useState, useCallback } from "react";
-import { Pressable, StyleSheet, Text, TouchableOpacity, View, Platform } from "react-native";
+import {ApiHabitRead, ApiHabitRecordRead, habitApi, habitRecordApi} from "@/services/api";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
+import React, {useCallback, useEffect, useState} from "react";
+import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
@@ -16,7 +16,13 @@ if (Platform.OS === 'web') {
     VictoryAxis = Victory.VictoryAxis;
 }
 
-const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarItem, habit, showTitle = true, isBooleanHabit = false}: {
+const ActivityCalendar = ({
+                              handleClickOnCalendarItem,
+                              handleLongClickOnCalendarItem,
+                              habit,
+                              showTitle = true,
+                              isBooleanHabit = false
+                          }: {
     handleClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
     handleLongClickOnCalendarItem: (record: ApiHabitRecordRead) => void,
     habit: ApiHabitRead,
@@ -65,8 +71,11 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                 return '#4CAF50';
             case "PARTIALLY_COMPLETED":
                 return '#FF9800';
+            case "DISABLED_COMPLETED_BY_OTHER_RECORDS":
             case "COMPLETED_BY_OTHER_RECORDS":
                 return '#addfb5';
+            case "DISABLED":
+                return '#515151';
             case "MISSED":
                 return '#F44336';
             case "FAILED":
@@ -102,7 +111,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
 
         if (chartData.length === 0) {
             return (
-                <View style={{ height: 220, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{height: 220, alignItems: 'center', justifyContent: 'center'}}>
                     <Text style={styles.noDataText}>No data available for this month</Text>
                 </View>
             );
@@ -116,38 +125,38 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
         ).getDate();
 
         return (
-            <View style={{ height: 220, width: '100%' }}>
+            <View style={{height: 220, width: '100%'}}>
                 <VictoryChart
                     height={200}
-                    padding={{ top: 20, bottom: 40, left: 50, right: 20 }}
-                    domain={{ x: [1, daysInMonth], y: [0, 100] }}
+                    padding={{top: 20, bottom: 40, left: 50, right: 20}}
+                    domain={{x: [1, daysInMonth], y: [0, 100]}}
                 >
                     <VictoryAxis
                         label="Day of Month"
                         style={{
-                            axisLabel: { fontSize: 12, padding: 30, fill: theme.textSecondary },
-                            tickLabels: { fontSize: 10, fill: theme.textSecondary },
-                            grid: { stroke: theme.border, strokeWidth: 0.5 }
+                            axisLabel: {fontSize: 12, padding: 30, fill: theme.textSecondary},
+                            tickLabels: {fontSize: 10, fill: theme.textSecondary},
+                            grid: {stroke: theme.border, strokeWidth: 0.5}
                         }}
                     />
                     <VictoryAxis
                         dependentAxis
                         label="Percentage (%)"
                         style={{
-                            axisLabel: { fontSize: 12, padding: 35, fill: theme.textSecondary },
-                            tickLabels: { fontSize: 10, fill: theme.textSecondary },
-                            grid: { stroke: theme.border, strokeWidth: 0.5 }
+                            axisLabel: {fontSize: 12, padding: 35, fill: theme.textSecondary},
+                            tickLabels: {fontSize: 10, fill: theme.textSecondary},
+                            grid: {stroke: theme.border, strokeWidth: 0.5}
                         }}
                     />
                     <VictoryLine
                         key={`${currentMonth.getMonth()}-${currentMonth.getFullYear()}`}
                         data={chartData}
                         style={{
-                            data: { stroke: "#2196F3", strokeWidth: 2 }
+                            data: {stroke: "#2196F3", strokeWidth: 2}
                         }}
                         animate={{
                             duration: 300,
-                            onLoad: { duration: 300 }
+                            onLoad: {duration: 300}
                         }}
                     />
                 </VictoryChart>
@@ -225,7 +234,7 @@ const ActivityCalendar = ({handleClickOnCalendarItem, handleLongClickOnCalendarI
                                                 fontWeight: day.isCurrentMonth ? 'bold' : 'normal'
                                             }
                                         ]}>
-                                            {isBooleanHabit ? getIcon(day.record.completion as any) : day.record.recordValue}
+                                            {isBooleanHabit ? getIcon(day.record.completion as any, day.record.recordValue) : day.record.recordValue}
                                         </Text>
                                     </Pressable>
                                 ) : (

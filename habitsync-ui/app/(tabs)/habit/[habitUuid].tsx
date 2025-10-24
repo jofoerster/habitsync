@@ -139,7 +139,12 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
-        if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY) {
+        return getFrequencyTypeTextType(progressComputation) + (progressComputation.isNegative? " Max" : " Goal");
+    }
+
+    const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
+        if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
+            (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1)) {
             return "Daily";
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
@@ -148,6 +153,7 @@ const HabitDetailsScreen = () => {
         if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
             return "Monthly";
         }
+        return "";
     }
 
     const handleDeleteHabit = () => {
@@ -354,11 +360,11 @@ const HabitDetailsScreen = () => {
                                     </View>
                                 )}
 
-                                {habitDetail?.progressComputation?.dailyReachableValue && (
+                                {typeof habitDetail?.progressComputation?.dailyReachableValue === "number" && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
-                                            {habitDetail.progressComputation && getFrequencyTypeText(habitDetail.progressComputation)} Goal: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
+                                            {habitDetail.progressComputation && getFrequencyTypeText(habitDetail.progressComputation)}: {habitDetail?.progressComputation?.dailyReachableValue} {habitDetail?.progressComputation?.unit || ''}
                                         </Text>
                                     </View>
                                 )}
