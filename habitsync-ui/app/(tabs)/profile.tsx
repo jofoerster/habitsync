@@ -1,7 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
     ActivityIndicator,
-    Alert,
     ScrollView,
     StyleSheet,
     Switch,
@@ -11,7 +10,7 @@ import {
     View,
 } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
-import {ApiAccountSettingsReadWrite, ApiHabitRead, habitApi, serverConfigApi, userApi} from "@/services/api";
+import {ApiAccountSettingsReadWrite, serverConfigApi, userApi} from "@/services/api";
 import alert from "@/services/alert";
 import {AuthService} from "@/services/auth";
 import {Link} from 'expo-router';
@@ -19,7 +18,7 @@ import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
 import ThemeToggle from '@/components/ThemeToggle';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
-import {useApiKey, useEvictApiKeys, useHabitInvitations, useUpdateUserSettings, useUserSettings} from "@/hooks/useUser";
+import {useApiKey, useEvictApiKeys, useHabitInvitations, useUpdateUserSettings, useUserSettings, useClearAllCache} from "@/hooks/useUser";
 import {useAcceptHabitInvitation, useDeclineHabitInvitation} from "@/hooks/useHabits";
 
 
@@ -31,6 +30,7 @@ const UserSettingsComponent = () => {
     const updateUserProfile = useUpdateUserSettings();
     const acceptInvitation = useAcceptHabitInvitation();
     const declineInvitation = useDeclineHabitInvitation();
+    const clearAllCache = useClearAllCache();
 
     const {data: settings, isLoading: loading} = useUserSettings();
     const {data: habitInvitations, isLoading: habitInvitationsLoading} = useHabitInvitations();
@@ -94,6 +94,7 @@ const UserSettingsComponent = () => {
     };
 
     const handleLogout = async () => {
+        clearAllCache();
         await AuthService.getInstance().logout();
     };
 
