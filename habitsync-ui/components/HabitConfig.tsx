@@ -809,7 +809,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 style={[
                                     styles.weekdayButton,
                                     selectedWeekdays.includes(day) && styles.selectedWeekdayButton,
-                                    isFieldLocked() && styles.lockedButton
                                 ]}
                                 onPress={() => toggleWeekday(day)}
                                 disabled={isFieldLocked()}
