@@ -1,0 +1,235 @@
+name: Beta Release
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  generate-version:
+    name: Generate Beta Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      version_tag: ${{ steps.version.outputs.version_tag }}
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version number
+        id: version
+        run: |
+          BASE_VERSION=$(grep -oPm1 "(?<=<version>)[^<]+" habitsync-api/pom.xml | head -1)
+          DATE=$(date +%Y%m%d)
+          SHORT_SHA=$(git rev-parse --short HEAD)
+          
+          BRANCH=${GITHUB_REF#refs/heads/}
+          
+          if [ "$BRANCH" = "main" ]; then
+            BETA_VERSION="${BASE_VERSION}-beta.${DATE}.${SHORT_SHA}"
+            DOCKER_TAG="beta"
+          else
+            BETA_VERSION="${BASE_VERSION}-${BRANCH}.${DATE}.${SHORT_SHA}"
+            DOCKER_TAG="beta-${BRANCH}"
+          fi
+          
+          echo "version=${BETA_VERSION}" >> $GITHUB_OUTPUT
+          echo "version_tag=${DOCKER_TAG}" >> $GITHUB_OUTPUT
+          echo "Generated version: ${BETA_VERSION}"
+          echo "Docker tag: ${DOCKER_TAG}"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+          restore-keys: ${{ runner.os }}-m2
+
+      - name: Run API tests
+        run: |
+          cd habitsync-api
+          mvn clean test
+
+  build-docker:
+    name: Build and Push Docker Image
+    needs: [generate-version, test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.generate-version.outputs.version_tag }}
+            type=raw,value=${{ needs.generate-version.outputs.version }}
+          labels: |
+            org.opencontainers.image.title=HabitSync (Beta)
+            org.opencontainers.image.description=Beta build - not for production use
+            org.opencontainers.image.version=${{ needs.generate-version.outputs.version }}
+            de.habitsync.release-type=beta
+            de.habitsync.is-prerelease=true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  build-android:
+    name: Build Android APK
+    needs: [generate-version, test]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'habitsync-ui/package-lock.json'
+
+      - name: Install dependencies
+        run: |
+          cd habitsync-ui
+          npm ci
+          npm install -g @expo/cli eas-cli
+
+      - name: Build Android APK
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          cd habitsync-ui
+          eas build --platform android --profile production --non-interactive --local
+
+      - name: Locate and Rename APK
+        run: |
+          cd habitsync-ui
+          VERSION="${{ needs.generate-version.outputs.version }}"
+          
+          mkdir -p android-build
+          APK_FILE=$(find . -maxdepth 1 -name "*.apk" | head -n 1)
+          
+          if [ -z "$APK_FILE" ]; then
+            echo "ERROR: No APK file found after local build."
+            exit 1
+          fi
+
+          echo "Found APK: $APK_FILE"
+          mv "$APK_FILE" "android-build/habitsync-${VERSION}.apk"
+          
+          FILE_SIZE=$(stat -c%s "android-build/habitsync-${VERSION}.apk")
+          echo "APK size: $FILE_SIZE bytes"
+          
+          if [ "$FILE_SIZE" -lt 1000000 ]; then
+            echo "ERROR: APK file is suspiciously small (${FILE_SIZE} bytes)"
+            exit 1
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-beta
+          path: habitsync-ui/android-build/*.apk
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Pre-release
+    needs: [generate-version, test, build-docker, build-android]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && !failure()
+    permissions:
+      contents: write
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get commits since last tag
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          if [ -n "$LATEST_TAG" ]; then
+            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
+          else
+            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
+          fi
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk-beta
+          path: ./apk
+
+      - name: Create GitHub Pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.generate-version.outputs.version }}
+          name: Beta Release v${{ needs.generate-version.outputs.version }}
+          body: |
+            ## 🚀 Beta Release
+            
+            This is an automated beta release from the `main` branch.
+            **Not intended for production use.**
+            
+            ### Changes since last release
+            ${{ steps.changelog.outputs.changelog }}
+            
+            ### Docker Image (Beta)
+            ```bash
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:beta
+            # Or specific version:
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ needs.generate-version.outputs.version }}
+            ```
+            
+            **Note:** The `latest` tag is not affected by beta releases.
+            
+            ### Commit
+            - SHA: ${{ github.sha }}
+            - Branch: ${{ github.ref_name }}
+          files: ./apk/*.apk
+          draft: false
+          prerelease: true
+          make_latest: false

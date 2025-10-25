@@ -58,6 +58,7 @@ tracking.
 - **Flexible habit tracking** with customizable goals and frequencies
 - **Variety of habit types**: daily, weekly, monthly, or custom intervals
 - **Negative habits** to track and reduce unwanted behaviors
+- **Weekday selection** choose specific days for habit tracking
 
 ### 👥 **Social & Sharing Features**
 
@@ -235,19 +236,6 @@ All contributions are welcome! If you find a bug, have a feature request or need
    ```
 
 5. The UI will be available at `http://localhost:8081`
-
-## Known Issues / TODOs
-
-### Backend
-
-- Improve shared habit connection cleanup
-- Improve background shared habit handling
-- Further improve caching
-- Improve notification handling
-
-### Frontend
-
-- Add push notifications support
 
 ## Release Process
 

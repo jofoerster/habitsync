@@ -28,8 +28,10 @@ export const useUpdateNotificationForHabit = () => {
         mutationFn: ({habitUuid, config}: { habitUuid: string; config: NotificationConfig }) =>
             notificationApi.updateNotificationForHabit(habitUuid, config),
         onSuccess: (_, {habitUuid}) => {
-            // Invalidate habit detail to get updated notification config
-            queryClient.invalidateQueries({queryKey: habitKeys.detail(habitUuid)});
+            // Invalidate habit detail to get updated notification config - but don't refetch immediately
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+            });
         },
     });
 };
@@ -40,8 +42,10 @@ export const useDeleteNotificationForHabit = () => {
     return useMutation({
         mutationFn: (habitUuid: string) => notificationApi.deleteNotificationForHabit(habitUuid),
         onSuccess: (_, habitUuid) => {
-            // Invalidate habit detail to get updated notification config
-            queryClient.invalidateQueries({queryKey: habitKeys.detail(habitUuid)});
+            // Invalidate habit detail to get updated notification config - but don't refetch immediately
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+            });
         },
     });
 };
@@ -53,8 +57,14 @@ export const useAddNumberToModal = () => {
         mutationFn: ({habitUuid, number}: { habitUuid: string; number: string }) =>
             habitNumberModalApi.addNumber(habitUuid, number),
         onSuccess: (_, {habitUuid}) => {
-            queryClient.invalidateQueries({queryKey: numberModalKeys.habit(habitUuid)});
-            queryClient.invalidateQueries({queryKey: habitKeys.detail(habitUuid)});
+            queryClient.invalidateQueries({
+                queryKey: numberModalKeys.habit(habitUuid),
+                refetchType: 'none'
+            });
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+                refetchType: 'none'
+            });
         },
     });
 };
@@ -66,9 +76,14 @@ export const useRemoveNumberFromModal = () => {
         mutationFn: ({habitUuid, number}: { habitUuid: string; number: string }) =>
             habitNumberModalApi.removeNumber(habitUuid, number),
         onSuccess: (_, {habitUuid}) => {
-            queryClient.invalidateQueries({queryKey: numberModalKeys.habit(habitUuid)});
-            queryClient.invalidateQueries({queryKey: habitKeys.detail(habitUuid)});
+            queryClient.invalidateQueries({
+                queryKey: numberModalKeys.habit(habitUuid),
+                refetchType: 'none'
+            });
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+                refetchType: 'none'
+            });
         },
     });
 };
-

@@ -9,7 +9,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
+import {useConnectedHabits, useCreateHabitRecord, useHabit, useHabitRecords} from "@/hooks/useHabits";
 
 
 interface DayButtonProps {
@@ -196,20 +196,25 @@ const HabitRow: React.FC<HabitRowProps> = ({
         epochDay: null,
         habitUuid: null,
     });
+    const getEpochDay = (date: Date): number =>
+        Math.floor(date.getTime() / 86400000);
+
+    const {data: habitFetched, isLoading: habitLoading} = useHabit(habit.uuid, true);
+
+    const {data: habitRecords, isLoading: recordsLoading} =
+        useHabitRecords(habit.uuid, getEpochDay(new Date()) - 2, getEpochDay(new Date()));
+
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit.hasConnectedHabits;
+
     const {
         data: connectedHabits,
         isLoading: connectedHabitsLoading
     } = useConnectedHabits(habit.uuid, hasConnectedHabits);
 
-    const {data: habitFetched, isLoading: loading} = useHabit(habit.uuid, true);
-    const records = loading ? new Map() : new Map(habitFetched!.records.map(record => [record.epochDay, record]));
+    const records = recordsLoading ? new Map() : new Map(habitRecords!.map(record => [record.epochDay, record]));
 
     const formatDate = (date: Date): string =>
         date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}).replace('/', '.');
-
-    const getEpochDay = (date: Date): number =>
-        Math.floor(date.getTime() / 86400000);
 
     const createDay = (daysAgo: number, key: string): DayItem => {
         const date = new Date();
@@ -228,7 +233,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
     ];
 
     const getRecordForDay = (epochDay) => {
-        if (loading) {
+        if (recordsLoading) {
             return {completion: 'LOADING', recordValue: "?"};
         }
         return records.get(epochDay) || {completion: 'MISSED', recordValue: 0};
@@ -250,8 +255,9 @@ const HabitRow: React.FC<HabitRowProps> = ({
             await updateHabitRecordMutation.mutateAsync({
                 habitUuid: habit.uuid, record: {
                     epochDay: epochDay,
-                    recordValue: newRecordValue
-                }
+                    recordValue: newRecordValue,
+                },
+                isChallenge: isChallengeHabit || false
             })
         } catch (error) {
             alert('Error', 'Failed to update record');
@@ -276,7 +282,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 habitUuid: habit.uuid, record: {
                     epochDay: epochDay,
                     recordValue: parseFloat(value) || 0
-                }
+                },
+                isChallenge: isChallengeHabit || false
             })
         } catch (error) {
             alert('Error', 'Failed to update record');
@@ -306,7 +313,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                         <Pressable style={{flexDirection: 'row', alignItems: 'center', flex: 1}}>
                             <View style={{paddingRight: 10}}>
                                 {!hideProgressRing && (
-                                    <ProgressRing color={habit.color} percentage={habit.currentPercentage}/>)}
+                                    <ProgressRing color={habit.color}
+                                                  percentage={habitLoading ? 0 : habitFetched!.currentPercentage}/>)}
                             </View>
                             <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>

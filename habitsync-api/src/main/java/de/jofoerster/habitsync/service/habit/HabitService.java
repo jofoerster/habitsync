@@ -195,7 +195,6 @@ public class HabitService {
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
                 .notificationFrequency(this.getNotificationConfig(habit))
-                .records(this.getRecordsOfCurrentDays(habit))
                 .numberModalConfig(habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
                         .getApiHabitNumberModalConfig())
                 .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(), habit.getHabitType()) > 0)
@@ -207,6 +206,14 @@ public class HabitService {
         List<HabitRecordReadDTO> records = new ArrayList<>();
         int todayEpochDay = (int) LocalDate.now().toEpochDay();
         for (int i = todayEpochDay - 3; i <= todayEpochDay + 1; i++ ) {
+            records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
+        }
+        return records;
+    }
+
+    public List<HabitRecordReadDTO> getRecordsOfHabit(Habit habit, int from, int to) {
+        List<HabitRecordReadDTO> records = new ArrayList<>();
+        for (int i = from; i <= to; i++ ) {
             records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
         }
         return records;

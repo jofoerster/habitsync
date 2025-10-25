@@ -14,7 +14,6 @@ export interface ApiHabitRead {
     synchronizedSharedHabitId?: number;
     sortPosition: number;
     notificationFrequency: NotificationConfig | null;
-    records: ApiHabitRecordRead[];
     hasConnectedHabits: boolean;
     numberModalConfig: ApiHabitNumberModalConfig;
 }

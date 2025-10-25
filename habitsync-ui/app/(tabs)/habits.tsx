@@ -1,7 +1,7 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useCallback, useState} from 'react';
-import {Animated, FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Link, useFocusEffect} from 'expo-router';
+import React, {useState} from 'react';
+import {Animated, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Link} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
@@ -81,6 +81,10 @@ const HabitTrackerScreen = () => {
         }
     };
 
+    const openHelp = () => {
+        Linking.openURL('https://github.com/jofoerster/habitsync/blob/main/FAQ.md');
+    };
+
     return (
         <View style={styles.container}>
             <View style={{flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'}}>
@@ -93,14 +97,24 @@ const HabitTrackerScreen = () => {
                     />
                     <Text style={styles.header}>HabitSync</Text>
                 </View>
-                <MaterialCommunityIcons.Button
-                    name="pencil"
-                    backgroundColor={theme.background}
-                    color={isDragModeEnabled ? "#ff0000" : theme.text}
-                    size={14}
-                    style={{marginRight: 16, marginTop: 16}}
-                    onPress={() => setIsDragModeEnabled(!isDragModeEnabled)}
-                />
+                <View style={styles.topRightButtons}>
+                    <MaterialCommunityIcons.Button
+                        name="help-circle"
+                        backgroundColor={theme.background}
+                        color={theme.text}
+                        size={14}
+                        style={{marginRight: 0, marginTop: 16}}
+                        onPress={openHelp}
+                    />
+                    <MaterialCommunityIcons.Button
+                        name="pencil"
+                        backgroundColor={theme.background}
+                        color={isDragModeEnabled ? "#ff0000" : theme.text}
+                        size={14}
+                        style={{marginRight: 16, marginTop: 16}}
+                        onPress={() => setIsDragModeEnabled(!isDragModeEnabled)}
+                    />
+                </View>
             </View>
             <DateHeader/>
             {loading ? (
@@ -278,6 +292,10 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     plusIcon: {
         color: '#fff',
         fontSize: 46,
+    },
+    topRightButtons: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 }));
 

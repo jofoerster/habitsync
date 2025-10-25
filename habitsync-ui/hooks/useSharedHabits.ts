@@ -43,7 +43,9 @@ export const useCreateSharedHabit = () => {
         mutationFn: (sharedHabit: ApiSharedHabitWrite) =>
             sharedHabitApi.createSharedHabit(sharedHabit),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+            });
         },
     });
 };
@@ -56,7 +58,9 @@ export const useUpdateSharedHabit = () => {
             sharedHabitApi.updateSharedHabit(sharedHabit, shareCode),
         onSuccess: (updatedHabit, {shareCode}) => {
             queryClient.setQueryData(sharedHabitKeys.detail(shareCode), updatedHabit);
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+            });
         },
     });
 };
@@ -69,7 +73,9 @@ export const useDeleteSharedHabit = () => {
             sharedHabitApi.deleteSharedHabit(sharedHabit, shareCode),
         onSuccess: (_, {shareCode}) => {
             queryClient.removeQueries({queryKey: sharedHabitKeys.detail(shareCode)});
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+            });
         },
     });
 };
@@ -81,7 +87,9 @@ export const useJoinSharedHabit = () => {
         mutationFn: ({shareCode, habitUuid}: { shareCode: string; habitUuid?: string }) =>
             sharedHabitApi.joinSharedHabit(shareCode, habitUuid),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+            });
         },
     });
 };
@@ -93,8 +101,14 @@ export const useUpdateLinkToSharedHabit = () => {
         mutationFn: ({shareCode, habitUuid}: { shareCode: string; habitUuid?: string }) =>
             sharedHabitApi.updateLinkToSharedHabit(shareCode, habitUuid),
         onSuccess: (_, {shareCode}) => {
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.detail(shareCode)});
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.detail(shareCode),
+                refetchType: 'none'
+            });
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+                refetchType: 'none'
+            });
         },
     });
 };
@@ -106,8 +120,10 @@ export const useLeaveSharedHabit = () => {
         mutationFn: (shareCode: string) => sharedHabitApi.leaveSharedHabit(shareCode),
         onSuccess: (_, shareCode) => {
             queryClient.removeQueries({queryKey: sharedHabitKeys.detail(shareCode)});
-            queryClient.invalidateQueries({queryKey: sharedHabitKeys.lists()});
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.lists(),
+                refetchType: 'none'
+            });
         },
     });
 };
-

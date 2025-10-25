@@ -62,8 +62,10 @@ export const useUpdateUserSettings = () => {
             userApi.updateUserSettings(settings),
         onSuccess: (updatedSettings) => {
             queryClient.setQueryData(userKeys.settings(), updatedSettings);
-            // Also update user info cache if it exists
-            queryClient.invalidateQueries({queryKey: userKeys.info()});
+            // Also update user info cache if it exists - but don't refetch immediately
+            queryClient.invalidateQueries({
+                queryKey: userKeys.info(),
+            });
         },
     });
 };
@@ -89,7 +91,10 @@ export const useEvictApiKeys = () => {
     return useMutation({
         mutationFn: () => userApi.evictAllApiKeys(),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: userKeys.apiKey()});
+            queryClient.invalidateQueries({
+                queryKey: userKeys.apiKey(),
+                refetchType: 'none'
+            });
         },
     });
 };
