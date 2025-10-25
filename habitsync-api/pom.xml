@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<version>0.16.0</version>
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
@@ -10,7 +11,6 @@
 	</parent>
 	<groupId>de.jofoerster.habitsync</groupId>
 	<artifactId>habitsync-api</artifactId>
-	<version>0.16.0</version>
 	<name>habitsync</name>
 	<description>Habit tracker with sharing and challenge functions</description>
 	<url/>
