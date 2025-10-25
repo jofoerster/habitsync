@@ -1,10 +1,11 @@
-import {ApiHabitRead, ApiHabitRecordRead, habitApi, habitRecordApi} from "@/services/api";
+import {ApiHabitRead, ApiHabitRecordRead} from "@/services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useMemo, useState} from "react";
 import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
+import {useHabitPercentageHistory, useHabitRecordsDetail} from "@/hooks/useHabits";
 
 // Platform-specific imports for Victory charts - only on web
 let VictoryLine: any, VictoryChart: any, VictoryAxis: any;
@@ -33,37 +34,24 @@ const ActivityCalendar = ({
     const styles = createStyles(theme);
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
-    const [calendarRecords, setCalendarRecords] = useState<ApiHabitRecordRead[]>([]);
     // Only enable graph toggle on web
     const [showCalendarAsGraph, setShowCalendarAsGraph] = useState(false);
-    const [percentageHistory, setPercentageHistory] = useState<{ [epochDay: number]: number }>({});
 
-    const fetchCalendarData = useCallback(async () => {
-        try {
-            const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-            const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+    // Calculate epoch range for the current month
+    const {startEpoch, endEpoch} = useMemo(() => {
+        const startOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+        const endOfMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
 
-            const startEpoch = Math.floor(Date.UTC(startOfMonth.getFullYear(), startOfMonth.getMonth(), startOfMonth.getDate()) / (1000 * 60 * 60 * 24))
-            const endEpoch = Math.floor(Date.UTC(endOfMonth.getFullYear(), endOfMonth.getMonth(), endOfMonth.getDate()) / (1000 * 60 * 60 * 24))
-            // Fetch percentage history
-            const historyData = await habitApi.getHabitPercentageHistory(habit.uuid, currentMonth);
-            setPercentageHistory(historyData.dailyPercentages);
+        return {
+            startEpoch: Math.floor(Date.UTC(startOfMonth.getFullYear(), startOfMonth.getMonth(), startOfMonth.getDate()) / (1000 * 60 * 60 * 24)),
+            endEpoch: Math.floor(Date.UTC(endOfMonth.getFullYear(), endOfMonth.getMonth(), endOfMonth.getDate()) / (1000 * 60 * 60 * 24))
+        };
+    }, [currentMonth]);
 
-            // Fetch calendar records
-            const calendarData = await habitRecordApi.getRecords(
-                habit.uuid,
-                startEpoch,
-                endEpoch
-            );
-            setCalendarRecords(calendarData);
-        } catch (error) {
-            console.error('Error fetching calendar data:', error);
-        }
-    }, [currentMonth, habit]);
-
-    useEffect(() => {
-        fetchCalendarData();
-    }, [fetchCalendarData]);
+    // Use React Query hooks for automatic cache updates
+    const {data: calendarRecords = []} = useHabitRecordsDetail(habit.uuid, startEpoch, endEpoch);
+    const {data: percentageHistoryData} = useHabitPercentageHistory(habit.uuid, currentMonth);
+    const percentageHistory = percentageHistoryData?.dailyPercentages || {};
 
     const getCompletionColor = (completion: string) => {
         switch (completion) {

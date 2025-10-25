@@ -9,11 +9,14 @@ export const habitKeys = {
     details: () => [...habitKeys.all, 'detail'] as const,
     detail: (uuid: string) => [...habitKeys.details(), uuid] as const,
     percentageHistory: (uuid: string, month: Date) =>
-        [...habitKeys.detail(uuid), 'percentage-history', month.toISOString()] as const,
+        ['percentage-history', ...habitKeys.detail(uuid), month.toISOString()] as const,
+    percentageHistoryComplete: (uuid: string) =>
+        ['percentage-history', ...habitKeys.detail(uuid)] as const,
     connectedHabits: (uuid: string) => [...habitKeys.detail(uuid), 'connected'] as const,
     connectedHabitsCount: (uuid: string) => [...habitKeys.detail(uuid), 'connected-count'] as const,
     participants: (uuid: string) => [...habitKeys.detail(uuid), 'participants'] as const,
     records: (uuid: string) => [...habitKeys.detail(uuid), 'records'] as const,
+    recordsDetail: (uuid: string) => [...habitKeys.detail(uuid), 'detailed-records'] as const,
 };
 
 export const useHabits = () => {
@@ -92,10 +95,23 @@ export const useHabitParticipants = (uuid?: string) => {
 export const useHabitRecords = (
     habitUuid: string,
     epochDayFrom?: number,
-    epochDayTo?: number
+    epochDayTo?: number,
 ) => {
     return useQuery({
         queryKey: [...habitKeys.records(habitUuid), epochDayFrom, epochDayTo],
+        queryFn: () => habitRecordApi.getRecords(habitUuid, epochDayFrom, epochDayTo),
+        enabled: !!habitUuid,
+        staleTime: 1000 * 30,
+    });
+};
+
+export const useHabitRecordsDetail = (
+    habitUuid: string,
+    epochDayFrom?: number,
+    epochDayTo?: number,
+) => {
+    return useQuery({
+        queryKey: [...habitKeys.recordsDetail(habitUuid), epochDayFrom, epochDayTo],
         queryFn: () => habitRecordApi.getRecords(habitUuid, epochDayFrom, epochDayTo),
         enabled: !!habitUuid,
         staleTime: 1000 * 30,
@@ -144,6 +160,16 @@ export const useUpdateHabit = () => {
                 (old) =>
                     old?.map((h) => (h.uuid === updatedHabit.uuid ? updatedHabit : h))
             );
+
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.records(updatedHabit.uuid),
+                refetchType: 'none'
+            });
+
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.recordsDetail(updatedHabit.uuid),
+                refetchType: 'none'
+            });
         },
     });
 };
@@ -214,6 +240,10 @@ export const useCreateHabitRecord = () => {
         mutationFn: ({habitUuid, record, isChallenge}: { habitUuid: string; record: ApiHabitRecordWrite, isChallenge: boolean}) =>
             habitRecordApi.createRecord(habitUuid, record),
         onSuccess: (_, {habitUuid, isChallenge}) => {
+            queryClient.removeQueries({
+                queryKey: habitKeys.recordsDetail(habitUuid),
+            })
+
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(habitUuid),
             });
@@ -224,7 +254,7 @@ export const useCreateHabitRecord = () => {
             });
 
             queryClient.invalidateQueries({
-                queryKey: [...habitKeys.detail(habitUuid), 'percentage-history'],
+                queryKey: [...habitKeys.percentageHistoryComplete(habitUuid)],
                 refetchType: 'none'
             });
 
