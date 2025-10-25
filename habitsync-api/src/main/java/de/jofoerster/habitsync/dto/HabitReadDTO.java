@@ -27,8 +27,6 @@ public class HabitReadDTO {
 
     private NotificationConfigDTO notificationFrequency;
 
-    private List<HabitRecordReadDTO> records;
-
     private Boolean hasConnectedHabits;
 
     private HabitNumberModalConfigDTO numberModalConfig;

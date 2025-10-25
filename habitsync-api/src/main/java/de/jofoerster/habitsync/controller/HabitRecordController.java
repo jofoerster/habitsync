@@ -58,7 +58,11 @@ public class HabitRecordController {
         if (habit == null) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(habitRecordService.getRecords(habit, epochDayFrom, epochDayTo));
+        if (epochDayTo-epochDayFrom <= 5) { // optimize fetching for small intervals (default for list)
+            return ResponseEntity.ok(habitService.getRecordsOfHabit(habit, epochDayFrom, epochDayTo));
+        } else {
+            return ResponseEntity.ok(habitRecordService.getRecords(habit, epochDayFrom, epochDayTo));
+        }
     }
 
     @GetMapping("/{habitUuid}/simple")

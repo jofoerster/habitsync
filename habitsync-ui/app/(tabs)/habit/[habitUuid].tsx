@@ -218,7 +218,8 @@ const HabitDetailsScreen = () => {
         if (selectedEpochDay) {
             await createHabitRecordMutation.mutateAsync({
                 habitUuid,
-                record: {epochDay: selectedEpochDay, recordValue: value}
+                record: {epochDay: selectedEpochDay, recordValue: value},
+                isChallenge: habitDetail?.isChallengeHabit || false
             });
         }
     }
@@ -228,7 +229,8 @@ const HabitDetailsScreen = () => {
             const value = record ? (record.recordValue === 1 ? 0 : 1) : 1;
             await createHabitRecordMutation.mutateAsync({
                 habitUuid,
-                record: {epochDay: record!.epochDay, recordValue: value}
+                record: {epochDay: record!.epochDay, recordValue: value},
+                isChallenge: habitDetail?.isChallengeHabit || false
             });
         } else {
             setModalVisible(true);

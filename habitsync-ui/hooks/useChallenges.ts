@@ -50,8 +50,12 @@ export const useCreateChallenge = () => {
     return useMutation({
         mutationFn: (challenge: ApiChallengeWrite) => challengeApi.createChallenge(challenge),
         onSuccess: () => {
-            queryClient.invalidateQueries({queryKey: challengeKeys.lists()});
-            queryClient.invalidateQueries({queryKey: challengeKeys.overview()});
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview(),
+            });
         },
     });
 };
@@ -65,8 +69,12 @@ export const useUpdateChallenge = () => {
             if (updatedChallenge.id) {
                 queryClient.setQueryData(challengeKeys.detail(updatedChallenge.id), updatedChallenge);
             }
-            queryClient.invalidateQueries({queryKey: challengeKeys.lists()});
-            queryClient.invalidateQueries({queryKey: challengeKeys.overview()});
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview(),
+            });
         },
     });
 };
@@ -78,8 +86,12 @@ export const useDeleteChallenge = () => {
         mutationFn: (id: number) => challengeApi.deleteChallenge(id),
         onSuccess: (_, id) => {
             queryClient.removeQueries({queryKey: challengeKeys.detail(id)});
-            queryClient.invalidateQueries({queryKey: challengeKeys.lists()});
-            queryClient.invalidateQueries({queryKey: challengeKeys.overview()});
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview(),
+            });
         },
     });
 };
@@ -91,8 +103,12 @@ export const useProposeChallenge = () => {
         mutationFn: (id: number) => challengeApi.proposeChallenge(id),
         onSuccess: (updatedChallenge) => {
             queryClient.setQueryData(challengeKeys.detail(updatedChallenge.id), updatedChallenge);
-            queryClient.invalidateQueries({queryKey: challengeKeys.lists()});
-            queryClient.invalidateQueries({queryKey: challengeKeys.overview()});
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview(),
+            });
         },
     });
 };
@@ -105,8 +121,9 @@ export const useVoteOnChallenge = () => {
             challengeApi.voteOnChallenge(id, vote),
         onSuccess: (updatedChallenge) => {
             queryClient.setQueryData(challengeKeys.detail(updatedChallenge.id), updatedChallenge);
-            queryClient.invalidateQueries({queryKey: challengeKeys.overview()});
+            queryClient.invalidateQueries({
+                queryKey: challengeKeys.overview(),
+            });
         },
     });
 };
-
