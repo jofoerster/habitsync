@@ -58,6 +58,7 @@ tracking.
 - **Flexible habit tracking** with customizable goals and frequencies
 - **Variety of habit types**: daily, weekly, monthly, or custom intervals
 - **Negative habits** to track and reduce unwanted behaviors
+- **Weekday selection** choose specific days for habit tracking
 
 ### 👥 **Social & Sharing Features**
 
