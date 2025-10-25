@@ -1,5 +1,6 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiSharedHabitWrite, sharedHabitApi,} from '@/services/api';
+import shareCode from "@/app/(tabs)/share/[shareCode]";
 
 export const sharedHabitKeys = {
     all: ['sharedHabits'] as const,
@@ -86,9 +87,12 @@ export const useJoinSharedHabit = () => {
     return useMutation({
         mutationFn: ({shareCode, habitUuid}: { shareCode: string; habitUuid?: string }) =>
             sharedHabitApi.joinSharedHabit(shareCode, habitUuid),
-        onSuccess: () => {
+        onSuccess: (sharedHabit) => {
             queryClient.invalidateQueries({
                 queryKey: sharedHabitKeys.lists(),
+            });
+            queryClient.invalidateQueries({
+                queryKey: sharedHabitKeys.detail(sharedHabit.shareCode),
             });
         },
     });

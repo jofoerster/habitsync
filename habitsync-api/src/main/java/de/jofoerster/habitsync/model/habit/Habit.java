@@ -50,7 +50,7 @@ public class Habit {
     private Integer color;
 
     @JsonProperty("daily_goal")
-    private Double dailyGoal;
+    private Double dailyGoal; //"Daily default"
 
     private DefaultDailyOperation defaultDailyOperation;
 
@@ -58,7 +58,7 @@ public class Habit {
     private String dailyGoalUnit;
 
     @JsonProperty("daily_goal_extra")
-    private Double dailyGoalExtra;
+    private Double dailyGoalExtra; // "Real" daily goal
 
     private Boolean isNegative;
 
@@ -218,7 +218,10 @@ public class Habit {
         if (iH.freqCustom != null) {
             this.freqCustom = iH.freqCustom;
         }
-        if (iH.name != null) {
+        if (iH.getDayFilterWhitelistAsList() != null) {
+            setDayFilterWhitelistFromList(iH.getDayFilterWhitelistAsList());
+        }
+        if (iH.name != null && !iH.name.isBlank()) {
             this.name = iH.name;
         }
     }
