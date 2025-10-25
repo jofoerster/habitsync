@@ -294,6 +294,7 @@ const SharedHabitDetailsScreen = () => {
             </View>
 
             {/* Copy Link Button */}
+            {userHasHabitInSharedHabit() && (
             <View style={styles.copyLinkSection}>
                 <TouchableOpacity
                     style={styles.copyLinkButton}
@@ -302,7 +303,7 @@ const SharedHabitDetailsScreen = () => {
                     <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
                     <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
                 </TouchableOpacity>
-            </View>
+            </View>)}
 
             {/* Description */}
             <View style={styles.descriptionSection}>
