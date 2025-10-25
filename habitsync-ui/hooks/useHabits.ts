@@ -114,7 +114,6 @@ export const useHabitRecordsDetail = (
         queryKey: [...habitKeys.recordsDetail(habitUuid), epochDayFrom, epochDayTo],
         queryFn: () => habitRecordApi.getRecords(habitUuid, epochDayFrom, epochDayTo),
         enabled: !!habitUuid,
-        staleTime: 1000 * 30,
     });
 };
 
@@ -166,9 +165,8 @@ export const useUpdateHabit = () => {
                 refetchType: 'none'
             });
 
-            queryClient.invalidateQueries({
+            queryClient.removeQueries({
                 queryKey: habitKeys.recordsDetail(updatedHabit.uuid),
-                refetchType: 'none'
             });
         },
     });
@@ -240,12 +238,14 @@ export const useCreateHabitRecord = () => {
         mutationFn: ({habitUuid, record, isChallenge}: { habitUuid: string; record: ApiHabitRecordWrite, isChallenge: boolean}) =>
             habitRecordApi.createRecord(habitUuid, record),
         onSuccess: (_, {habitUuid, isChallenge}) => {
-            queryClient.removeQueries({
+            queryClient.invalidateQueries({
                 queryKey: habitKeys.recordsDetail(habitUuid),
+                refetchType: 'none'
             })
 
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(habitUuid),
+                refetchType: 'active'
             });
 
             queryClient.invalidateQueries({
