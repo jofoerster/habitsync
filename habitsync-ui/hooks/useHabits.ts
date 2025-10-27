@@ -238,11 +238,51 @@ export const useCreateHabitRecord = () => {
     return useMutation({
         mutationFn: ({habitUuid, record, isChallenge}: { habitUuid: string; record: ApiHabitRecordWrite, isChallenge: boolean}) =>
             habitRecordApi.createRecord(habitUuid, record),
-        onSuccess: (_, {habitUuid, isChallenge}) => {
+        onMutate: async ({habitUuid, record}) => {
+            await queryClient.cancelQueries({
+                queryKey: habitKeys.recordsDetail(habitUuid),
+            });
+
+            const previousRecords = queryClient.getQueryData(habitKeys.recordsDetail(habitUuid));
+
+            queryClient.setQueryData(
+                habitKeys.recordsDetail(habitUuid),
+                (old: any) => {
+                    if (!old) return old;
+
+                    const optimisticRecord = {
+                        uuid: `temp-${Date.now()}`, // temporary UUID
+                        habitUuid,
+                        epochDay: record.epochDay,
+                        recordValue: record.recordValue,
+                        completion: 'COMPLETED' as any,
+                    };
+
+                    const existingIndex = old.findIndex((r: any) => r.epochDay === record.epochDay);
+                    if (existingIndex >= 0) {
+                        const newRecords = [...old];
+                        newRecords[existingIndex] = optimisticRecord;
+                        return newRecords;
+                    }
+                    return [...old, optimisticRecord];
+                }
+            );
+
+            return { previousRecords };
+        },
+        onError: (err, {habitUuid}, context) => {
+            if (context?.previousRecords) {
+                queryClient.setQueryData(
+                    habitKeys.recordsDetail(habitUuid),
+                    context.previousRecords
+                );
+            }
+        },
+        onSettled: (_, __, {habitUuid, isChallenge}) => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.recordsDetail(habitUuid),
                 refetchType: 'none'
-            })
+            });
 
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(habitUuid),
@@ -262,7 +302,7 @@ export const useCreateHabitRecord = () => {
             if (isChallenge) {
                 queryClient.invalidateQueries({
                     queryKey: challengeKeys.overview()
-                })
+                });
             }
         },
     });
