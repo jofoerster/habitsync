@@ -5,7 +5,7 @@ import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "rea
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {useHabitPercentageHistory, useHabitRecordsDetail} from "@/hooks/useHabits";
+import {useHabitPercentageHistory, useHabitRecords} from "@/hooks/useHabitUuids";
 
 // Platform-specific imports for Victory charts - only on web
 let VictoryLine: any, VictoryChart: any, VictoryAxis: any;
@@ -49,7 +49,7 @@ const ActivityCalendar = ({
     }, [currentMonth]);
 
     // Use React Query hooks for automatic cache updates
-    const {data: calendarRecords = []} = useHabitRecordsDetail(habit.uuid, startEpoch, endEpoch);
+    const {data: calendarRecords = []} = useHabitRecords(habit.uuid, startEpoch, endEpoch);
     const {data: percentageHistoryData} = useHabitPercentageHistory(habit.uuid, currentMonth);
     const percentageHistory = percentageHistoryData?.dailyPercentages || {};
 

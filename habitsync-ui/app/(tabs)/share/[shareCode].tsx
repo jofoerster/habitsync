@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import {ApiAccountRead, ApiComputationReadWrite, ApiHabitRead, FrequencyTypeDTO, sharedHabitApi} from '@/services/api';
+import {ApiAccountRead, ApiComputationReadWrite, ApiHabitRead, FrequencyTypeDTO} from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {getColorById} from "@/constants/colors";
@@ -23,7 +23,7 @@ import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
 import {AuthService} from "@/services/auth";
 import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
-import {useHabits} from "@/hooks/useHabits";
+import {useHabits} from "@/hooks/useHabitUuids";
 
 const {width} = Dimensions.get('window');
 
@@ -218,15 +218,15 @@ const SharedHabitDetailsScreen = () => {
                     {userHabits && userHabits.length > 0 && (
                         <>
                             <Text style={styles.modalSectionTitle}>Or connect an existing habit:</Text>
-                            {userHabits.map(habit => (
+                            {userHabits.map(userHabit => (
                                 <TouchableOpacity
-                                    key={habit.uuid}
+                                    key={userHabit.uuid}
                                     style={styles.existingHabitOption}
-                                    onPress={() => handleJoinWithExistingHabit(habit.uuid)}
+                                    onPress={() => handleJoinWithExistingHabit(userHabit.uuid)}
                                 >
                                     <View
-                                        style={[styles.habitColorDot, {backgroundColor: getColorById(habit.color) || '#E0E0E0'}]}/>
-                                    <Text style={styles.existingHabitName}>{habit.name}</Text>
+                                        style={[styles.habitColorDot, {backgroundColor: getColorById(userHabit.color) || '#E0E0E0'}]}/>
+                                    <Text style={styles.existingHabitName}>{userHabit.name}</Text>
                                 </TouchableOpacity>
                             ))}
                         </>
@@ -295,15 +295,15 @@ const SharedHabitDetailsScreen = () => {
 
             {/* Copy Link Button */}
             {userHasHabitInSharedHabit() && (
-            <View style={styles.copyLinkSection}>
-                <TouchableOpacity
-                    style={styles.copyLinkButton}
-                    onPress={handleCopy}
-                >
-                    <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
-                    <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
-                </TouchableOpacity>
-            </View>)}
+                <View style={styles.copyLinkSection}>
+                    <TouchableOpacity
+                        style={styles.copyLinkButton}
+                        onPress={handleCopy}
+                    >
+                        <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
+                        <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
+                    </TouchableOpacity>
+                </View>)}
 
             {/* Description */}
             <View style={styles.descriptionSection}>

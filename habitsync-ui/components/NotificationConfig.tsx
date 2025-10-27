@@ -15,7 +15,7 @@ import alert from "@/services/alert";
 import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useUpdateNotificationForHabit} from "@/hooks/useNotifications";
-import {useHabit} from "@/hooks/useHabits";
+import {useHabit} from "@/hooks/useHabitUuids";
 
 const NOTIFICATION_TYPES = [
     {
@@ -230,7 +230,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
                 <TouchableOpacity
                     style={styles.closeButton}
-                    onPress={() => onModalClose(config || currentConfig || {rules: []})}
+                    onPress={() => onModalClose(config || {rules: []})}
                 >
                     <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                 </TouchableOpacity>

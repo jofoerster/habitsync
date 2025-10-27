@@ -364,7 +364,7 @@ const ChallengesScreen = () => {
                 <>
                     <HabitRow
                         key={challengeHabit.uuid}
-                        habit={challengeHabit}
+                        habitUuid={challengeHabit}
                         isExpanded={false}
                         onToggleExpand={() => {
                         }}

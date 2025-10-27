@@ -62,6 +62,16 @@ public class HabitController {
     }
 
     /**
+     * Returns a list of all habit uuids of the user.
+     *
+     * @return A list of {@link HabitReadDTO} objects representing the user's habits.
+     */
+    @GetMapping("/uuids/list")
+    public ResponseEntity<List<String>> getUserHabitUuids() {
+        return ResponseEntity.ok(habitService.getAllUserHabitUuids(accountService.getCurrentAccount()));
+    }
+
+    /**
      * Retrieves a habit by its UUID.
      * User needs to own habit or have access to it via a shared habit.
      *

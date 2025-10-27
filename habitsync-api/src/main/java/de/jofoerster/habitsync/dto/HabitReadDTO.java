@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.dto;
 
+import de.jofoerster.habitsync.model.habit.HabitRecord;
 import lombok.Builder;
 import lombok.Data;
 
@@ -30,4 +31,6 @@ public class HabitReadDTO {
     private Boolean hasConnectedHabits;
 
     private HabitNumberModalConfigDTO numberModalConfig;
+
+    private List<HabitRecordReadDTO> records;
 }
