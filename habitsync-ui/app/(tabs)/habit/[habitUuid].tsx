@@ -139,7 +139,7 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
-        return getFrequencyTypeTextType(progressComputation) + (progressComputation.isNegative? " Max" : " Goal");
+        return getFrequencyTypeTextType(progressComputation) + (progressComputation.isNegative ? " Max" : " Goal");
     }
 
     const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {

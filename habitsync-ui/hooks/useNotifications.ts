@@ -28,9 +28,9 @@ export const useUpdateNotificationForHabit = () => {
         mutationFn: ({habitUuid, config}: { habitUuid: string; config: NotificationConfig }) =>
             notificationApi.updateNotificationForHabit(habitUuid, config),
         onSuccess: (_, {habitUuid}) => {
-            // Invalidate habit detail to get updated notification config - but don't refetch immediately
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(habitUuid),
+                refetchType: "none",
             });
         },
     });
