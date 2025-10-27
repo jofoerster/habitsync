@@ -15,6 +15,7 @@ import alert from "@/services/alert";
 import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useUpdateNotificationForHabit} from "@/hooks/useNotifications";
+import {useHabit} from "@/hooks/useHabits";
 
 const NOTIFICATION_TYPES = [
     {
@@ -45,16 +46,16 @@ type NotificationConfigProps = {
 
 const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                                                    habitUuid,
-                                                                   currentConfig,
                                                                    onModalClose
                                                                }) => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const [loading, setLoading] = useState(false);
-    const [appriseUrl, setAppriseUrl] = useState(currentConfig?.appriseTarget || '');
-    const [rules, setRules] = useState<NotificationConfigRule[]>(currentConfig?.rules || []);
-    const [config, setConfig] = useState<NotificationConfigType | null>(currentConfig);
+    const {data: habit, isLoading: loading} = useHabit(habitUuid);
+
+    const [appriseUrl, setAppriseUrl] = useState(habit?.notificationFrequency?.appriseTarget || '');
+    const [rules, setRules] = useState<NotificationConfigRule[]>(habit?.notificationFrequency?.rules || []);
+    const [config, setConfig] = useState<NotificationConfigType | null>(habit?.notificationFrequency || null);
 
     const updateNotificationForHabitMutation = useUpdateNotificationForHabit();
 
@@ -182,19 +183,13 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
     const saveConfig = async (rules: NotificationConfigRule[]) => {
         try {
-            setLoading(true);
-
             const config: NotificationConfigType = {
                 appriseTarget: appriseUrl.trim() || undefined,
                 rules: rules.filter(rule => rule.enabled)
             };
-            setConfig(config);
-
             await updateNotificationForHabitMutation.mutateAsync({habitUuid, config})
         } catch {
             alert('Error', 'Failed to update notification settings');
-        } finally {
-            setLoading(false);
         }
     };
 
