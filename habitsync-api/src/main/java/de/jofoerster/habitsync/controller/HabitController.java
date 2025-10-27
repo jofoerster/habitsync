@@ -180,6 +180,9 @@ public class HabitController {
         if (account1.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
+        if (account1.get().getAuthenticationId().equals(account.getAuthenticationId())) {
+            return ResponseEntity.badRequest().build();
+        }
         checkIfIsOwner(habit, account);
         habitParticipationService.inviteParticipant(habit.getUuid(), participantAuthId);
         return ResponseEntity.ok().build();

@@ -1,6 +1,7 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiHabitRead, ApiHabitRecordWrite, ApiHabitWrite, habitApi, habitRecordApi,} from '@/services/api';
 import {challengeKeys} from "@/hooks/useChallenges";
+import {userKeys} from "@/hooks/useUser";
 
 export const habitKeys = {
     all: ['habits'] as const,
@@ -314,6 +315,9 @@ export const useAcceptHabitInvitation = () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.lists(),
             });
+            queryClient.invalidateQueries({
+                queryKey: userKeys.invitations(),
+            })
         },
     });
 };
@@ -331,6 +335,9 @@ export const useDeclineHabitInvitation = () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.lists(),
             });
+            queryClient.invalidateQueries({
+                queryKey: userKeys.invitations(),
+            })
         },
     });
 };
