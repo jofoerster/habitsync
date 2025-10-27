@@ -28,6 +28,15 @@ export const useHabitUuids = () => {
     });
 };
 
+export const useHabits = () => {
+    return useQuery({
+        queryKey: habitKeys.list(),
+        queryFn: () => habitApi.getUserHabits(),
+        staleTime: 1000 * 60 * 5,
+        refetchOnMount: 'always', // always refetch when component mounts
+    });
+};
+
 /**
  * Get a single habit by UUID
  * Use this for habit detail screens

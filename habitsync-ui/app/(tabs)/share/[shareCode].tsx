@@ -10,7 +10,7 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
-import {ApiAccountRead, ApiComputationReadWrite, ApiHabitRead, FrequencyTypeDTO, sharedHabitApi} from '@/services/api';
+import {ApiAccountRead, ApiComputationReadWrite, ApiHabitRead, FrequencyTypeDTO} from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useLocalSearchParams, useRouter} from "expo-router";
 import {getColorById} from "@/constants/colors";
@@ -23,7 +23,7 @@ import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
 import {AuthService} from "@/services/auth";
 import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
-import {useHabitUuids} from "@/hooks/useHabitUuids";
+import {useHabits} from "@/hooks/useHabitUuids";
 
 const {width} = Dimensions.get('window');
 
@@ -37,7 +37,7 @@ const SharedHabitDetailsScreen = () => {
     const editModeEnabled = useLocalSearchParams()['edit'] === 'true';
 
     const {data: sharedHabit, isLoading: sharedHabitLoading} = useSharedHabit(shareCode);
-    const {data: userHabitUuids, isLoading: userHabitsLoading} = useHabitUuids();
+    const {data: userHabits, isLoading: userHabitsLoading} = useHabits();
 
     const updateSharedHabit = useUpdateSharedHabit();
     const joinSharedHabit = useJoinSharedHabit();
@@ -215,17 +215,18 @@ const SharedHabitDetailsScreen = () => {
                         <Text style={styles.modalButtonText}>Create New Habit</Text>
                     </TouchableOpacity>
 
-                    {userHabitUuids && userHabitUuids.length > 0 && (
+                    {userHabits && userHabits.length > 0 && (
                         <>
                             <Text style={styles.modalSectionTitle}>Or connect an existing habit:</Text>
-                            {userHabitUuids.map(habitUuid => (
+                            {userHabits.map(userHabit => (
                                 <TouchableOpacity
-                                    key={habitUuid}
+                                    key={userHabit.uuid}
                                     style={styles.existingHabitOption}
-                                    onPress={() => handleJoinWithExistingHabit(habitUuid)}
+                                    onPress={() => handleJoinWithExistingHabit(userHabit.uuid)}
                                 >
                                     <View
-                                        style={[styles.habitColorDot, {backgroundColor: '#E0E0E0'}]}/>
+                                        style={[styles.habitColorDot, {backgroundColor: getColorById(userHabit.color) || '#E0E0E0'}]}/>
+                                    <Text style={styles.existingHabitName}>{userHabit.name}</Text>
                                 </TouchableOpacity>
                             ))}
                         </>
@@ -294,15 +295,15 @@ const SharedHabitDetailsScreen = () => {
 
             {/* Copy Link Button */}
             {userHasHabitInSharedHabit() && (
-            <View style={styles.copyLinkSection}>
-                <TouchableOpacity
-                    style={styles.copyLinkButton}
-                    onPress={handleCopy}
-                >
-                    <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
-                    <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
-                </TouchableOpacity>
-            </View>)}
+                <View style={styles.copyLinkSection}>
+                    <TouchableOpacity
+                        style={styles.copyLinkButton}
+                        onPress={handleCopy}
+                    >
+                        <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
+                        <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
+                    </TouchableOpacity>
+                </View>)}
 
             {/* Description */}
             <View style={styles.descriptionSection}>

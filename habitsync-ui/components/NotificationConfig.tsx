@@ -230,7 +230,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
                 <TouchableOpacity
                     style={styles.closeButton}
-                    onPress={() => onModalClose(config || currentConfig || {rules: []})}
+                    onPress={() => onModalClose(config || {rules: []})}
                 >
                     <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                 </TouchableOpacity>
