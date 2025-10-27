@@ -31,8 +31,7 @@ RUN addgroup -g 6842 -S appgroup && \
 
 RUN mkdir -p /data && chown appuser:appgroup /data
 
-COPY --from=api-builder /app/api/target/habitsync-api-*.jar /app/app.jar
-RUN chown appuser:appgroup /app/app.jar
+COPY --from=api-builder --chown=appuser:appgroup /app/api/target/habitsync-api-*.jar /app/app.jar
 
 USER appuser
 
