@@ -21,7 +21,7 @@ export const habitKeys = {
 
 export const useHabitUuids = () => {
     return useQuery({
-        queryKey: habitKeys.list(),
+        queryKey: [...habitKeys.list(), "uuids"],
         queryFn: () => habitApi.getUserHabitUuids(),
         staleTime: 1000 * 60 * 5,
         refetchOnMount: 'always', // always refetch when component mounts
@@ -30,7 +30,7 @@ export const useHabitUuids = () => {
 
 export const useHabits = () => {
     return useQuery({
-        queryKey: habitKeys.list(),
+        queryKey: [...habitKeys.list(), "full"],
         queryFn: () => habitApi.getUserHabits(),
         staleTime: 1000 * 60 * 5,
         refetchOnMount: 'always', // always refetch when component mounts
@@ -233,13 +233,24 @@ export const useCreateHabitRecord = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({habitUuid, record, isChallenge}: {
+        mutationFn: ({habitUuid, record}: {
             habitUuid: string;
             record: ApiHabitRecordWrite,
-            isChallenge: boolean
+            isChallenge: boolean,
+            isDetailView:boolean,
         }) =>
             habitRecordApi.createRecord(habitUuid, record),
         onSuccess: ({habitUuid}, variables) => {
+            if (variables.isDetailView) {
+                queryClient.invalidateQueries({
+                    queryKey: [...habitKeys.records(habitUuid)],
+                });
+            } else {
+                queryClient.removeQueries({
+                    queryKey: habitKeys.records(habitUuid),
+                });
+            }
+
             queryClient.invalidateQueries({
                 queryKey: [...habitKeys.percentageHistoryComplete(habitUuid)],
                 refetchType: 'none'

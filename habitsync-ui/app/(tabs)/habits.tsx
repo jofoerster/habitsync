@@ -7,7 +7,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabitUuids";
+import {useHabits, useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
 
 const DateHeader = () => {
     const {theme} = useTheme();

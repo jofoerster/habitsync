@@ -5,7 +5,7 @@ import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "rea
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {useHabitPercentageHistory, useHabitRecords} from "@/hooks/useHabitUuids";
+import {useHabitPercentageHistory, useHabitRecords} from "@/hooks/useHabits";
 
 // Platform-specific imports for Victory charts - only on web
 let VictoryLine: any, VictoryChart: any, VictoryAxis: any;

@@ -19,7 +19,7 @@ import {createThemedStyles} from '@/constants/styles';
 import ThemeToggle from '@/components/ThemeToggle';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {useApiKey, useEvictApiKeys, useHabitInvitations, useUpdateUserSettings, useUserSettings, useClearAllCache} from "@/hooks/useUser";
-import {useAcceptHabitInvitation, useDeclineHabitInvitation} from "@/hooks/useHabitUuids";
+import {useAcceptHabitInvitation, useDeclineHabitInvitation} from "@/hooks/useHabits";
 
 
 const UserSettingsComponent = () => {

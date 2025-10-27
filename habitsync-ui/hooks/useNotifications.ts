@@ -1,6 +1,6 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {habitNumberModalApi, notificationApi, NotificationConfig,} from '@/services/api';
-import {habitKeys} from './useHabitUuids';
+import {habitKeys} from './useHabits';
 
 export const notificationKeys = {
     all: ['notifications'] as const,

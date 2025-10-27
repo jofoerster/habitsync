@@ -6,7 +6,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {useHabit} from "@/hooks/useHabitUuids";
+import {useHabit} from "@/hooks/useHabits";
 import {useApproveUser, useUnapprovedUsers} from "@/hooks/useUser";
 
 

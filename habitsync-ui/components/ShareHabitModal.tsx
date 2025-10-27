@@ -7,7 +7,7 @@ import {createThemedStyles} from '@/constants/styles';
 import {ApiHabitRead, ApiSharedHabitRead,} from '@/services/api';
 import {getUiBaseUrl} from '@/public/config';
 import alert from '@/services/alert';
-import {useHabitParticipants, useInviteParticipant, useRemoveParticipant} from "@/hooks/useHabitUuids";
+import {useHabitParticipants, useInviteParticipant, useRemoveParticipant} from "@/hooks/useHabits";
 import {useCreateSharedHabit} from "@/hooks/useSharedHabits";
 
 interface ShareHabitModalProps {

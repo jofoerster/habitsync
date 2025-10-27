@@ -6,7 +6,7 @@ import alert from "@/services/alert";
 import HabitConfig, {ConfigType} from "@/components/HabitConfig";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {useCreateHabit, useHabit, useUpdateHabit} from "@/hooks/useHabitUuids";
+import {useCreateHabit, useHabit, useUpdateHabit} from "@/hooks/useHabits";
 
 const HabitEditScreen = () => {
     const {theme} = useTheme();
