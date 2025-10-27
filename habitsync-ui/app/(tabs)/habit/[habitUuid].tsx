@@ -22,7 +22,7 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import NotificationConfigComponent from "@/components/NotificationConfig";
 import ShareHabitModal from "@/components/ShareHabitModal";
-import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
+import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabitUuids";
 import {useLeaveSharedHabit, useSharedHabits} from "@/hooks/useSharedHabits";
 
 const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';

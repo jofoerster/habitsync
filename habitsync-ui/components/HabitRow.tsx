@@ -9,7 +9,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {useConnectedHabits, useCreateHabitRecord, useHabit, useHabitRecords} from "@/hooks/useHabits";
+import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabitUuids";
 
 
 interface DayButtonProps {
@@ -157,7 +157,7 @@ const DayButton: React.FC<DayButtonProps> = ({
 };
 
 interface HabitRowProps {
-    habit: ApiHabitRead,
+    habitUuid: string,
     isExpanded: boolean,
     onToggleExpand: () => void,
     isConnectedHabitView?: boolean,
@@ -173,7 +173,7 @@ interface HabitRowProps {
 }
 
 const HabitRow: React.FC<HabitRowProps> = ({
-                                               habit,
+                                               habitUuid,
                                                isExpanded,
                                                onToggleExpand,
                                                isConnectedHabitView,
@@ -199,19 +199,15 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const getEpochDay = (date: Date): number =>
         Math.floor(date.getTime() / 86400000);
 
-    const {data: habitFetched, isLoading: habitLoading} = useHabit(habit.uuid, true);
+    const {data: habit, isLoading: habitLoading} = useHabit(habitUuid, true);
+    const recordsMap = habitLoading ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
 
-    const {data: habitRecords, isLoading: recordsLoading} =
-        useHabitRecords(habit.uuid, getEpochDay(new Date()) - 2, getEpochDay(new Date()));
-
-    const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit.hasConnectedHabits;
+    const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
 
     const {
         data: connectedHabits,
-        isLoading: connectedHabitsLoading
-    } = useConnectedHabits(habit.uuid, hasConnectedHabits);
-
-    const records = recordsLoading ? new Map() : new Map(habitRecords!.map(record => [record.epochDay, record]));
+        isLoading: connectedHabitsLoading,
+    } = useConnectedHabits(habitUuid, hasConnectedHabits);
 
     const formatDate = (date: Date): string =>
         date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}).replace('/', '.');
@@ -233,10 +229,10 @@ const HabitRow: React.FC<HabitRowProps> = ({
     ];
 
     const getRecordForDay = (epochDay) => {
-        if (recordsLoading) {
+        if (habitLoading) {
             return {completion: 'LOADING', recordValue: "?"};
         }
-        return records.get(epochDay) || {completion: 'MISSED', recordValue: 0};
+        return recordsMap.get(epochDay) || {completion: 'MISSED', recordValue: 0};
     };
 
     const handleDayPress = async (epochDay) => {
@@ -290,6 +286,26 @@ const HabitRow: React.FC<HabitRowProps> = ({
         }
     };
 
+    if (habitLoading) {
+        return (<View style={{marginBottom: 16}}>
+            <View style={{
+                backgroundColor: theme.surface,
+                borderRadius: 10,
+                padding: 4,
+                shadowColor: '#000',
+                shadowOffset: {width: 0, height: 1},
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 1,
+            }}>
+                <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text, padding: 10}}>
+                    Loading...
+                </Text>
+            </View>
+        </View>
+    );
+    }
+
     return (
         <View style={{marginBottom: 16}}>
             <View style={{
@@ -314,7 +330,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                             <View style={{paddingRight: 10}}>
                                 {!hideProgressRing && (
                                     <ProgressRing color={habit.color}
-                                                  percentage={habitLoading ? 0 : habitFetched!.currentPercentage}/>)}
+                                                  percentage={habitLoading ? 0 : habit!.currentPercentage}/>)}
                             </View>
                             <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
@@ -421,7 +437,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                     {connectedHabits.filter(habit => habit.currentPercentage > 0.01).map(connectedHabit => (
                         <HabitRow
                             key={connectedHabit.uuid}
-                            habit={connectedHabit}
+                            habitUuid={connectedHabit.uuid}
                             isExpanded={false}
                             onToggleExpand={() => {
                             }}

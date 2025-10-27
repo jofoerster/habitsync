@@ -15,7 +15,7 @@ import alert from "@/services/alert";
 import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useUpdateNotificationForHabit} from "@/hooks/useNotifications";
-import {useHabit} from "@/hooks/useHabits";
+import {useHabit} from "@/hooks/useHabitUuids";
 
 const NOTIFICATION_TYPES = [
     {

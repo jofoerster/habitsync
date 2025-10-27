@@ -23,7 +23,7 @@ import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
 import {AuthService} from "@/services/auth";
 import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
-import {useHabits} from "@/hooks/useHabits";
+import {useHabitUuids} from "@/hooks/useHabitUuids";
 
 const {width} = Dimensions.get('window');
 
@@ -37,7 +37,7 @@ const SharedHabitDetailsScreen = () => {
     const editModeEnabled = useLocalSearchParams()['edit'] === 'true';
 
     const {data: sharedHabit, isLoading: sharedHabitLoading} = useSharedHabit(shareCode);
-    const {data: userHabits, isLoading: userHabitsLoading} = useHabits();
+    const {data: userHabitUuids, isLoading: userHabitsLoading} = useHabitUuids();
 
     const updateSharedHabit = useUpdateSharedHabit();
     const joinSharedHabit = useJoinSharedHabit();
@@ -215,18 +215,17 @@ const SharedHabitDetailsScreen = () => {
                         <Text style={styles.modalButtonText}>Create New Habit</Text>
                     </TouchableOpacity>
 
-                    {userHabits && userHabits.length > 0 && (
+                    {userHabitUuids && userHabitUuids.length > 0 && (
                         <>
                             <Text style={styles.modalSectionTitle}>Or connect an existing habit:</Text>
-                            {userHabits.map(habit => (
+                            {userHabitUuids.map(habitUuid => (
                                 <TouchableOpacity
-                                    key={habit.uuid}
+                                    key={habitUuid}
                                     style={styles.existingHabitOption}
-                                    onPress={() => handleJoinWithExistingHabit(habit.uuid)}
+                                    onPress={() => handleJoinWithExistingHabit(habitUuid)}
                                 >
                                     <View
-                                        style={[styles.habitColorDot, {backgroundColor: getColorById(habit.color) || '#E0E0E0'}]}/>
-                                    <Text style={styles.existingHabitName}>{habit.name}</Text>
+                                        style={[styles.habitColorDot, {backgroundColor: '#E0E0E0'}]}/>
                                 </TouchableOpacity>
                             ))}
                         </>

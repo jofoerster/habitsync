@@ -7,7 +7,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabits, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
+import {useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabitUuids";
 
 const DateHeader = () => {
     const {theme} = useTheme();
@@ -48,7 +48,7 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const {data: habits = [], isLoading: loading, refetch} = useHabits();
+    const {data: habitUuids = [], isLoading: loading, refetch} = useHabitUuids();
 
     const moveHabitUpMutation = useMoveHabitUp();
     const moveHabitDownMutation = useMoveHabitDown();
@@ -121,7 +121,7 @@ const HabitTrackerScreen = () => {
                 <View style={styles.emptyState}>
                     <Text style={styles.emptyStateText}>Loading your habits...</Text>
                 </View>
-            ) : habits.length === 0 ? (
+            ) : habitUuids.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="target" size={64} color="#ccc"/>
                     <Text style={styles.emptyStateText}>No habits yet</Text>
@@ -129,42 +129,42 @@ const HabitTrackerScreen = () => {
                 </View>
             ) : isDragModeEnabled ? (
                 <FlatList
-                    data={habits}
+                    data={habitUuids}
                     renderItem={({item, index}) => (
                         <HabitRow
-                            key={item.uuid}
-                            habit={item}
-                            isExpanded={expandedHabits[item.uuid]}
-                            onToggleExpand={() => toggleHabitExpansion(item.uuid)}
+                            key={item}
+                            habitUuid={item}
+                            isExpanded={expandedHabits[item]}
+                            onToggleExpand={() => toggleHabitExpansion(item)}
                             isConnectedHabitView={false}
-                            isChallengeHabit={item.isChallengeHabit}
+                            isChallengeHabit={false}
                             hideDates={true}
                             isDragModeEnabled={isDragModeEnabled}
                             habitIndex={index}
-                            totalHabits={habits.length}
+                            totalHabits={habitUuids.length}
                             onMoveUp={handleMoveUp}
                             onMoveDown={handleMoveDown}
                         />
                     )}
-                    keyExtractor={(item) => item.uuid}
+                    keyExtractor={(item) => item}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={true}
                 />
             ) : (
                 <FlatList
-                    data={habits}
+                    data={habitUuids}
                     renderItem={({item}) => (
                         <HabitRow
-                            key={item.uuid}
-                            habit={item}
-                            isExpanded={expandedHabits[item.uuid]}
-                            onToggleExpand={() => toggleHabitExpansion(item.uuid)}
+                            key={item}
+                            habitUuid={item}
+                            isExpanded={expandedHabits[item]}
+                            onToggleExpand={() => toggleHabitExpansion(item)}
                             isConnectedHabitView={false}
-                            isChallengeHabit={item.isChallengeHabit}
+                            isChallengeHabit={false}
                             hideDates={true}
                         />
                     )}
-                    keyExtractor={(item) => item.uuid}
+                    keyExtractor={(item) => item}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 />

@@ -18,11 +18,9 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -180,6 +178,11 @@ public class HabitService {
                 .map(this::getApiHabitReadFromHabit).toList();
     }
 
+    public List<String> getAllUserHabitUuids(Account currentAccount) {
+        return habitRepository.findByAccountAndChallengeHabitAndStatus(currentAccount, false, 1).stream().map(Habit::getUuid)
+                .toList();
+    }
+
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {
         Double currentPercentage = cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now());
         String currentMedal = getLastMonthMedalString(habit);
@@ -197,7 +200,9 @@ public class HabitService {
                 .notificationFrequency(this.getNotificationConfig(habit))
                 .numberModalConfig(habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
                         .getApiHabitNumberModalConfig())
-                .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(), habit.getHabitType()) > 0)
+                .records(getRecordsOfCurrentDays(habit))
+                .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(),
+                        habit.getHabitType()) > 0)
                 .build();
 
     }
@@ -205,7 +210,7 @@ public class HabitService {
     private List<HabitRecordReadDTO> getRecordsOfCurrentDays(Habit habit) {
         List<HabitRecordReadDTO> records = new ArrayList<>();
         int todayEpochDay = (int) LocalDate.now().toEpochDay();
-        for (int i = todayEpochDay - 3; i <= todayEpochDay + 1; i++ ) {
+        for (int i = todayEpochDay - 3; i <= todayEpochDay + 1; i++) {
             records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
         }
         return records;
@@ -213,7 +218,7 @@ public class HabitService {
 
     public List<HabitRecordReadDTO> getRecordsOfHabit(Habit habit, int from, int to) {
         List<HabitRecordReadDTO> records = new ArrayList<>();
-        for (int i = from; i <= to; i++ ) {
+        for (int i = from; i <= to; i++) {
             records.add(cachingHabitRecordService.getHabitRecordByHabitAndEpochDay(habit, i));
         }
         return records;

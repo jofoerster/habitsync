@@ -16,6 +16,7 @@ export interface ApiHabitRead {
     notificationFrequency: NotificationConfig | null;
     hasConnectedHabits: boolean;
     numberModalConfig: ApiHabitNumberModalConfig;
+    records: ApiHabitRecordRead[];
 }
 
 export interface PercentageHistoryDTO {
@@ -291,6 +292,12 @@ export const userApi = {
 export const habitApi = {
     getUserHabits: async (): Promise<ApiHabitRead[]> => {
         const response = await authenticatedFetch(`/api/habit/list`);
+        if (!response.ok) throw new Error('Failed to fetch habits');
+        return response.json();
+    },
+
+    getUserHabitUuids: async (): Promise<string[]> => {
+        const response = await authenticatedFetch(`/api/habit/uuids/list`);
         if (!response.ok) throw new Error('Failed to fetch habits');
         return response.json();
     },
