@@ -179,7 +179,8 @@ public class HabitService {
     }
 
     public List<String> getAllUserHabitUuids(Account currentAccount) {
-        return habitRepository.findByAccountAndChallengeHabitAndStatus(currentAccount, false, 1).stream().map(Habit::getUuid)
+        return habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
+                .stream().map(Habit::getUuid)
                 .toList();
     }
 

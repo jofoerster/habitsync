@@ -199,7 +199,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const getEpochDay = (date: Date): number =>
         Math.floor(date.getTime() / 86400000);
 
-    const {data: habit, isLoading: habitLoading} = useHabit(habitUuid, true);
+    const {data: habit, isLoading: habitLoading, refetch: refetchHabit} = useHabit(habitUuid, true);
     const recordsMap = habitLoading || !habit || !habit.records ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
@@ -258,6 +258,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 isChallenge: isChallengeHabit || false,
                 isDetailView: false
             })
+            await refetchHabit();
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -285,6 +286,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 isChallenge: isChallengeHabit || false,
                 isDetailView: false
             })
+            await refetchHabit();
         } catch (error) {
             alert('Error', 'Failed to update record');
         }

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,4 +39,6 @@ public interface HabitRepository extends JpaRepository<Habit, Long> {
     List<Habit> findByReminderCustomIsNotEmptyAndStatus(@Param("status") Integer status);
 
     double countHabitsByAccountAndHabitTypeAndStatusAndChallengeHabit(Account account, HabitType habitType, Integer status, boolean challengeHabit);
+
+    List<Habit> findByAccountAndChallengeHabitAndStatusOrderBySortPosition(Account currentAccount, boolean b, int i);
 }
