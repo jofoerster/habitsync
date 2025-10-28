@@ -22,8 +22,9 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import NotificationConfigComponent from "@/components/NotificationConfig";
 import ShareHabitModal from "@/components/ShareHabitModal";
-import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
+import {habitKeys, useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
 import {useLeaveSharedHabit, useSharedHabits} from "@/hooks/useSharedHabits";
+import {queryClient} from "@/context/ReactQueryContext";
 
 const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';
 
@@ -106,14 +107,17 @@ const HabitDetailsScreen = () => {
     const isNonNummericHabit = habitDetail?.progressComputation?.dailyReachableValue === 1
         && habitDetail.progressComputation.dailyDefault === "1";
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.records(habitUuid),
+            });
             await refetch();
         } catch (error) {
             console.error('Error fetching habit details:', error);
             alert('Error', 'Failed to load habit details');
         }
-    };
+    }, [habitUuid, refetch]);
 
     useFocusEffect(
         useCallback(() => {

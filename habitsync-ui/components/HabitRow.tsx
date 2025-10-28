@@ -8,7 +8,9 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
+import {habitKeys, useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
+import {challengeKeys} from "@/hooks/useChallenges";
+import {queryClient} from "@/context/ReactQueryContext";
 
 
 interface DayButtonProps {
@@ -203,8 +205,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
 
-    console.log("hasconnectedhabits", hasConnectedHabits);
-
     const {
         data: connectedHabits,
         isLoading: connectedHabitsLoading,
@@ -251,15 +251,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
             } else {
                 newRecordValue = oldRecord.recordValue == 0 ? Math.abs(parseFloat(habit.progressComputation.dailyDefault)) : 0;
             }
-            await updateHabitRecordMutation.mutateAsync({
-                habitUuid: habitUuid, record: {
-                    epochDay: epochDay,
-                    recordValue: newRecordValue,
-                },
-                isChallenge: isChallengeHabit || false,
-                isDetailView: false
-            })
-            await refetchHabit();
+            updateHabitValue(habitUuid, epochDay, newRecordValue);
+
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -278,20 +271,39 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const handleModalSubmit = async (value: string) => {
         try {
             const epochDay = modalConfig.epochDay;
+            updateHabitValue(habitUuid, epochDay, value);
 
-            updateHabitRecordMutation.mutateAsync({
-                habitUuid: habitUuid, record: {
-                    epochDay: epochDay,
-                    recordValue: parseFloat(value) || 0
-                },
-                isChallenge: isChallengeHabit || false,
-                isDetailView: false
-            })
-            await refetchHabit();
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
     };
+
+    const updateHabitValue = (habitUuid: string, epochDay: number, recordValue: string) => {
+        updateHabitRecordMutation.mutate({
+            habitUuid: habitUuid, record: {
+                epochDay: epochDay,
+                recordValue: parseFloat(recordValue) || 0
+            },
+            isChallenge: isChallengeHabit || false,
+            isDetailView: false
+        }, {
+            onSuccess: () => {
+                if (isChallengeHabit) {
+                    queryClient.invalidateQueries({
+                        queryKey: challengeKeys.overview(),
+                        refetchType: 'active'
+                    });
+                }
+
+                queryClient.invalidateQueries({
+                    queryKey: habitKeys.records(habitUuid),
+                    refetchType: "none"
+                })
+
+                refetchHabit();
+            }
+        })
+    }
 
     if (loading || !habit) {
         return (<View style={{marginBottom: 16}}>

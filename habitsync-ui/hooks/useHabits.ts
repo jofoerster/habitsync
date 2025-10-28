@@ -153,12 +153,9 @@ export const useUpdateHabit = () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(updatedHabit.uuid),
             });
-
-            queryClient.setQueryData<ApiHabitRead[]>(
-                habitKeys.list(),
-                (old) =>
-                    old?.map((h) => (h.uuid === updatedHabit.uuid ? updatedHabit : h))
-            );
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.list(),
+            });
         },
     });
 };
