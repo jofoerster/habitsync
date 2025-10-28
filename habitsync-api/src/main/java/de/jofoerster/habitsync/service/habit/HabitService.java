@@ -102,10 +102,11 @@ public class HabitService {
                 habitToAdd.setColor(rand.nextInt(10) + 1);
                 habitToAdd.setConnectedSharedHabitId(sharedHabit.getId());
                 this.saveHabit(habitToAdd);
-            } else {
-                cachingNumberOfConnectedHabitsService.evictCache(habitUuid);
             }
             sharedHabit.addHabit(habitToAdd);
+            for (Habit h : sharedHabit.getHabits()) {
+                cachingNumberOfConnectedHabitsService.evictCache(h.getUuid());
+            }
             return Optional.of(sharedHabitService.save(sharedHabit));
         }
 

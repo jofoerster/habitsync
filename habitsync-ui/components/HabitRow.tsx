@@ -204,6 +204,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
 
+    console.log("hasconnectedhabits", hasConnectedHabits);
+
     const {
         data: connectedHabits,
         isLoading: connectedHabitsLoading,
