@@ -1,4 +1,3 @@
-import {ChevronDown, ChevronUp} from "lucide-react-native";
 import React, {useState} from "react";
 import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead} from "../services/api";
@@ -365,8 +364,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                 }}
                                 onPress={onToggleExpand}
                             >
-                                {isExpanded ? <ChevronUp color={theme.text} size={20}/> :
-                                    <ChevronDown color={theme.text} size={20}/>}
+                                {isExpanded ? <MaterialCommunityIcons name="chevron-up" color={theme.text} size={20}/> :
+                                    <MaterialCommunityIcons name="chevron-down" color={theme.text} size={20}/>}
                             </TouchableOpacity>
                         )}
 

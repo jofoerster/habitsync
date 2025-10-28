@@ -3,7 +3,7 @@ import {StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {getColorById} from "@/constants/colors";
 import ProgressBar from "@/components/ProgressBar";
 import {ApiAccountRead, ApiHabitRead, ApiSharedHabitMedalsRead, ApiSharedHabitRead} from "@/services/api";
-import {ChevronDown, ChevronUp} from "lucide-react-native";
+import {MaterialCommunityIcons} from "@expo/vector-icons";
 import ActivityCalendar from "@/components/ActivityCalendar";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
@@ -34,8 +34,9 @@ const SharedHabitParticipants = ({sharedHabit, currentUser, hideHabit, medals}: 
                     <View style={{flex: 1, flexDirection: 'column'}}>
                         <View style={{flex: 1, flexDirection: 'row', alignItems: 'center'}}>
                             <TouchableOpacity onPress={() => onToggleExpand(habit.uuid)}>
-                                {isExpandedList.get(habit.uuid) ? <ChevronUp color={theme.text} size={20} style={{marginRight: 5}}/> :
-                                    <ChevronDown color={theme.text} size={20} style={{marginRight: 5}}/>}
+                                {isExpandedList.get(habit.uuid) ?
+                                    <MaterialCommunityIcons name="chevron-up" color={theme.text} size={20} style={{marginRight: 5}}/> :
+                                    <MaterialCommunityIcons name="chevron-down" color={theme.text} size={20} style={{marginRight: 5}}/>}
                             </TouchableOpacity>
                             <View style={styles.participantInfo}>
                                 <View

@@ -10,12 +10,12 @@ import {useHabitPercentageHistory, useHabitRecords} from "@/hooks/useHabits";
 // Platform-specific imports for Victory charts - only on web
 let VictoryLine: any, VictoryChart: any, VictoryAxis: any;
 
-if (Platform.OS === 'web') {
-    const Victory = require('victory');
-    VictoryLine = Victory.VictoryLine;
-    VictoryChart = Victory.VictoryChart;
-    VictoryAxis = Victory.VictoryAxis;
-}
+// if (Platform.OS === 'web') {
+//     const Victory = require('victory');
+//     VictoryLine = Victory.VictoryLine;
+//     VictoryChart = Victory.VictoryChart;
+//     VictoryAxis = Victory.VictoryAxis;
+// }
 
 const ActivityCalendar = ({
                               handleClickOnCalendarItem,
@@ -75,7 +75,7 @@ const ActivityCalendar = ({
 
     const renderGraph = () => {
         // Only render graph on web
-        if (Platform.OS !== 'web') {
+        if (true || Platform.OS !== 'web') {
             return null;
         }
 
@@ -266,7 +266,7 @@ const ActivityCalendar = ({
                 <View style={styles.headerRow}>
                     <Text style={styles.sectionTitle}>Activity Calendar</Text>
                     {/* Only show toggle button on web */}
-                    {Platform.OS === 'web' && (
+                    {Platform.OS === 'web' && false && (
                         <TouchableOpacity
                             onPress={() => setShowCalendarAsGraph(!showCalendarAsGraph)}
                             style={styles.toggleButton}
