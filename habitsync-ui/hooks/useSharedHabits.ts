@@ -64,6 +64,7 @@ export const useUpdateSharedHabit = () => {
                 queryKey: sharedHabitKeys.lists(),
             });
             for (const h of updatedHabit.habits) {
+                console.log("invalidate habit detail for", h.uuid);
                 queryClient.invalidateQueries({
                     queryKey: habitKeys.detail(h.uuid),
                 })

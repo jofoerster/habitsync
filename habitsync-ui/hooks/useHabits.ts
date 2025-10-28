@@ -67,7 +67,7 @@ export const useHabitPercentageHistory = (uuid: string, month: Date) => {
 /**
  * Get connected habits
  */
-export const useConnectedHabits = (uuid: string, enabled = true) => {
+export const useConnectedHabits = (uuid: string, enabled = false) => {
     return useQuery({
         queryKey: habitKeys.connectedHabits(uuid),
         queryFn: () => habitApi.getConnectedHabits(uuid),

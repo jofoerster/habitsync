@@ -27,13 +27,17 @@ public class SharedHabitService {
     private final HabitRepository habitRepository;
     private final HabitParticipationService habitParticipationService;
     private final CachingHabitProgressService cachingHabitProgressService;
+    private final CachingHabitProgressHistoryService cachingHabitProgressHistoryService;
+    private final CachingHabitRecordService cachingHabitRecordService;
 
     public SharedHabitService(SharedHabitRepository sharedHabitRepository, HabitRecordRepository habitRecordRepository,
                               NotificationRuleService notificationRuleService,
                               SharedHabitResultsRepository sharedHabitResultsRepository,
                               HabitRepository habitRepository, HabitParticipantRepository habitParticipantRepository,
                               HabitParticipationService habitParticipationService,
-                              CachingHabitProgressService cachingHabitProgressService) {
+                              CachingHabitProgressService cachingHabitProgressService,
+                              CachingHabitProgressHistoryService cachingHabitProgressHistoryService,
+                              CachingHabitRecordService cachingHabitRecordService) {
         this.sharedHabitRepository = sharedHabitRepository;
         this.habitRecordSupplier = new HabitRecordSupplier(habitRecordRepository);
         this.notificationRuleService = notificationRuleService;
@@ -41,6 +45,8 @@ public class SharedHabitService {
         this.habitRepository = habitRepository;
         this.habitParticipationService = habitParticipationService;
         this.cachingHabitProgressService = cachingHabitProgressService;
+        this.cachingHabitProgressHistoryService = cachingHabitProgressHistoryService;
+        this.cachingHabitRecordService = cachingHabitRecordService;
     }
 
     public Optional<SharedHabit> getSharedHabitByCode(String shareCode) {
@@ -121,6 +127,9 @@ public class SharedHabitService {
             return false;
         }
         habit.copyAttributesFromHabit(notificationRuleOpt.get().getInternalHabitForComputationOfGoal(), true);
+        cachingHabitProgressService.onHabitChanged(habit, (int) LocalDate.now().toEpochDay());
+        cachingHabitProgressHistoryService.evictCacheForHabit(habit, (int) LocalDate.now().toEpochDay());
+        cachingHabitRecordService.evictCache(habit, (int) LocalDate.now().toEpochDay());
         habitRepository.save(habit);
         return true;
     }
