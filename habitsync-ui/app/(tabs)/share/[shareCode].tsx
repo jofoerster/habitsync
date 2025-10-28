@@ -23,7 +23,7 @@ import {createThemedStyles} from "@/constants/styles";
 import {UI_BASE_URL} from "@/public/config";
 import {AuthService} from "@/services/auth";
 import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
-import {useHabits} from "@/hooks/useHabitUuids";
+import {useHabits} from "@/hooks/useHabits";
 
 const {width} = Dimensions.get('window');
 

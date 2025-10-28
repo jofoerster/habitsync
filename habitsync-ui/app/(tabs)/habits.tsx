@@ -1,13 +1,14 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Animated, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Link} from 'expo-router';
+import {Link, useFocusEffect} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabitUuids";
+import {useHabits, useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
+import {reload} from "expo-router/build/global-state/routing";
 
 const DateHeader = () => {
     const {theme} = useTheme();

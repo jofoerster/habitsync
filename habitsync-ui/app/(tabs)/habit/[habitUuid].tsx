@@ -22,7 +22,7 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import NotificationConfigComponent from "@/components/NotificationConfig";
 import ShareHabitModal from "@/components/ShareHabitModal";
-import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabitUuids";
+import {useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
 import {useLeaveSharedHabit, useSharedHabits} from "@/hooks/useSharedHabits";
 
 const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';
@@ -219,7 +219,8 @@ const HabitDetailsScreen = () => {
             await createHabitRecordMutation.mutateAsync({
                 habitUuid,
                 record: {epochDay: selectedEpochDay, recordValue: value},
-                isChallenge: habitDetail?.isChallengeHabit || false
+                isChallenge: habitDetail?.isChallengeHabit || false,
+                isDetailView: true
             });
         }
     }
@@ -230,7 +231,8 @@ const HabitDetailsScreen = () => {
             await createHabitRecordMutation.mutateAsync({
                 habitUuid,
                 record: {epochDay: record!.epochDay, recordValue: value},
-                isChallenge: habitDetail?.isChallengeHabit || false
+                isChallenge: habitDetail?.isChallengeHabit || false,
+                isDetailView: true
             });
         } else {
             setModalVisible(true);

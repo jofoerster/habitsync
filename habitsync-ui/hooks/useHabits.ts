@@ -7,6 +7,8 @@ export const habitKeys = {
     all: ['habits'] as const,
     lists: () => [...habitKeys.all, 'list'] as const,
     list: () => [...habitKeys.lists()] as const,
+    uuidlists: () => [...habitKeys.all, 'list-uuid'] as const,
+    uuidlist: () => [...habitKeys.uuidlists()] as const,
     details: () => [...habitKeys.all, 'detail'] as const,
     detail: (uuid: string) => [...habitKeys.details(), uuid] as const,
     percentageHistory: (uuid: string, month: Date) =>
@@ -21,7 +23,7 @@ export const habitKeys = {
 
 export const useHabitUuids = () => {
     return useQuery({
-        queryKey: habitKeys.list(),
+        queryKey: habitKeys.uuidlist(),
         queryFn: () => habitApi.getUserHabitUuids(),
         staleTime: 1000 * 60 * 5,
         refetchOnMount: 'always', // always refetch when component mounts
@@ -65,7 +67,7 @@ export const useHabitPercentageHistory = (uuid: string, month: Date) => {
 /**
  * Get connected habits
  */
-export const useConnectedHabits = (uuid: string, enabled = true) => {
+export const useConnectedHabits = (uuid: string, enabled = false) => {
     return useQuery({
         queryKey: habitKeys.connectedHabits(uuid),
         queryFn: () => habitApi.getConnectedHabits(uuid),
@@ -130,9 +132,10 @@ export const useCreateHabit = () => {
                 (old) => (old ? [...old, newHabit] : [newHabit])
             );
             queryClient.invalidateQueries({
-                queryKey: habitKeys.lists(),
-                refetchType: 'none'
-            });
+                queryKey: habitKeys.list(),
+                refetchType: "none"
+            })
+            queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },
     });
 };
@@ -147,25 +150,15 @@ export const useUpdateHabit = () => {
     return useMutation({
         mutationFn: (habit: ApiHabitWrite) => habitApi.updateHabit(habit),
         onSuccess: (updatedHabit) => {
-            queryClient.setQueryData(
-                habitKeys.detail(updatedHabit.uuid),
-                updatedHabit
-            );
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(updatedHabit.uuid),
+            });
 
             queryClient.setQueryData<ApiHabitRead[]>(
                 habitKeys.list(),
                 (old) =>
                     old?.map((h) => (h.uuid === updatedHabit.uuid ? updatedHabit : h))
             );
-
-            queryClient.invalidateQueries({
-                queryKey: habitKeys.records(updatedHabit.uuid),
-                refetchType: 'none'
-            });
-
-            queryClient.removeQueries({
-                queryKey: habitKeys.records(updatedHabit.uuid),
-            });
         },
     });
 };
@@ -180,13 +173,12 @@ export const useDeleteHabit = () => {
     return useMutation({
         mutationFn: (uuid: string) => habitApi.deleteHabit(uuid),
         onSuccess: (_, uuid) => {
-            queryClient.setQueryData<ApiHabitRead[]>(
-                habitKeys.list(),
-                (old) => old?.filter((h) => h.uuid !== uuid)
-            );
-
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.list(),
+                refetchType: "none"
+            })
+            queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
             queryClient.removeQueries({queryKey: habitKeys.detail(uuid)});
-
             queryClient.removeQueries({queryKey: habitKeys.records(uuid)});
             queryClient.removeQueries({queryKey: habitKeys.connectedHabits(uuid)});
         },
@@ -203,8 +195,10 @@ export const useMoveHabitUp = () => {
         mutationFn: (uuid: string) => habitApi.moveHabitUp(uuid),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: habitKeys.lists(),
-            });
+                queryKey: habitKeys.list(),
+                refetchType: "none"
+            })
+            queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },
     });
 };
@@ -219,8 +213,10 @@ export const useMoveHabitDown = () => {
         mutationFn: (uuid: string) => habitApi.moveHabitDown(uuid),
         onSuccess: () => {
             queryClient.invalidateQueries({
-                queryKey: habitKeys.lists(),
-            });
+                queryKey: habitKeys.list(),
+                refetchType: "none"
+            })
+            queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },
     });
 };
@@ -233,22 +229,19 @@ export const useCreateHabitRecord = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({habitUuid, record, isChallenge}: {
+        mutationFn: ({habitUuid, record}: {
             habitUuid: string;
             record: ApiHabitRecordWrite,
-            isChallenge: boolean
+            isChallenge: boolean,
+            isDetailView: boolean,
         }) =>
             habitRecordApi.createRecord(habitUuid, record),
         onSuccess: ({habitUuid}, variables) => {
-            queryClient.invalidateQueries({
-                queryKey: [...habitKeys.percentageHistoryComplete(habitUuid)],
-                refetchType: 'none'
-            });
-
-            queryClient.invalidateQueries({
-                queryKey: habitKeys.detail(habitUuid),
-            })
-
+            if (variables.isDetailView) {
+                queryClient.invalidateQueries({
+                    queryKey: habitKeys.detail(habitUuid),
+                })
+            }
             if (variables.isChallenge) {
                 queryClient.invalidateQueries({
                     queryKey: challengeKeys.overview(),

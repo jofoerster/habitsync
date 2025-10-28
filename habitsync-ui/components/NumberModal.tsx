@@ -1,4 +1,4 @@
-import {Plus, X} from "lucide-react-native";
+
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {Modal, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead, habitNumberModalApi} from "../services/api";
@@ -192,7 +192,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                             )}
                         </View>
                         <TouchableOpacity onPress={onClose}>
-                            <X size={24} color="#666"/>
+                            <MaterialCommunityIcons name="close" size={24} color="#666"/>
                         </TouchableOpacity>
                     </View>
 
@@ -253,7 +253,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         }]}
                                         onPress={handleAddNumber}
                                     >
-                                        <Plus size={20} color="white"/>
+                                        <MaterialCommunityIcons name="plus" size={20} color="white"/>
                                     </TouchableOpacity>
                                 </View>
                             </View>

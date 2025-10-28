@@ -1,6 +1,7 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiSharedHabitWrite, sharedHabitApi,} from '@/services/api';
 import shareCode from "@/app/(tabs)/share/[shareCode]";
+import {habitKeys} from "@/hooks/useHabits";
 
 export const sharedHabitKeys = {
     all: ['sharedHabits'] as const,
@@ -62,6 +63,12 @@ export const useUpdateSharedHabit = () => {
             queryClient.invalidateQueries({
                 queryKey: sharedHabitKeys.lists(),
             });
+            for (const h of updatedHabit.habits) {
+                console.log("invalidate habit detail for", h.uuid);
+                queryClient.invalidateQueries({
+                    queryKey: habitKeys.detail(h.uuid),
+                })
+            }
         },
     });
 };

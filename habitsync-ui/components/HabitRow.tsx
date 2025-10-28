@@ -1,4 +1,3 @@
-import {ChevronDown, ChevronUp} from "lucide-react-native";
 import React, {useState} from "react";
 import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead} from "../services/api";
@@ -9,7 +8,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabitUuids";
+import {useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
 
 
 interface DayButtonProps {
@@ -199,15 +198,19 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const getEpochDay = (date: Date): number =>
         Math.floor(date.getTime() / 86400000);
 
-    const {data: habit, isLoading: habitLoading} = useHabit(habitUuid, true);
-    const recordsMap = habitLoading ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
+    const {data: habit, isLoading: habitLoading, refetch: refetchHabit} = useHabit(habitUuid, true);
+    const recordsMap = habitLoading || !habit || !habit.records ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
+
+    console.log("hasconnectedhabits", hasConnectedHabits);
 
     const {
         data: connectedHabits,
         isLoading: connectedHabitsLoading,
-    } = useConnectedHabits(habitUuid, hasConnectedHabits);
+    } = useConnectedHabits(habitUuid, habit && hasConnectedHabits);
+
+    const loading = habitLoading || connectedHabitsLoading;
 
     const formatDate = (date: Date): string =>
         date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}).replace('/', '.');
@@ -229,7 +232,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
     ];
 
     const getRecordForDay = (epochDay) => {
-        if (habitLoading) {
+        if (loading) {
             return {completion: 'LOADING', recordValue: "?"};
         }
         return recordsMap.get(epochDay) || {completion: 'MISSED', recordValue: 0};
@@ -249,12 +252,14 @@ const HabitRow: React.FC<HabitRowProps> = ({
                 newRecordValue = oldRecord.recordValue == 0 ? Math.abs(parseFloat(habit.progressComputation.dailyDefault)) : 0;
             }
             await updateHabitRecordMutation.mutateAsync({
-                habitUuid: habit.uuid, record: {
+                habitUuid: habitUuid, record: {
                     epochDay: epochDay,
                     recordValue: newRecordValue,
                 },
-                isChallenge: isChallengeHabit || false
+                isChallenge: isChallengeHabit || false,
+                isDetailView: false
             })
+            await refetchHabit();
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
@@ -262,7 +267,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     const handleDayLongPress = async (epochDay) => {
         try {
-            const config = {habitUuid: habit.uuid, epochDay: epochDay};
+            const config = {habitUuid: habitUuid, epochDay: epochDay};
             setModalConfig(config);
             setModalVisible(true);
         } catch (error) {
@@ -275,18 +280,20 @@ const HabitRow: React.FC<HabitRowProps> = ({
             const epochDay = modalConfig.epochDay;
 
             updateHabitRecordMutation.mutateAsync({
-                habitUuid: habit.uuid, record: {
+                habitUuid: habitUuid, record: {
                     epochDay: epochDay,
                     recordValue: parseFloat(value) || 0
                 },
-                isChallenge: isChallengeHabit || false
+                isChallenge: isChallengeHabit || false,
+                isDetailView: false
             })
+            await refetchHabit();
         } catch (error) {
             alert('Error', 'Failed to update record');
         }
     };
 
-    if (habitLoading) {
+    if (loading || !habit) {
         return (<View style={{marginBottom: 16}}>
             <View style={{
                 backgroundColor: theme.surface,
@@ -322,7 +329,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                     <Link
                         href={{
                             pathname: '/habit/[habitUuid]',
-                            params: {habitUuid: habit.uuid, isOwnHabit: (!isConnectedHabitView).toString()}
+                            params: {habitUuid: habitUuid, isOwnHabit: (!isConnectedHabitView).toString()}
                         }}
                         asChild
                     >
@@ -330,7 +337,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                             <View style={{paddingRight: 10}}>
                                 {!hideProgressRing && (
                                     <ProgressRing color={habit.color}
-                                                  percentage={habitLoading ? 0 : habit!.currentPercentage}/>)}
+                                                  percentage={loading ? 0 : habit!.currentPercentage}/>)}
                             </View>
                             <View style={{flex: 1}}>
                                 <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text}}>
@@ -357,8 +364,8 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                 }}
                                 onPress={onToggleExpand}
                             >
-                                {isExpanded ? <ChevronUp color={theme.text} size={20}/> :
-                                    <ChevronDown color={theme.text} size={20}/>}
+                                {isExpanded ? <MaterialCommunityIcons name="chevron-up" color={theme.text} size={20}/> :
+                                    <MaterialCommunityIcons name="chevron-down" color={theme.text} size={20}/>}
                             </TouchableOpacity>
                         )}
 
@@ -372,7 +379,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                             habitIndex === 0 && styles.reorderButtonDisabled
                                         ]}
                                         disabled={habitIndex === 0}
-                                        onPress={() => onMoveUp && onMoveUp(habit.uuid)}
+                                        onPress={() => onMoveUp && onMoveUp(habitUuid)}
                                     >
                                         <MaterialCommunityIcons
                                             name="arrow-up"
@@ -386,7 +393,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                             habitIndex >= totalHabits - 1 && styles.reorderButtonDisabled
                                         ]}
                                         disabled={habitIndex >= totalHabits - 1}
-                                        onPress={() => onMoveDown && onMoveDown(habit.uuid)}
+                                        onPress={() => onMoveDown && onMoveDown(habitUuid)}
                                     >
                                         <MaterialCommunityIcons
                                             name="arrow-down"
@@ -399,7 +406,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                 days.map(day => {
                                     const record = getRecordForDay(day.epochDay);
                                     return (
-                                        <View key={day.key + habit.uuid}>
+                                        <View key={day.key + habitUuid}>
                                             {!hideDates && (<Text key={day.key + record.id}
                                                                   style={{
                                                                       fontSize: 10,
@@ -409,7 +416,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                 {day.label}
                                             </Text>)}
                                             <DayButton
-                                                key={day.key + habit.uuid}
+                                                key={day.key + habitUuid}
                                                 day={day.label}
                                                 completion={record.completion}
                                                 value={record.recordValue}

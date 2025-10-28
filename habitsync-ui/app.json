@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "assetBundlePatterns": [
-      "**/*"
+      "assets/fonts/**/*",
+      "assets/images/logo-transparent-pad.png",
+      "assets/images/favicon.png",
+      "assets/images/icon.png"
     ],
     "ios": {
       "supportsTablet": true,

@@ -9,6 +9,7 @@ import de.jofoerster.habitsync.service.habit.HabitParticipationService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 
@@ -30,7 +31,7 @@ public class PermissionChecker {
                     .stream()
                     .map(pair ->
                             pair.getHabit().getAccount()).noneMatch(a -> a.equals(account))) {
-                throw new IllegalArgumentException("User is not allowed to read this habit");
+                throw new AccessDeniedException("User is not allowed to read this habit");
             }
 
         }
@@ -43,7 +44,7 @@ public class PermissionChecker {
             return;
         }
         if (!habit.getAccount().equals(account)) {
-            throw new IllegalArgumentException("User is not allowed to edit this habit");
+            throw new AccessDeniedException("User is not allowed to edit this habit");
         }
     }
 
@@ -57,7 +58,7 @@ public class PermissionChecker {
         checkNotNull(challenge);
         if (!challenge.getCreator().equals(account) ||
                 challenge.getStatus() != ChallengeStatus.CREATED) {
-            throw new IllegalArgumentException("User is not allowed to edit this challenge");
+            throw new AccessDeniedException("User is not allowed to edit this challenge");
         }
     }
 
@@ -66,14 +67,14 @@ public class PermissionChecker {
         if (!challenge.getCreator().equals(account) ||
                 (challenge.getStatus() != ChallengeStatus.CREATED &&
                         challenge.getStatus() != ChallengeStatus.PROPOSED)) {
-            throw new IllegalArgumentException("User is not allowed to delete this challenge");
+            throw new AccessDeniedException("User is not allowed to delete this challenge");
         }
     }
 
     public static void checkIfIsOwner (Habit habit, Account account) {
         checkNotNull(habit);
         if (!habit.getAccount().equals(account)) {
-            throw new IllegalArgumentException("User is not the owner of this habit");
+            throw new AccessDeniedException("User is not the owner of this habit");
         }
     }
 
