@@ -18,6 +18,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -300,6 +301,7 @@ public class HabitService {
         return habitRepository.findByReminderCustomIsNotEmptyAndStatus(1);
     }
 
+    @Cacheable(value = "habitNotificationConfigCache", key = "#habit.getUuid()")
     public NotificationConfigDTO getNotificationConfig(Habit habit) {
         String frequency = habit.getReminderCustom();
         if (frequency == null || frequency.isEmpty()) {

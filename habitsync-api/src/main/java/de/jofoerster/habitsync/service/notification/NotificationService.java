@@ -17,10 +17,13 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
@@ -90,8 +93,32 @@ public class NotificationService {
         habitsWithoutUpdatesTemp.clear();
     }
 
+    @Async
     public void markHabitAsUpdated(Habit habit) {
         habitsWithoutUpdates.remove(habit.getUuid());
+        List<NotificationConfigRuleDTO> rules = habitService.getNotificationConfig(habit).getRules();
+        rules.forEach(rule -> {
+            this.checkAndExecuteRule(habit, rule);
+        });
+    }
+
+    @CacheEvict(value = "habitNotificationConfigCache", key = "#habit.getUuid()")
+    public boolean createOrUpdateNotificationsForHabit(Habit habit, NotificationConfigDTO frequency) {
+        try {
+            habit.setReminderCustom(mapper.writeValueAsString(frequency));
+            habit = habitService.saveHabit(habit);
+            if (!habitsWithCustomReminders.contains(habit)) {
+                habitsWithCustomReminders.add(habit);
+            }
+            for (NotificationConfigRuleDTO r : frequency.getRules()) {
+                this.initializeNewRule(habit, r);
+            }
+            scheduleAllNotificationJobsForHabit(habit);
+            return true;
+        } catch (JsonProcessingException e) {
+            log.warn("Could not set reminderCustom for habit {}", habit.getUuid(), e);
+            return false;
+        }
     }
 
     private void checkAndExecuteRule(Habit habit, NotificationConfigRuleDTO rule) {
@@ -127,8 +154,8 @@ public class NotificationService {
                 }
                 sharedHabitService.getSharedHabitsByHabit(habit).forEach(sh -> {
                     sh.getHabits().forEach(ch -> {
-                        habitsWithoutUpdates.add(ch.getUuid());
                         boolean overtaken = checkAndExecuteOvertakeRule(habit, ch, rule);
+                        habitsWithoutUpdates.add(ch.getUuid());
                         if (overtaken) {
                             return;
                         }
@@ -175,24 +202,6 @@ public class NotificationService {
                 schedulingService.scheduleNotificationJob(habit.getUuid(), rule));
     }
 
-    public boolean createOrUpdateNotificationsForHabit(Habit habit, NotificationConfigDTO frequency) {
-        try {
-            habit.setReminderCustom(mapper.writeValueAsString(frequency));
-            habit = habitService.saveHabit(habit);
-            if (!habitsWithCustomReminders.contains(habit)) {
-                habitsWithCustomReminders.add(habit);
-            }
-            for (NotificationConfigRuleDTO r : frequency.getRules()) {
-                this.initializeNewRule(habit, r);
-            }
-            scheduleAllNotificationJobsForHabit(habit);
-            return true;
-        } catch (JsonProcessingException e) {
-            log.warn("Could not set reminderCustom for habit {}", habit.getUuid(), e);
-            return false;
-        }
-    }
-
     private void initializeNewRule(Habit habit, NotificationConfigRuleDTO rule) {
         switch (rule.getType()) {
             case NotificationTypeEnum.fixed -> {
@@ -216,31 +225,6 @@ public class NotificationService {
         habitService.saveHabit(habit);
         schedulingService.removeNotificationJob(habit.getUuid());
         return true;
-    }
-
-    public void sendCustomReminderNotifications(NotificationConfigRuleDTO rule, Habit habit) {
-        log.info("Sending custom reminder notifications");
-        NotificationType type = switch (rule.getType()) {
-            case NotificationTypeEnum.threshold -> NotificationType.THRESHOLD_PUSH_NOTIFICATION_HABIT;
-            case NotificationTypeEnum.overtake -> NotificationType.OVERTAKE_PUSH_NOTIFICATION_HABIT;
-            default -> null;
-        };
-        if (type == null) {
-            log.warn("Could not determine notification type for rule {}", rule);
-            return;
-        }
-        NotificationTemplate notificationTemplate =
-                notificationTemplateService.getNotificationTemplateByNotificationType(
-                        type);
-        Notification notification =
-                notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
-                        templateEngine,
-                        notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
-                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, rule, cachingHabitProgressService);
-        sendNotificationViaApprise(notification, habit);
-        if (habit.getAccount().isSendNotificationsViaEmail()) {
-            sendNotificationViaMail(notification);
-        }
     }
 
     public void sendFixedTimePushNotifications(String id) {
@@ -284,7 +268,36 @@ public class NotificationService {
         }
     }
 
-    public void sendNotificationViaMail(Notification notification) {
+    public boolean isAppriseActive() {
+        return appriseApiUrl != null && !appriseApiUrl.isEmpty();
+    }
+
+    private void sendCustomReminderNotifications(NotificationConfigRuleDTO rule, Habit habit) {
+        log.info("Sending custom reminder notifications");
+        NotificationType type = switch (rule.getType()) {
+            case NotificationTypeEnum.threshold -> NotificationType.THRESHOLD_PUSH_NOTIFICATION_HABIT;
+            case NotificationTypeEnum.overtake -> NotificationType.OVERTAKE_PUSH_NOTIFICATION_HABIT;
+            default -> null;
+        };
+        if (type == null) {
+            log.warn("Could not determine notification type for rule {}", rule);
+            return;
+        }
+        NotificationTemplate notificationTemplate =
+                notificationTemplateService.getNotificationTemplateByNotificationType(
+                        type);
+        Notification notification =
+                notificationTemplate.createNotification(habit.getAccount(), Optional.empty(), null, habit, null,
+                        templateEngine,
+                        notificationRuleService, new HabitRecordSupplier(habitRecordRepository), baseUrl,
+                        NotificationStatus.STATELESS_NOTIFICATION, resourceLoader, rule, cachingHabitProgressService);
+        sendNotificationViaApprise(notification, habit);
+        if (habit.getAccount().isSendNotificationsViaEmail()) {
+            sendNotificationViaMail(notification);
+        }
+    }
+
+    private void sendNotificationViaMail(Notification notification) {
         if (emailService.isEmpty()) {
             log.warn("Email service not configured. Cannot send email notification.");
             return;
@@ -292,7 +305,7 @@ public class NotificationService {
         emailService.get().sendNotification(notification);
     }
 
-    public void sendNotificationViaApprise(Notification notification, Habit habit) {
+    private void sendNotificationViaApprise(Notification notification, Habit habit) {
         if (!isAppriseActive()) {
             log.debug("No Apprise target specified for notification {}", notification.getId());
             return;
@@ -333,10 +346,6 @@ public class NotificationService {
         } catch (Exception e) {
             log.error("Unexpected error sending Apprise notification: {}", e.getMessage());
         }
-    }
-
-    public boolean isAppriseActive() {
-        return appriseApiUrl != null && !appriseApiUrl.isEmpty();
     }
 
     private String getAppriseTargetFromHabit(Habit habit) {
