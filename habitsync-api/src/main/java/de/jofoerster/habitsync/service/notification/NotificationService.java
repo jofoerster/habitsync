@@ -18,7 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -81,7 +80,7 @@ public class NotificationService {
 
     @Scheduled(cron = "0 */10 * * * *") // Do not change -> see isFirstCheckToday
     public void checkNotificationRules() {
-        log.info("Checking notification rules for all habits with reminders");
+        log.debug("Checking notification rules for all habits with reminders");
         habitsWithoutUpdatesTemp.addAll(habitsWithoutUpdates);
         habitsWithCustomReminders.forEach(habit -> {
             habitsWithoutUpdates.add(habit.getUuid());
@@ -96,10 +95,7 @@ public class NotificationService {
     @Async
     public void markHabitAsUpdated(Habit habit) {
         habitsWithoutUpdates.remove(habit.getUuid());
-        List<NotificationConfigRuleDTO> rules = habitService.getNotificationConfig(habit).getRules();
-        rules.forEach(rule -> {
-            this.checkAndExecuteRule(habit, rule);
-        });
+        checkNotificationRules();
     }
 
     @CacheEvict(value = "habitNotificationConfigCache", key = "#habit.getUuid()")
@@ -154,8 +150,8 @@ public class NotificationService {
                 }
                 sharedHabitService.getSharedHabitsByHabit(habit).forEach(sh -> {
                     sh.getHabits().forEach(ch -> {
-                        boolean overtaken = checkAndExecuteOvertakeRule(habit, ch, rule);
                         habitsWithoutUpdates.add(ch.getUuid());
+                        boolean overtaken = checkAndExecuteOvertakeRule(habit, ch, rule);
                         if (overtaken) {
                             return;
                         }
@@ -244,7 +240,8 @@ public class NotificationService {
                         habitOpt.get().getUuid());
                 return;
             }
-        } if (!fixedTimeRules.getFirst().getTriggerIfFulfilled()) {
+        }
+        if (!fixedTimeRules.getFirst().getTriggerIfFulfilled()) {
             if (habitService.hasHabitBeenCompletedToday(habitOpt.get(),
                     new HabitRecordSupplier(habitRecordRepository))) {
                 log.debug("Habit {} has already been completed today. Not sending fixed time notification.",
