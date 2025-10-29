@@ -220,6 +220,7 @@ public class NotificationService {
         habit.setReminderCustom(null);
         habitService.saveHabit(habit);
         schedulingService.removeNotificationJob(habit.getUuid());
+        habitsWithCustomReminders.remove(habit);
         return true;
     }
 
