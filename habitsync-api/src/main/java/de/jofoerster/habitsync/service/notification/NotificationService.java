@@ -260,7 +260,7 @@ public class NotificationService {
                         habitOpt.get().getUuid());
                 return;
             }
-        } else if (!fixedTimeRules.getFirst().getTriggerIfFulfilled()) {
+        } if (!fixedTimeRules.getFirst().getTriggerIfFulfilled()) {
             if (habitService.hasHabitBeenCompletedToday(habitOpt.get(),
                     new HabitRecordSupplier(habitRecordRepository))) {
                 log.debug("Habit {} has already been completed today. Not sending fixed time notification.",
