@@ -89,8 +89,9 @@ public class HabitRecordController {
                                                            @RequestBody HabitRecordWriteDTO recordWrite) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(habitUuid);
         permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
+        HabitRecordReadDTO record = cachingHabitRecordService.createRecord(habitOpt.get(), recordWrite);
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
-        return ResponseEntity.ok(cachingHabitRecordService.createRecord(habitOpt.get(), recordWrite));
+        return ResponseEntity.ok(record);
     }
 
     @PostMapping("/{habitUuid}/simple")

@@ -62,6 +62,9 @@ public class NotificationService {
     @Value("${apprise.api.url:}")
     String appriseApiUrl;
 
+    @Value("${notification.triggers-on-update:true}")
+    boolean checkNotificationTriggersOnRecordUpdate = true;
+
     private final List<Habit> habitsWithCustomReminders = new ArrayList<>();
     private final Set<String> habitsWithoutUpdates = new HashSet<>();
     private final Set<String> habitsWithoutUpdatesTemp = new HashSet<>();
@@ -92,10 +95,11 @@ public class NotificationService {
         habitsWithoutUpdatesTemp.clear();
     }
 
-    @Async
     public void markHabitAsUpdated(Habit habit) {
         habitsWithoutUpdates.remove(habit.getUuid());
-        checkNotificationRules();
+        if (checkNotificationTriggersOnRecordUpdate) {
+            checkNotificationRules();
+        }
     }
 
     @CacheEvict(value = "habitNotificationConfigCache", key = "#habit.getUuid()")
