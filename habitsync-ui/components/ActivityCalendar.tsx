@@ -50,8 +50,8 @@ const ActivityCalendar = ({
 
     // Use React Query hooks for automatic cache updates
     const {data: calendarRecords = []} = useHabitRecords(habit.uuid, startEpoch, endEpoch);
-    const {data: percentageHistoryData} = useHabitPercentageHistory(habit.uuid, currentMonth);
-    const percentageHistory = percentageHistoryData?.dailyPercentages || {};
+    //const {data: percentageHistoryData} = useHabitPercentageHistory(habit.uuid, currentMonth);
+    const percentageHistory = {}; //percentageHistoryData?.dailyPercentages ||
 
     const getCompletionColor = (completion: string) => {
         switch (completion) {
