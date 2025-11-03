@@ -100,7 +100,7 @@ export class WebOAuthService {
 
             const discoveryUrl = provider.url.endsWith('/.well-known/openid-configuration')
                 ? provider.url
-                : `${provider.url}/.well-known/openid-configuration`;
+                : `${provider.url.replace(/\/+$/, '')}/.well-known/openid-configuration`;
 
             console.log('[WebOAuth] Fetching discovery document from:', discoveryUrl);
 
