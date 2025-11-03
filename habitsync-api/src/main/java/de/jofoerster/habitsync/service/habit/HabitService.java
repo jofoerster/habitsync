@@ -181,9 +181,23 @@ public class HabitService {
     }
 
     public List<String> getAllUserHabitUuids(Account currentAccount) {
-        return habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
-                .stream().map(Habit::getUuid)
-                .toList();
+        List<String> uuids = new ArrayList<>(
+                habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
+                        .stream().map(Habit::getUuid)
+                        .toList());
+        List<HabitParticipant> participants =
+                habitParticipantRepository
+                        .getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
+                                HabitParticipationStatus.ACCEPTED, currentAccount.getAuthenticationId());
+        participants.forEach(p -> {
+            Optional<Habit> habitOpt = habitRepository.findByUuid(p.getHabitUuid());
+            habitOpt.ifPresent(h -> {
+                if (h.getStatus() == 1) {
+                    uuids.add(h.getUuid());
+                }
+            });
+        });
+        return uuids;
     }
 
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {
