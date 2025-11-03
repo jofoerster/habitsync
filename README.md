@@ -128,14 +128,14 @@ services:
   web:
     image: ghcr.io/jofoerster/habitsync:latest
     environment:
-      - BASE_URL=https://your-domain.com/
+      - BASE_URL=https://your-domain.com
       # Choose one or more of the following authentication methods:
       # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
       # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback
       # more than one issuer can be configured
       # scopes: openid, profile, email
       # issues setting this up? -> create an issue on github
-      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
+      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url> # no trailing `/`
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_NEEDS-CONFIRMATION=true # New users need to to be 'let in' by other user, default: true 
       # Google: Use normal web client settings, set CLIENT-SECRET as workaround for Google
