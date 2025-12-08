@@ -7,4 +7,6 @@ import lombok.Data;
 @Data
 public class ConfigReadDTO {
     private boolean appriseActive;
+    private boolean hideChallenges;
+    private String templateDateFormat;
 }

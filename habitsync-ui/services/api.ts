@@ -227,6 +227,8 @@ export type NotificationConfigRule = FixedTimeNotificationConfigRule | Threshold
 
 export interface ServerConfig {
     appriseActive: boolean;
+    hideChallenges: boolean;
+    templateDateFormat: string;
 }
 
 // API service functions

@@ -154,6 +154,7 @@ services:
        # optional SHA-512 hash of your secret key, generate with `openssl rand -base64 64`. Needed to keep sessions across restarts
       - JWT_SECRET=<your-jwt-secret>
       - APPRISE_API_URL=<your-apprise-url> # optional, see Notifications section below
+      - TRACKER_DATEFORMAT_TEMPLATE=DD.MM. # optional, only DD, MM supported currently, sets date format in tracker globally
     volumes:
       - <path-to-database-file-location>:/data #optional for direct access to database, user 6842:6842 needs access
     user: "6842:6842" # optional, run as user with id 6842, same as the application user in the container

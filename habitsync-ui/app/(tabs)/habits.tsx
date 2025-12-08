@@ -9,13 +9,20 @@ import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
 import {useHabits, useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
 import {reload} from "expo-router/build/global-state/routing";
+import {useConfiguration} from "@/hooks/useConfiguration";
 
 const DateHeader = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const formatDate = (date: Date): string =>
-        date.toLocaleDateString('de-DE', {day: '2-digit', month: '2-digit'}).replace('/', '.');
+    const {data: serverConfig} = useConfiguration();
+    const templateDateFormat = serverConfig?.templateDateFormat || 'DD.MM.';
+
+    const formatDate = (date: Date): string => {
+        return templateDateFormat
+            .replace('DD', date.getDate().toString().padStart(2, '0'))
+            .replace('MM', (date.getMonth() + 1).toString().padStart(2, '0'))
+    };
 
     const createDay = (daysAgo: number): string => {
         const date = new Date();
