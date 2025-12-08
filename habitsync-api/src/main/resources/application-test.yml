@@ -50,6 +50,10 @@ logging:
 
 jwt.secret: T0M8xk85GC3/oOtdEcK++ZYtKKQL7ftrlXDtR4t09dBTqmnxCM+xoEEIdfAwIdEXRLiyGVCx2Z0utBYZcnLR6A==
 
+tracker:
+  dateformat:
+    template: DD/MM
+
 
 
 

@@ -38,7 +38,7 @@ USER appuser
 EXPOSE 6842
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:6842/api/actuator/health || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:6842/actuator/health || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Duser.timezone=UTC", "-jar", "/app/app.jar"]
