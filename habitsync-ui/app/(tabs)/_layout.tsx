@@ -2,9 +2,13 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import {Tabs} from 'expo-router';
 import {useTheme} from "@/context/ThemeContext";
 import AuthGuard from '@/components/AuthGuard';
+import {useConfiguration} from "@/hooks/useConfiguration";
 
 export default function TabLayout() {
     const {theme} = useTheme();
+
+    const {data: config} = useConfiguration();
+    const showChallengesTab = !config || !config?.hideChallenges
 
     return (
         <AuthGuard>
@@ -74,19 +78,21 @@ export default function TabLayout() {
                         ),
                     }}
                 />
-                <Tabs.Screen
-                    name="challenges"
-                    options={{
-                        title: 'Challenges',
-                        tabBarIcon: ({focused, color, size}) => (
-                            <MaterialCommunityIcons
-                                size={size}
-                                name={focused ? 'trophy' : 'trophy-outline'}
-                                color={color}
-                            />
-                        ),
-                    }}
-                />
+                {showChallengesTab && (
+                    <Tabs.Screen
+                        name="challenges"
+                        options={{
+                            title: 'Challenges',
+                            tabBarIcon: ({focused, color, size}) => (
+                                <MaterialCommunityIcons
+                                    size={size}
+                                    name={focused ? 'trophy' : 'trophy-outline'}
+                                    color={color}
+                                />
+                            ),
+                        }}
+                    />
+                )}
                 <Tabs.Screen
                     name="profile"
                     options={{
