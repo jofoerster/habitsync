@@ -388,9 +388,9 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                     <TouchableOpacity
                                         style={[
                                             styles.reorderButton,
-                                            habitIndex === 0 && styles.reorderButtonDisabled
+                                            (!onMoveUp || habitIndex === 0) && styles.reorderButtonDisabled
                                         ]}
-                                        disabled={habitIndex === 0}
+                                        disabled={!onMoveUp || habitIndex === 0}
                                         onPress={() => onMoveUp && onMoveUp(habitUuid)}
                                     >
                                         <MaterialCommunityIcons
@@ -402,9 +402,9 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                     <TouchableOpacity
                                         style={[
                                             styles.reorderButton,
-                                            habitIndex >= totalHabits - 1 && styles.reorderButtonDisabled
+                                            (!onMoveDown || habitIndex >= totalHabits - 1) && styles.reorderButtonDisabled
                                         ]}
-                                        disabled={habitIndex >= totalHabits - 1}
+                                        disabled={!onMoveDown || habitIndex >= totalHabits - 1}
                                         onPress={() => onMoveDown && onMoveDown(habitUuid)}
                                     >
                                         <MaterialCommunityIcons

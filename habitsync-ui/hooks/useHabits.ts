@@ -219,6 +219,25 @@ export const useMoveHabitDown = () => {
 };
 
 /**
+ * Sort habits (typically for groups)
+ */
+export const useSortHabits = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: (body: { habitUuids: string[]; before: number; after: number }) =>
+            habitApi.sort(body),
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.list(),
+                refetchType: "none"
+            })
+            queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
+        },
+    });
+};
+
+/**
  * Create a habit record
  * Automatically invalidates habit and records caches
  */
