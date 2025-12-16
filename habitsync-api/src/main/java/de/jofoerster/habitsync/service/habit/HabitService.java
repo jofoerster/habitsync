@@ -388,6 +388,16 @@ public class HabitService {
                 .anyMatch(r -> r.getRecordValue() != null && r.getRecordValue() != 0);
     }
 
+    public void sortHabits(List<Habit> habits, Double before, Double after) {
+        final double beforeValue = before != null ? before : 0;
+        final double afterValue =  after != null ? after : Double.MAX_VALUE;
+        double valueToAdd = (afterValue - beforeValue) / habits.size();
+        for (int i  = 0; i < habits.size(); i++) {
+            habits.get(i).setSortPosition(beforeValue + (i * valueToAdd));
+        }
+        habitRepository.saveAll(habits);
+    }
+
     private class DeprecatedNotificationFrequencyDTO {
         private FrequencyEnum frequency;
         private String[] weekdays; // MO, TU, WE, TH, FR, SA, SU

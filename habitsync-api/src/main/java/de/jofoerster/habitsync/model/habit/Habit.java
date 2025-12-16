@@ -84,6 +84,8 @@ public class Habit {
     @JsonProperty("sort_position")
     private Double sortPosition;
 
+    private String group;
+
     @ManyToMany(mappedBy = "habits")
     @JsonIgnore
     private List<SharedHabit> sharedHabits;

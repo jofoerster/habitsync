@@ -1,0 +1,2 @@
+ALTER TABLE habits ADD COLUMN group VARCHAR(255);
+
