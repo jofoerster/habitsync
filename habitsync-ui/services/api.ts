@@ -13,6 +13,7 @@ export interface ApiHabitRead {
     isChallengeHabit?: boolean;
     synchronizedSharedHabitId?: number;
     sortPosition: number;
+    group?: string;
     notificationFrequency: NotificationConfig | null;
     hasConnectedHabits: boolean;
     numberModalConfig: ApiHabitNumberModalConfig;
@@ -70,6 +71,7 @@ export interface ApiHabitWrite {
     uuid?: string;
     name: string;
     color?: number;
+    group?: number;
     progressComputation: ApiComputationReadWrite;
 }
 

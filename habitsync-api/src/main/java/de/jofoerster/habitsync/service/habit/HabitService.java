@@ -212,6 +212,7 @@ public class HabitService {
                 .currentPercentage(currentPercentage)
                 .currentMedal(currentMedal)
                 .sortPosition(habit.getSortPosition())
+                .group(habit.getGroup())
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
                 .notificationFrequency(this.getNotificationConfig(habit))

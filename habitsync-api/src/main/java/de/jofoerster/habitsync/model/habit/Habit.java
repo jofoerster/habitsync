@@ -282,6 +282,9 @@ public class Habit {
         if (apiHabitWrite.getColor() != null) {
             this.color = apiHabitWrite.getColor();
         }
+        if (apiHabitWrite.getGroup() != null) {
+            this.group = apiHabitWrite.getGroup();
+        }
         if (apiHabitWrite.getProgressComputation() != null) {
             applyChanges(apiHabitWrite.getProgressComputation());
         }
