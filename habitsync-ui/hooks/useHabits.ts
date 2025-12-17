@@ -2,6 +2,7 @@ import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import {ApiHabitRead, ApiHabitRecordWrite, ApiHabitWrite, habitApi, habitRecordApi,} from '@/services/api';
 import {challengeKeys} from "@/hooks/useChallenges";
 import {userKeys} from "@/hooks/useUser";
+import {SortHabitRequestBody} from "../services/api";
 
 export const habitKeys = {
     all: ['habits'] as const,
@@ -172,7 +173,6 @@ export const useDeleteHabit = () => {
         onSuccess: (_, uuid) => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.list(),
-                refetchType: "none"
             })
             queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
             queryClient.removeQueries({queryKey: habitKeys.detail(uuid)});
@@ -193,7 +193,6 @@ export const useMoveHabitUp = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.list(),
-                refetchType: "none"
             })
             queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },
@@ -211,7 +210,6 @@ export const useMoveHabitDown = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.list(),
-                refetchType: "none"
             })
             queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },
@@ -225,12 +223,11 @@ export const useSortHabits = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (body: { habitUuids: string[]; before: number; after: number }) =>
+        mutationFn: (body: SortHabitRequestBody) =>
             habitApi.sort(body),
         onSuccess: () => {
             queryClient.invalidateQueries({
                 queryKey: habitKeys.list(),
-                refetchType: "none"
             })
             queryClient.invalidateQueries({queryKey: habitKeys.uuidlist()})
         },

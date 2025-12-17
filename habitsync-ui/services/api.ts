@@ -235,8 +235,8 @@ export interface ServerConfig {
 
 export interface SortHabitRequestBody {
     habitUuids: string[];
-    before: number;
-    after: number;
+    before?: number;
+    after?: number;
 }
 
 // API service functions

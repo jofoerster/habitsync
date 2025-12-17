@@ -49,7 +49,7 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
                 <View style={styles.groupHeaderLeft}>
                     <MaterialCommunityIcons
                         name={isGroupExpanded ? "chevron-down" : "chevron-right"}
-                        size={24}
+                        size={20}
                         color={theme.text}
                     />
                     <Text style={styles.groupTitle}>{groupName}</Text>
@@ -66,7 +66,7 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
                         >
                             <MaterialCommunityIcons
                                 name="chevron-up"
-                                size={24}
+                                size={20}
                                 color={canMoveUp ? theme.text : theme.textSecondary}
                             />
                         </TouchableOpacity>
@@ -77,7 +77,7 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
                         >
                             <MaterialCommunityIcons
                                 name="chevron-down"
-                                size={24}
+                                size={20}
                                 color={canMoveDown ? theme.text : theme.textSecondary}
                             />
                         </TouchableOpacity>
@@ -87,22 +87,24 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
             
             {isGroupExpanded && (
                 <View style={styles.groupContent}>
-                    {habitUuids.map((habitUuid, index) => (
-                        <HabitRow
-                            key={habitUuid}
-                            habitUuid={habitUuid}
-                            isExpanded={expandedHabits[habitUuid]}
-                            onToggleExpand={() => onToggleHabitExpand(habitUuid)}
-                            isConnectedHabitView={false}
-                            isChallengeHabit={false}
-                            hideDates={true}
-                            isDragModeEnabled={isDragModeEnabled}
-                            habitIndex={index}
-                            totalHabits={habitUuids.length}
-                            onMoveUp={onMoveHabitUp}
-                            onMoveDown={onMoveHabitDown}
-                        />
-                    ))}
+                    <View style={styles.habitList}>
+                        {habitUuids.map((habitUuid, index) => (
+                            <HabitRow
+                                key={habitUuid}
+                                habitUuid={habitUuid}
+                                isExpanded={expandedHabits[habitUuid]}
+                                onToggleExpand={() => onToggleHabitExpand(habitUuid)}
+                                isConnectedHabitView={false}
+                                isChallengeHabit={false}
+                                hideDates={true}
+                                isDragModeEnabled={isDragModeEnabled}
+                                habitIndex={index}
+                                totalHabits={habitUuids.length}
+                                onMoveUp={onMoveHabitUp}
+                                onMoveDown={onMoveHabitDown}
+                            />
+                        ))}
+                    </View>
                 </View>
             )}
         </View>
@@ -111,19 +113,25 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
 
 const createStyles = createThemedStyles((theme) => StyleSheet.create({
     groupContainer: {
-        marginBottom: 16,
+        marginBottom: 13,
+        borderColor: theme.surfaceTertiary,
+        borderWidth: 2,
+        borderRadius: 8,
     },
     groupHeader: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
         backgroundColor: theme.surface,
-        paddingVertical: 12,
+        paddingVertical: 6,
         paddingHorizontal: 12,
         borderRadius: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
         marginBottom: 4,
-        borderLeftWidth: 3,
-        borderLeftColor: theme.primary,
     },
     groupHeaderLeft: {
         flexDirection: 'row',
@@ -131,32 +139,44 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         flex: 1,
     },
     groupTitle: {
-        fontSize: 16,
+        fontSize: 13,
         fontWeight: '600',
         color: theme.text,
-        marginLeft: 8,
+        marginLeft: 4,
     },
     groupBadge: {
-        backgroundColor: theme.primary,
-        borderRadius: 12,
-        paddingHorizontal: 8,
-        paddingVertical: 2,
-        marginLeft: 8,
+        backgroundColor: theme.surfaceSecondary,
+        borderRadius: 10,
+        minWidth: 18,
+        height: 18,
+        paddingHorizontal: 5,
+        marginLeft: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     groupBadgeText: {
-        color: '#fff',
-        fontSize: 12,
-        fontWeight: 'bold',
+        color: theme.textSecondary,
+        fontSize: 10,
+        fontWeight: '600',
     },
     groupContent: {
+        marginTop: 0,
+    },
+    habitList: {
+        borderRadius: 0,
+        paddingTop: 15,
+        paddingHorizontal: 0,
+        paddingBottom: 0,
         paddingLeft: 8,
     },
     groupDragControls: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginLeft: 4,
     },
     dragButton: {
         padding: 4,
+        marginLeft: 1,
     },
 }));
 

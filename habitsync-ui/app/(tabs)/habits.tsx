@@ -8,7 +8,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabits, useMoveHabitDown, useMoveHabitUp, useSortHabits} from "@/hooks/useHabits";
+import {useHabits, useSortHabits} from "@/hooks/useHabits";
 import {useConfiguration} from "@/hooks/useConfiguration";
 import {ApiHabitRead} from "@/services/api";
 
@@ -59,15 +59,13 @@ const HabitTrackerScreen = () => {
 
     const {data: habits = [], isLoading: loading} = useHabits();
 
-    const moveHabitUpMutation = useMoveHabitUp();
-    const moveHabitDownMutation = useMoveHabitDown();
     const sortHabitsMutation = useSortHabits();
 
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
     const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
 
-    // Group habits by their group property
+    // Group habits by their group property and create a unified sorted list
     const groupedData = useMemo(() => {
         const groups: { [key: string]: ApiHabitRead[] } = {};
         const ungrouped: ApiHabitRead[] = [];
@@ -88,14 +86,39 @@ const HabitTrackerScreen = () => {
             groups[groupName].sort((a, b) => a.sortPosition - b.sortPosition);
         });
 
-        // Get group names sorted by the minimum sortPosition in each group
-        const groupNames = Object.keys(groups).sort((a, b) => {
-            const minA = Math.min(...groups[a].map(h => h.sortPosition));
-            const minB = Math.min(...groups[b].map(h => h.sortPosition));
-            return minA - minB;
+        // Create a unified list with groups and ungrouped habits sorted by position
+        type ListItem =
+            | { type: 'group'; groupName: string; position: number; habits: ApiHabitRead[] }
+            | { type: 'habit'; habit: ApiHabitRead; position: number };
+
+        const items: ListItem[] = [];
+
+        // Add groups (use the first habit's position as the group position)
+        Object.keys(groups).forEach(groupName => {
+            const groupHabits = groups[groupName];
+            if (groupHabits.length > 0) {
+                items.push({
+                    type: 'group',
+                    groupName,
+                    position: groupHabits[0].sortPosition,
+                    habits: groupHabits
+                });
+            }
         });
 
-        return { groups, groupNames, ungrouped };
+        // Add ungrouped habits
+        ungrouped.forEach(habit => {
+            items.push({
+                type: 'habit',
+                habit,
+                position: habit.sortPosition
+            });
+        });
+
+        // Sort all items by position
+        items.sort((a, b) => a.position - b.position);
+
+        return { groups, ungrouped, items };
     }, [habits]);
 
     const toggleHabitExpansion = (habitUuid: string) => {
@@ -114,7 +137,31 @@ const HabitTrackerScreen = () => {
 
     const handleMoveUp = async (habitUuid: string) => {
         try {
-            await moveHabitUpMutation.mutateAsync(habitUuid);
+            const habit = habits.find(h => h.uuid === habitUuid);
+            if (!habit) return;
+
+            // Find the habit immediately before this one
+            const habitsBefore = habits
+                .filter(h => h.sortPosition < habit.sortPosition)
+                .sort((a, b) => b.sortPosition - a.sortPosition);
+
+            if (habitsBefore.length === 0) return; // Can't move up
+
+            const habitBefore = habitsBefore[0];
+
+            // Find position to move to (before habitBefore)
+            const habitsBeforeThat = habits
+                .filter(h => h.sortPosition < habitBefore.sortPosition)
+                .sort((a, b) => b.sortPosition - a.sortPosition);
+
+            const before = habitsBeforeThat.length > 0 ? habitsBeforeThat[0].sortPosition : undefined;
+            const after = habitBefore.sortPosition;
+
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: [habitUuid],
+                before,
+                after
+            });
         } catch (_error) {
             alert('Error', 'Failed to move habit up');
         }
@@ -122,7 +169,31 @@ const HabitTrackerScreen = () => {
 
     const handleMoveDown = async (habitUuid: string) => {
         try {
-            await moveHabitDownMutation.mutateAsync(habitUuid);
+            const habit = habits.find(h => h.uuid === habitUuid);
+            if (!habit) return;
+
+            // Find the habit immediately after this one
+            const habitsAfter = habits
+                .filter(h => h.sortPosition > habit.sortPosition)
+                .sort((a, b) => a.sortPosition - b.sortPosition);
+
+            if (habitsAfter.length === 0) return; // Can't move down
+
+            const habitAfter = habitsAfter[0];
+
+            // Find position to move to (after habitAfter)
+            const habitsAfterThat = habits
+                .filter(h => h.sortPosition > habitAfter.sortPosition)
+                .sort((a, b) => a.sortPosition - b.sortPosition);
+
+            const before = habitAfter.sortPosition;
+            const after = habitsAfterThat.length > 0 ? habitsAfterThat[0].sortPosition : undefined;
+
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: [habitUuid],
+                before,
+                after
+            });
         } catch (_error) {
             alert('Error', 'Failed to move habit down');
         }
@@ -146,7 +217,7 @@ const HabitTrackerScreen = () => {
         const habitsBeforeThat = habits.filter(h => h.sortPosition < habitBefore.sortPosition)
             .sort((a, b) => b.sortPosition - a.sortPosition);
 
-        const before = habitsBeforeThat.length > 0 ? habitsBeforeThat[0].sortPosition : -1;
+        const before = habitsBeforeThat.length > 0 ? habitsBeforeThat[0].sortPosition : undefined;
         const after = habitBefore.sortPosition;
 
         try {
@@ -179,7 +250,7 @@ const HabitTrackerScreen = () => {
             .sort((a, b) => a.sortPosition - b.sortPosition);
 
         const before = habitAfter.sortPosition;
-        const after = habitsAfterThat.length > 0 ? habitsAfterThat[0].sortPosition : Number.MAX_SAFE_INTEGER;
+        const after = habitsAfterThat.length > 0 ? habitsAfterThat[0].sortPosition : undefined;
 
         try {
             await sortHabitsMutation.mutateAsync({
@@ -196,6 +267,8 @@ const HabitTrackerScreen = () => {
         const groupHabits = groupedData.groups[groupName];
         if (groupHabits.length === 0) return false;
         const firstHabitPosition = groupHabits[0].sortPosition;
+        console.log(`First habit position in group "${groupName}": ${firstHabitPosition}`);
+        console.log(`Can move up: ${habits.some(h => h.sortPosition < firstHabitPosition)}`);
         return habits.some(h => h.sortPosition < firstHabitPosition);
     };
 
@@ -203,6 +276,8 @@ const HabitTrackerScreen = () => {
         const groupHabits = groupedData.groups[groupName];
         if (groupHabits.length === 0) return false;
         const lastHabitPosition = groupHabits[groupHabits.length - 1].sortPosition;
+        console.log(`Last habit position in group "${groupName}": ${lastHabitPosition}`);
+        console.log(`Can move down: ${habits.some(h => h.sortPosition > lastHabitPosition)}`);
         return habits.some(h => h.sortPosition > lastHabitPosition);
     };
 
@@ -264,34 +339,37 @@ const HabitTrackerScreen = () => {
                 </View>
             ) : (
                 <FlatList
-                    data={[...groupedData.groupNames, ...(groupedData.ungrouped.length > 0 ? ['__ungrouped__'] : [])]}
-                    renderItem={({item}) => {
-                        if (item === '__ungrouped__') {
-                            // Render ungrouped habits
+                    data={groupedData.items}
+                    renderItem={({item, index}) => {
+                        if (item.type === 'habit') {
+                            // Render individual ungrouped habit
+                            const habit = item.habit;
+
+                            // Find all ungrouped habits to determine move capabilities
+                            const allUngroupedHabits = groupedData.items
+                                .filter(i => i.type === 'habit')
+                                .map(i => (i as { type: 'habit'; habit: ApiHabitRead }).habit);
+
                             return (
-                                <>
-                                    {groupedData.ungrouped.map((habit, index) => (
-                                        <HabitRow
-                                            key={habit.uuid}
-                                            habitUuid={habit.uuid}
-                                            isExpanded={expandedHabits[habit.uuid]}
-                                            onToggleExpand={() => toggleHabitExpansion(habit.uuid)}
-                                            isConnectedHabitView={false}
-                                            isChallengeHabit={false}
-                                            hideDates={true}
-                                            isDragModeEnabled={isDragModeEnabled}
-                                            habitIndex={index}
-                                            totalHabits={groupedData.ungrouped.length}
-                                            onMoveUp={canHabitMoveUp(habit, groupedData.ungrouped) ? handleMoveUp : undefined}
-                                            onMoveDown={canHabitMoveDown(habit, groupedData.ungrouped) ? handleMoveDown : undefined}
-                                        />
-                                    ))}
-                                </>
+                                <HabitRow
+                                    key={habit.uuid}
+                                    habitUuid={habit.uuid}
+                                    isExpanded={expandedHabits[habit.uuid]}
+                                    onToggleExpand={() => toggleHabitExpansion(habit.uuid)}
+                                    isConnectedHabitView={false}
+                                    isChallengeHabit={false}
+                                    hideDates={true}
+                                    isDragModeEnabled={isDragModeEnabled}
+                                    habitIndex={allUngroupedHabits.findIndex(h => h.uuid === habit.uuid)}
+                                    totalHabits={allUngroupedHabits.length}
+                                    onMoveUp={canHabitMoveUp(habit, allUngroupedHabits) ? handleMoveUp : undefined}
+                                    onMoveDown={canHabitMoveDown(habit, allUngroupedHabits) ? handleMoveDown : undefined}
+                                />
                             );
                         } else {
-                            // Render grouped habits
-                            const groupName = item;
-                            const groupHabits = groupedData.groups[groupName];
+                            // Render group
+                            const groupName = item.groupName;
+                            const groupHabits = item.habits;
 
                             return (
                                 <HabitGroup
@@ -307,23 +385,15 @@ const HabitTrackerScreen = () => {
                                     canMoveDown={canMoveGroupDown(groupName)}
                                     onMoveGroupUp={() => handleMoveGroupUp(groupName)}
                                     onMoveGroupDown={() => handleMoveGroupDown(groupName)}
-                                    onMoveUp={(habitUuid) => {
-                                        const habit = groupHabits.find(h => h.uuid === habitUuid);
-                                        if (habit && canHabitMoveUp(habit, groupHabits)) {
-                                            handleMoveUp(habitUuid);
-                                        }
-                                    }}
-                                    onMoveDown={(habitUuid) => {
-                                        const habit = groupHabits.find(h => h.uuid === habitUuid);
-                                        if (habit && canHabitMoveDown(habit, groupHabits)) {
-                                            handleMoveDown(habitUuid);
-                                        }
-                                    }}
+                                    onMoveHabitUp={handleMoveUp}
+                                    onMoveHabitDown={handleMoveDown}
                                 />
                             );
                         }
                     }}
-                    keyExtractor={(item) => item}
+                    keyExtractor={(item, index) =>
+                        item.type === 'habit' ? item.habit.uuid : `group-${item.groupName}`
+                    }
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 />
