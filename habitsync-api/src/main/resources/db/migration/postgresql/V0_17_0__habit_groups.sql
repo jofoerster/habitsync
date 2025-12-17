@@ -1,2 +1,2 @@
-ALTER TABLE habits ADD COLUMN group VARCHAR(255);
+ALTER TABLE habits ADD COLUMN group_name VARCHAR(255);
 
