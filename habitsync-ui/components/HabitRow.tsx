@@ -198,7 +198,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
         habitUuid: null,
     });
     const getEpochDay = (date: Date): number =>
-        Math.floor(date.getTime() / 86400000);
+        Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
 
     const {data: habit, isLoading: habitLoading, refetch: refetchHabit} = useHabit(habitUuid, true);
     const recordsMap = habitLoading || !habit || !habit.records ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
