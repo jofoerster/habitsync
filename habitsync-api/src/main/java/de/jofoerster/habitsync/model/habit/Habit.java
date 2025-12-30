@@ -84,6 +84,9 @@ public class Habit {
     @JsonProperty("sort_position")
     private Double sortPosition;
 
+    @JsonIgnore
+    private String groupName;
+
     @ManyToMany(mappedBy = "habits")
     @JsonIgnore
     private List<SharedHabit> sharedHabits;
@@ -279,6 +282,9 @@ public class Habit {
         }
         if (apiHabitWrite.getColor() != null) {
             this.color = apiHabitWrite.getColor();
+        }
+        if (apiHabitWrite.getGroup() != null) {
+            this.groupName = apiHabitWrite.getGroup();
         }
         if (apiHabitWrite.getProgressComputation() != null) {
             applyChanges(apiHabitWrite.getProgressComputation());

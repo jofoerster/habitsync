@@ -12,8 +12,8 @@ public class ConfigurationService {
 
     private final NotificationService notificationService;
 
-    @Value("${hide-challenges:false}")
-    private Boolean hideChallenges;
+    @Value("${page.challenges.visible:true}")
+    private Boolean challengePageVisible;
 
     @Value("${tracker.dateformat.template:DD.MM.}")
     private String templateDateFormat;
@@ -21,7 +21,7 @@ public class ConfigurationService {
     public ConfigReadDTO getConfiguration() {
         return ConfigReadDTO.builder()
                 .appriseActive(notificationService.isAppriseActive())
-                .hideChallenges(hideChallenges)
+                .hideChallenges(!challengePageVisible)
                 .templateDateFormat(templateDateFormat)
                 .build();
     }

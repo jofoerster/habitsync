@@ -8,6 +8,7 @@ import lombok.Data;
 public class HabitWriteDTO {
     private String name;
     private Integer color; // 1-10
+    private String group;
 
     private ComputationReadWriteDTO progressComputation;
 }

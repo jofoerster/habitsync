@@ -155,6 +155,7 @@ services:
       - JWT_SECRET=<your-jwt-secret>
       - APPRISE_API_URL=<your-apprise-url> # optional, see Notifications section below
       - TRACKER_DATEFORMAT_TEMPLATE=DD.MM. # optional, only DD, MM supported currently, sets date format in tracker globally
+      - PAGE_CHALLENGES_VISIBLE=true # optional, show challenges page in navigation, set to false to hide globally
     volumes:
       - <path-to-database-file-location>:/data #optional for direct access to database, user 6842:6842 needs access
     user: "6842:6842" # optional, run as user with id 6842, same as the application user in the container

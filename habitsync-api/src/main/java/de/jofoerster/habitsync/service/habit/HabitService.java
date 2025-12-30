@@ -212,6 +212,7 @@ public class HabitService {
                 .currentPercentage(currentPercentage)
                 .currentMedal(currentMedal)
                 .sortPosition(habit.getSortPosition())
+                .group(habit.getGroupName())
                 .isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
                 .notificationFrequency(this.getNotificationConfig(habit))
@@ -386,6 +387,16 @@ public class HabitService {
         return habitRecordSupplier.getHabitRecordsInRange(habit, LocalDate.now(), LocalDate.now())
                 .stream()
                 .anyMatch(r -> r.getRecordValue() != null && r.getRecordValue() != 0);
+    }
+
+    public void sortHabits(List<Habit> habits, Double before, Double after) {
+        final double beforeValue = before != null ? before : 0;
+        final double afterValue =  after != null ? after : Double.MAX_VALUE;
+        double valueToAdd = (afterValue - beforeValue) / habits.size();
+        for (int i  = 0; i < habits.size(); i++) {
+            habits.get(i).setSortPosition(beforeValue + (i * valueToAdd));
+        }
+        habitRepository.saveAll(habits);
     }
 
     private class DeprecatedNotificationFrequencyDTO {

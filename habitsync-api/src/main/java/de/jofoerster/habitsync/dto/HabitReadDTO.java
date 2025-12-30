@@ -16,6 +16,8 @@ public class HabitReadDTO {
 
     private Double sortPosition;
 
+    private String group;
+
     private ComputationReadWriteDTO progressComputation;
 
     private Double currentPercentage;

@@ -1,9 +1,6 @@
 package de.jofoerster.habitsync.controller;
 
-import de.jofoerster.habitsync.dto.AccountReadDTO;
-import de.jofoerster.habitsync.dto.HabitReadDTO;
-import de.jofoerster.habitsync.dto.HabitWriteDTO;
-import de.jofoerster.habitsync.dto.PercentageHistoryDTO;
+import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitType;
@@ -176,6 +173,18 @@ public class HabitController {
         Account account = accountService.getCurrentAccount();
         permissionChecker.checkIfisAllowedToEdit(habit, account);
         habitService.moveHabit(account, habit, false);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/sort")
+    public ResponseEntity sortHabits(@RequestBody HabitSortBody habitSortBody) {
+        Account account = accountService.getCurrentAccount();
+        List<Habit> habits = habitSortBody.getHabitUuids().stream().map(uuid -> {
+            Habit habit  = habitService.getHabitByUuid(uuid).orElse(null);
+            permissionChecker.checkIfisAllowedToEdit(habit, account);
+            return habit;
+        }).toList();
+        habitService.sortHabits(habits, habitSortBody.getBefore(), habitSortBody.getAfter());
         return ResponseEntity.ok().build();
     }
 

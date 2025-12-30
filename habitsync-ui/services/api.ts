@@ -13,6 +13,7 @@ export interface ApiHabitRead {
     isChallengeHabit?: boolean;
     synchronizedSharedHabitId?: number;
     sortPosition: number;
+    group?: string;
     notificationFrequency: NotificationConfig | null;
     hasConnectedHabits: boolean;
     numberModalConfig: ApiHabitNumberModalConfig;
@@ -70,6 +71,7 @@ export interface ApiHabitWrite {
     uuid?: string;
     name: string;
     color?: number;
+    group?: number;
     progressComputation: ApiComputationReadWrite;
 }
 
@@ -231,6 +233,12 @@ export interface ServerConfig {
     templateDateFormat: string;
 }
 
+export interface SortHabitRequestBody {
+    habitUuids: string[];
+    before: number;
+    after: number;
+}
+
 // API service functions
 
 // User API
@@ -367,6 +375,14 @@ export const habitApi = {
             method: 'POST',
         });
         if (!response.ok) throw new Error('Failed to move habit down');
+    },
+
+    sort: async (body: SortHabitRequestBody): Promise<void> => {
+        const response = await authenticatedFetch(`/api/habit/sort`, {
+            method: 'POST',
+            body: JSON.stringify(body)
+        });
+        if (!response.ok) throw new Error('Failed to sort habits');
     },
 
     listParticipants: async (uuid: string): Promise<ApiAccountRead[]> => {
@@ -724,7 +740,7 @@ const authenticatedFetch = async (url: string, options: RequestInit = {}, retrie
             ...headers,
             ...options.headers,
         },
-    });
+    } as any);
 
     if (response.status === 401 && retries <= 3) {
         console.log('Unauthorized, attempting token refresh');
