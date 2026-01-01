@@ -167,8 +167,6 @@ interface HabitRowProps {
     isDragModeEnabled?: boolean,
     hideDates?: boolean,
     hideProgressRing?: boolean,
-    habitIndex?: number,
-    totalHabits?: number,
     onMoveUp?: (habitUuid: string) => void,
     onMoveDown?: (habitUuid: string) => void
 }
@@ -183,8 +181,6 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                isDragModeEnabled = false,
                                                hideDates = false,
                                                hideProgressRing = false,
-                                               habitIndex = 0,
-                                               totalHabits = 1,
                                                onMoveUp,
                                                onMoveDown
                                            }) => {
@@ -388,9 +384,9 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                     <TouchableOpacity
                                         style={[
                                             styles.reorderButton,
-                                            (!onMoveUp || habitIndex === 0) && styles.reorderButtonDisabled
+                                            !onMoveUp && styles.reorderButtonDisabled
                                         ]}
-                                        disabled={!onMoveUp || habitIndex === 0}
+                                        disabled={!onMoveUp}
                                         onPress={() => onMoveUp && onMoveUp(habitUuid)}
                                     >
                                         <MaterialCommunityIcons
@@ -402,9 +398,9 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                     <TouchableOpacity
                                         style={[
                                             styles.reorderButton,
-                                            (!onMoveDown || habitIndex >= totalHabits - 1) && styles.reorderButtonDisabled
+                                            !onMoveDown && styles.reorderButtonDisabled
                                         ]}
-                                        disabled={!onMoveDown || habitIndex >= totalHabits - 1}
+                                        disabled={!onMoveDown}
                                         onPress={() => onMoveDown && onMoveDown(habitUuid)}
                                     >
                                         <MaterialCommunityIcons

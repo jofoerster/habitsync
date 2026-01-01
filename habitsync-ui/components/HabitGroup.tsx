@@ -98,10 +98,8 @@ const HabitGroup: React.FC<HabitGroupProps> = ({
                                 isChallengeHabit={false}
                                 hideDates={true}
                                 isDragModeEnabled={isDragModeEnabled}
-                                habitIndex={index}
-                                totalHabits={habitUuids.length}
-                                onMoveUp={onMoveHabitUp}
-                                onMoveDown={onMoveHabitDown}
+                                onMoveUp={index > 0 ? onMoveHabitUp : undefined}
+                                onMoveDown={index < habitUuids.length - 1 ? onMoveHabitDown : undefined}
                             />
                         ))}
                     </View>
