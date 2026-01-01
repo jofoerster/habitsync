@@ -93,6 +93,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [saving, setSaving] = useState(false);
 
         const [name, setName] = useState('');
+        const [group, setGroup] = useState('');
         const [selectedColor, setSelectedColor] = useState<number>(1);
         const [dailyDefault, setDailyDefault] = useState('');
         const [dailyReachableValue, setDailyReachableValue] = useState('1');
@@ -365,6 +366,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 const habitData: ApiHabitWrite = {
                     uuid: habit?.uuid,
                     name: name.trim(),
+                    group: group.trim() || undefined,
                     color: selectedColor,
                     progressComputation
                 };
@@ -825,6 +827,23 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         ))}
                     </View>
                 </View>
+
+                {configType === ConfigType.HABIT && (
+                    <View style={styles.section}>
+                        <View style={styles.titleRow}>
+                            <Text style={styles.sectionTitle}>Habit Group (optional)</Text>
+                            {isFieldLocked() && <LockIcon/>}
+                        </View>
+                        <TextInput
+                            style={[styles.input, isFieldLocked() && styles.lockedInput]}
+                            value={group}
+                            onChangeText={isFieldLocked() ? undefined : setGroup}
+                            placeholder="Enter habit group name"
+                            placeholderTextColor="#999"
+                            editable={!isFieldLocked()}
+                        />
+                    </View>
+                )}
 
                 {
                     showSaveButton && (
