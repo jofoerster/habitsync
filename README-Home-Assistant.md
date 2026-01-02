@@ -11,7 +11,7 @@ To authenticate, you can create an API key on the profile page. Best practice is
 rest_command:
   # 1. Create a record with default value 1 for a specific habit.
   create_habit_record_simple:
-    url: "http://<your-api-host>/api/habits/<your-habit-uuid>/simple?value=1.0"
+    url: "http://<your-api-host>/api/record/<your-habit-uuid>/simple?value=1.0"
     method: "POST"
     headers:
       X-Api-Key: "<your-api-key-or-reference-to-secrets>"
@@ -20,7 +20,7 @@ rest_command:
   #    with a dynamic value, offset, and timezone. The variables (e.g., {{ habit_uuid }})
   #    must be provided when you call this service.
   create_habit_record_complex:
-    url: "http://<your-api-host>/api/habits/{{ habit_uuid }}/simple?value={{ value }}&offset={{ offset }}&timeZone={{ time_zone }}"
+    url: "http://<your-api-host>/api/record/{{ habit_uuid }}/simple?value={{ value }}&offset={{ offset }}&timeZone={{ time_zone }}"
     method: "POST"
     headers:
       X-Api-Key: "<your-api-key-or-reference-to-secrets>"
@@ -50,7 +50,7 @@ sensor:
     # 1. Gets the record for the current day (API defaults offset to 0 and uses server timezone).
     name: "Habit Today's Value"
     unique_id: habit_today_value_sensor
-    resource: "http://<your-api-host>/api/habits/<your-habit-uuid>/simple"
+    resource: "http://<your-api-host>/api/record/<your-habit-uuid>/simple"
     headers:
       X-Api-Key: "<your-api-key-or-reference-to-secrets>"
     value_template: "{{ value_json.recordValue }}"
@@ -65,7 +65,7 @@ sensor:
     # 2. Gets the record for yesterday using a specific timezone.
     name: "Habit Yesterday's Value"
     unique_id: habit_yesterday_value_sensor_complex
-    resource: "http://<your-api-host>/api/habits/<your-habit-uuid>/simple?offset=-1&timeZone=Europe/Berlin"
+    resource: "http://<your-api-host>/api/record/<your-habit-uuid>/simple?offset=-1&timeZone=Europe/Berlin"
     headers:
       X-Api-Key: "<your-api-key-or-reference-to-secrets>"
     value_template: "{{ value_json.recordValue }}"
