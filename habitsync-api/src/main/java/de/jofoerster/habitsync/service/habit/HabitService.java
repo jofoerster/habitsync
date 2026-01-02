@@ -399,6 +399,10 @@ public class HabitService {
         habitRepository.saveAll(habits);
     }
 
+    public List<String> getGroupNamesForAccount(Account account) {
+        return habitRepository.findDistinctGroupNamesByAccount(account);
+    }
+
     private class DeprecatedNotificationFrequencyDTO {
         private FrequencyEnum frequency;
         private String[] weekdays; // MO, TU, WE, TH, FR, SA, SU

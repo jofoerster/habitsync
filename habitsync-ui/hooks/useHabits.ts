@@ -118,6 +118,15 @@ export const useHabitRecords = (
     });
 };
 
+export const useHabitGroupNames = () => {
+    return useQuery({
+        queryKey: habitKeys.details(),
+        queryFn: () => habitApi.getGroupNames(),
+        staleTime: 1000 * 60 * 60,
+        refetchOnMount: 'always',
+    });
+}
+
 /**
  * Create a new habit
  * Automatically invalidates habit list cache

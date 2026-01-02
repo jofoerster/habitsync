@@ -25,6 +25,7 @@ import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {MAX_INTEGER} from "@/constants/numbers";
+import {useHabitGroupNames} from "@/hooks/useHabits";
 
 const {width} = Dimensions.get('window');
 
@@ -123,6 +124,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const [goalType, setGoalType] = useState<'Daily' | 'Weekly' | 'Monthly'>('Daily');
 
         const [selectedWeekdays, setSelectedWeekdays] = useState<number[]>([]);
+
+        const {data: groupNames = []} = useHabitGroupNames();
 
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
@@ -834,14 +837,43 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             <Text style={styles.sectionTitle}>Habit Group (optional)</Text>
                             {isFieldLocked() && <LockIcon/>}
                         </View>
-                        <TextInput
-                            style={[styles.input, isFieldLocked() && styles.lockedInput]}
-                            value={group}
-                            onChangeText={isFieldLocked() ? undefined : setGroup}
-                            placeholder="Enter habit group name"
-                            placeholderTextColor="#999"
-                            editable={!isFieldLocked()}
-                        />
+                        <View>
+                            {groupNames.length > 0 && (
+                                <View style={styles.dropdownContainer}>
+                                    <Text style={[styles.label, { marginBottom: 8 }]}>Select from existing groups:</Text>
+                                    <View style={styles.groupChipsContainer}>
+                                        {groupNames.map((groupName, index) => (
+                                            <TouchableOpacity
+                                                key={index}
+                                                style={[
+                                                    styles.groupChip,
+                                                    group === groupName && styles.selectedGroupChip
+                                                ]}
+                                                onPress={() => !isFieldLocked() && setGroup(groupName)}
+                                                disabled={isFieldLocked()}
+                                                activeOpacity={0.7}
+                                            >
+                                                <Text style={[
+                                                    styles.groupChipText,
+                                                    group === groupName && styles.selectedGroupChipText
+                                                ]}>
+                                                    {groupName}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </View>
+                                    <Text style={[styles.label, { marginTop: 16, marginBottom: 8 }]}>Or enter a new group name:</Text>
+                                </View>
+                            )}
+                            <TextInput
+                                style={[styles.input, isFieldLocked() && styles.lockedInput]}
+                                value={group}
+                                onChangeText={isFieldLocked() ? undefined : setGroup}
+                                placeholder="Enter habit group name"
+                                placeholderTextColor="#999"
+                                editable={!isFieldLocked()}
+                            />
+                        </View>
                     </View>
                 )}
 
@@ -1249,6 +1281,34 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         color: theme.text,
     },
     selectedWeekdayButtonText: {
+        color: theme.textInverse,
+    },
+    dropdownContainer: {
+        marginBottom: 12,
+    },
+    groupChipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    groupChip: {
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+        backgroundColor: theme.background,
+        borderWidth: 1,
+        borderColor: theme.border,
+    },
+    selectedGroupChip: {
+        backgroundColor: '#4ECDC4',
+        borderColor: '#4ECDC4',
+    },
+    groupChipText: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: theme.text,
+    },
+    selectedGroupChipText: {
         color: theme.textInverse,
     },
 }));
