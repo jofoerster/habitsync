@@ -1,15 +1,16 @@
 import HabitRow from '@/components/HabitRow';
-import React, {useCallback, useState} from 'react';
+import HabitGroup from '@/components/HabitGroup';
+import React, {useMemo, useState} from 'react';
 import {Animated, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Link, useFocusEffect} from 'expo-router';
+import {Link} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabits, useHabitUuids, useMoveHabitDown, useMoveHabitUp} from "@/hooks/useHabits";
-import {reload} from "expo-router/build/global-state/routing";
+import {useHabits, useSortHabits} from "@/hooks/useHabits";
 import {useConfiguration} from "@/hooks/useConfiguration";
+import {ApiHabitRead} from "@/services/api";
 
 const DateHeader = () => {
     const {theme} = useTheme();
@@ -56,26 +57,115 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const {data: habitUuids = [], isLoading: loading, refetch} = useHabitUuids();
+    const {data: habits = [], isLoading: loading} = useHabits();
 
-    const moveHabitUpMutation = useMoveHabitUp();
-    const moveHabitDownMutation = useMoveHabitDown();
+    const sortHabitsMutation = useSortHabits();
 
     const [expandedHabits, setExpandedHabits] = useState<{ [key: string]: boolean }>({});
+    const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({});
     const [isDragModeEnabled, setIsDragModeEnabled] = useState(false);
 
-    const toggleHabitExpansion = async (habitUuid: string) => {
-        const isExpanded = expandedHabits[habitUuid];
+    // Group habits by their group property and create a unified sorted list
+    const groupedData = useMemo(() => {
+        const groups: { [key: string]: ApiHabitRead[] } = {};
+        const ungrouped: ApiHabitRead[] = [];
 
+        habits.forEach(habit => {
+            if (habit.group) {
+                if (!groups[habit.group]) {
+                    groups[habit.group] = [];
+                }
+                groups[habit.group].push(habit);
+            } else {
+                ungrouped.push(habit);
+            }
+        });
+
+        // Sort habits within each group by sortPosition
+        Object.keys(groups).forEach(groupName => {
+            groups[groupName].sort((a, b) => a.sortPosition - b.sortPosition);
+        });
+
+        // Sort ungrouped habits by sortPosition
+        ungrouped.sort((a, b) => a.sortPosition - b.sortPosition);
+
+        // Create a unified list with groups and ungrouped habits sorted by position
+        type ListItem =
+            | { type: 'group'; groupName: string; anchor: number; habits: ApiHabitRead[] }
+            | { type: 'habit'; habit: ApiHabitRead; anchor: number };
+
+        const items: ListItem[] = [];
+
+        // Add groups (anchor = minimum sortPosition of all habits in the group)
+        Object.keys(groups).forEach(groupName => {
+            const groupHabits = groups[groupName];
+            if (groupHabits.length > 0) {
+                const anchor = Math.min(...groupHabits.map(h => h.sortPosition));
+                items.push({
+                    type: 'group',
+                    groupName,
+                    anchor,
+                    habits: groupHabits
+                });
+            }
+        });
+
+        // Add ungrouped habits
+        ungrouped.forEach(habit => {
+            items.push({
+                type: 'habit',
+                habit,
+                anchor: habit.sortPosition
+            });
+        });
+
+        // Sort all items by anchor position
+        items.sort((a, b) => a.anchor - b.anchor);
+
+        return { groups, ungrouped, items };
+    }, [habits]);
+
+    const toggleHabitExpansion = (habitUuid: string) => {
         setExpandedHabits(prev => ({
             ...prev,
-            [habitUuid]: !isExpanded
+            [habitUuid]: !prev[habitUuid]
+        }));
+    };
+
+    const toggleGroupExpansion = (groupName: string) => {
+        setExpandedGroups(prev => ({
+            ...prev,
+            [groupName]: !prev[groupName]
         }));
     };
 
     const handleMoveUp = async (habitUuid: string) => {
         try {
-            await moveHabitUpMutation.mutateAsync(habitUuid);
+            const habit = habits.find(h => h.uuid === habitUuid);
+            if (!habit) return;
+
+            // Find the habit immediately before this one
+            const habitsBefore = habits
+                .filter(h => h.sortPosition < habit.sortPosition)
+                .sort((a, b) => b.sortPosition - a.sortPosition);
+
+            if (habitsBefore.length === 0) return; // Can't move up
+
+            const habitBefore = habitsBefore[0];
+
+            // Find position to move to (before habitBefore)
+            const habitsBeforeThat = habits
+                .filter(h => h.sortPosition < habitBefore.sortPosition)
+                .sort((a, b) => b.sortPosition - a.sortPosition);
+
+            const before = habitsBeforeThat.length > 0 ? habitsBeforeThat[0].sortPosition : undefined;
+            const after = habitBefore.sortPosition;
+
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: [habitUuid],
+                before,
+                after
+            });
         } catch (_error) {
             alert('Error', 'Failed to move habit up');
         }
@@ -83,10 +173,134 @@ const HabitTrackerScreen = () => {
 
     const handleMoveDown = async (habitUuid: string) => {
         try {
-            await moveHabitDownMutation.mutateAsync(habitUuid);
+            const habit = habits.find(h => h.uuid === habitUuid);
+            if (!habit) return;
+
+            // Find the habit immediately after this one
+            const habitsAfter = habits
+                .filter(h => h.sortPosition > habit.sortPosition)
+                .sort((a, b) => a.sortPosition - b.sortPosition);
+
+            if (habitsAfter.length === 0) return; // Can't move down
+
+            const habitAfter = habitsAfter[0];
+
+            // Find position to move to (after habitAfter)
+            const habitsAfterThat = habits
+                .filter(h => h.sortPosition > habitAfter.sortPosition)
+                .sort((a, b) => a.sortPosition - b.sortPosition);
+
+            const before = habitAfter.sortPosition;
+            const after = habitsAfterThat.length > 0 ? habitsAfterThat[0].sortPosition : undefined;
+
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: [habitUuid],
+                before,
+                after
+            });
         } catch (_error) {
             alert('Error', 'Failed to move habit down');
         }
+    };
+
+    const handleMoveGroupUp = async (groupName: string) => {
+        const groupHabits = groupedData.groups[groupName];
+        if (groupHabits.length === 0) return;
+
+        const firstHabitPosition = groupHabits[0].sortPosition;
+
+        // Find the habit that comes before this group
+        const allHabits = habits.filter(h => h.sortPosition < firstHabitPosition)
+            .sort((a, b) => b.sortPosition - a.sortPosition);
+
+        if (allHabits.length === 0) return; // Can't move up
+
+        const habitBefore = allHabits[0];
+
+        // Find position to move to (before habitBefore)
+        const habitsBeforeThat = habits.filter(h => h.sortPosition < habitBefore.sortPosition)
+            .sort((a, b) => b.sortPosition - a.sortPosition);
+
+        const before = habitsBeforeThat.length > 0 ? habitsBeforeThat[0].sortPosition : undefined;
+        const after = habitBefore.sortPosition;
+
+        try {
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: groupHabits.map(h => h.uuid),
+                before,
+                after
+            });
+        } catch (_error) {
+            alert('Error', 'Failed to move group up');
+        }
+    };
+
+    const handleMoveGroupDown = async (groupName: string) => {
+        const groupHabits = groupedData.groups[groupName];
+        if (groupHabits.length === 0) return;
+
+        const lastHabitPosition = groupHabits[groupHabits.length - 1].sortPosition;
+
+        // Find the habit that comes after this group
+        const allHabits = habits.filter(h => h.sortPosition > lastHabitPosition)
+            .sort((a, b) => a.sortPosition - b.sortPosition);
+
+        if (allHabits.length === 0) return; // Can't move down
+
+        const habitAfter = allHabits[0];
+
+        // Find position to move to (after habitAfter)
+        const habitsAfterThat = habits.filter(h => h.sortPosition > habitAfter.sortPosition)
+            .sort((a, b) => a.sortPosition - b.sortPosition);
+
+        const before = habitAfter.sortPosition;
+        const after = habitsAfterThat.length > 0 ? habitsAfterThat[0].sortPosition : undefined;
+
+        try {
+            await sortHabitsMutation.mutateAsync({
+                habitUuids: groupHabits.map(h => h.uuid),
+                before,
+                after
+            });
+        } catch (_error) {
+            alert('Error', 'Failed to move group down');
+        }
+    };
+
+    const canMoveGroupUp = (groupName: string): boolean => {
+        const groupItem = groupedData.items.find(
+            item => item.type === 'group' && item.groupName === groupName
+        );
+        if (!groupItem) return false;
+        const index = groupedData.items.indexOf(groupItem);
+        return index > 0;
+    };
+
+    const canMoveGroupDown = (groupName: string): boolean => {
+        const groupItem = groupedData.items.find(
+            item => item.type === 'group' && item.groupName === groupName
+        );
+        if (!groupItem) return false;
+        const index = groupedData.items.indexOf(groupItem);
+        return index < groupedData.items.length - 1;
+    };
+
+    const canUngroupedHabitMoveUp = (habitUuid: string): boolean => {
+        const habitItem = groupedData.items.find(
+            item => item.type === 'habit' && item.habit.uuid === habitUuid
+        );
+        if (!habitItem) return false;
+        const index = groupedData.items.indexOf(habitItem);
+        return index > 0;
+    };
+
+    const canUngroupedHabitMoveDown = (habitUuid: string): boolean => {
+        const habitItem = groupedData.items.find(
+            item => item.type === 'habit' && item.habit.uuid === habitUuid
+        );
+        if (!habitItem) return false;
+        const index = groupedData.items.indexOf(habitItem);
+        return index < groupedData.items.length - 1;
     };
 
     const openHelp = () => {
@@ -129,50 +343,62 @@ const HabitTrackerScreen = () => {
                 <View style={styles.emptyState}>
                     <Text style={styles.emptyStateText}>Loading your habits...</Text>
                 </View>
-            ) : habitUuids.length === 0 ? (
+            ) : habits.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="target" size={64} color="#ccc"/>
                     <Text style={styles.emptyStateText}>No habits yet</Text>
                     <Text style={styles.emptyStateSubText}>Start building your first habit!</Text>
                 </View>
-            ) : isDragModeEnabled ? (
-                <FlatList
-                    data={habitUuids}
-                    renderItem={({item, index}) => (
-                        <HabitRow
-                            key={item}
-                            habitUuid={item}
-                            isExpanded={expandedHabits[item]}
-                            onToggleExpand={() => toggleHabitExpansion(item)}
-                            isConnectedHabitView={false}
-                            isChallengeHabit={false}
-                            hideDates={true}
-                            isDragModeEnabled={isDragModeEnabled}
-                            habitIndex={index}
-                            totalHabits={habitUuids.length}
-                            onMoveUp={handleMoveUp}
-                            onMoveDown={handleMoveDown}
-                        />
-                    )}
-                    keyExtractor={(item) => item}
-                    contentContainerStyle={styles.scrollContent}
-                    showsVerticalScrollIndicator={true}
-                />
             ) : (
                 <FlatList
-                    data={habitUuids}
-                    renderItem={({item}) => (
-                        <HabitRow
-                            key={item}
-                            habitUuid={item}
-                            isExpanded={expandedHabits[item]}
-                            onToggleExpand={() => toggleHabitExpansion(item)}
-                            isConnectedHabitView={false}
-                            isChallengeHabit={false}
-                            hideDates={true}
-                        />
-                    )}
-                    keyExtractor={(item) => item}
+                    data={groupedData.items}
+                    renderItem={({item, index}) => {
+                        if (item.type === 'habit') {
+                            // Render individual ungrouped habit
+                            const habit = item.habit;
+
+                            return (
+                                <HabitRow
+                                    key={habit.uuid}
+                                    habitUuid={habit.uuid}
+                                    isExpanded={expandedHabits[habit.uuid]}
+                                    onToggleExpand={() => toggleHabitExpansion(habit.uuid)}
+                                    isConnectedHabitView={false}
+                                    isChallengeHabit={false}
+                                    hideDates={true}
+                                    isDragModeEnabled={isDragModeEnabled}
+                                    onMoveUp={canUngroupedHabitMoveUp(habit.uuid) ? handleMoveUp : undefined}
+                                    onMoveDown={canUngroupedHabitMoveDown(habit.uuid) ? handleMoveDown : undefined}
+                                />
+                            );
+                        } else {
+                            // Render group
+                            const groupName = item.groupName;
+                            const groupHabits = item.habits;
+
+                            return (
+                                <HabitGroup
+                                    key={groupName}
+                                    groupName={groupName}
+                                    habitUuids={groupHabits.map(h => h.uuid)}
+                                    expandedHabits={expandedHabits}
+                                    onToggleHabitExpand={toggleHabitExpansion}
+                                    isGroupExpanded={expandedGroups[groupName] !== false}
+                                    onToggleGroupExpand={() => toggleGroupExpansion(groupName)}
+                                    isDragModeEnabled={isDragModeEnabled}
+                                    canMoveUp={canMoveGroupUp(groupName)}
+                                    canMoveDown={canMoveGroupDown(groupName)}
+                                    onMoveGroupUp={() => handleMoveGroupUp(groupName)}
+                                    onMoveGroupDown={() => handleMoveGroupDown(groupName)}
+                                    onMoveHabitUp={handleMoveUp}
+                                    onMoveHabitDown={handleMoveDown}
+                                />
+                            );
+                        }
+                    }}
+                    keyExtractor={(item, index) =>
+                        item.type === 'habit' ? item.habit.uuid : `group-${item.groupName}`
+                    }
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                 />

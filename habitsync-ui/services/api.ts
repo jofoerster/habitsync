@@ -235,8 +235,8 @@ export interface ServerConfig {
 
 export interface SortHabitRequestBody {
     habitUuids: string[];
-    before: number;
-    after: number;
+    before?: number;
+    after?: number;
 }
 
 // API service functions
@@ -418,6 +418,12 @@ export const habitApi = {
         });
         if (!response.ok) throw new Error('Failed to decline invitation');
     },
+
+    getGroupNames: async (): Promise<string[]> => {
+        const response = await authenticatedFetch(`/api/habit/group-names`);
+        if (!response.ok) throw new Error('Failed to fetch habit groups');
+        return response.json();
+    }
 };
 
 export const notificationApi = {

@@ -41,4 +41,7 @@ public interface HabitRepository extends JpaRepository<Habit, Long> {
     double countHabitsByAccountAndHabitTypeAndStatusAndChallengeHabit(Account account, HabitType habitType, Integer status, boolean challengeHabit);
 
     List<Habit> findByAccountAndChallengeHabitAndStatusOrderBySortPosition(Account currentAccount, boolean b, int i);
+
+    @Query("SELECT DISTINCT h.groupName FROM Habit h WHERE h.account = :account AND h.groupName IS NOT NULL AND h.groupName != ''")
+    List<String> findDistinctGroupNamesByAccount(Account account);
 }
