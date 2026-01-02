@@ -390,8 +390,8 @@ public class HabitService {
     }
 
     public void sortHabits(List<Habit> habits, Double before, Double after) {
-        final double beforeValue = before != null ? before : -Double.MAX_VALUE;
-        final double afterValue = after != null ? after : Double.MAX_VALUE;
+        final double beforeValue = before != null ? before : after - 2;
+        final double afterValue = after != null ? after : before + 2;
         double valueToAdd = (afterValue - beforeValue) / (habits.size() + 1);
         for (int i = 0; i < habits.size(); i++) {
             habits.get(i).setSortPosition(beforeValue + ((i + 1) * valueToAdd));
