@@ -266,4 +266,11 @@ public class HabitController {
         PercentageHistoryDTO dto = cachingHabitProgressHistoryService.getPercentageHistoryForMonth(habit, year, monthInt);
         return ResponseEntity.ok(dto);
     }
+
+    @GetMapping("/group-names")
+    public ResponseEntity<List<String>> getGroupNames() {
+        Account account = accountService.getCurrentAccount();
+        List<String> groupNames = habitService.getGroupNamesForAccount(account);
+        return ResponseEntity.ok(groupNames);
+    }
 }
