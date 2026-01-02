@@ -22,23 +22,21 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine AS runtime
 
-RUN apk add --no-cache wget dumb-init tzdata
+RUN apk add --no-cache wget dumb-init tzdata su-exec
 
 RUN ln -snf /usr/share/zoneinfo/UTC /etc/localtime && echo UTC > /etc/timezone
 
-RUN addgroup -g 6842 -S appgroup && \
-    adduser -u 6842 -S appuser -G appgroup
+RUN mkdir -p /data
 
-RUN mkdir -p /data && chown appuser:appgroup /data
+COPY --from=api-builder /app/api/target/habitsync-api-*.jar /app/app.jar
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-COPY --from=api-builder --chown=appuser:appgroup /app/api/target/habitsync-api-*.jar /app/app.jar
-
-USER appuser
 
 EXPOSE 6842
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:6842/actuator/health || exit 1
 
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Duser.timezone=UTC", "-jar", "/app/app.jar"]
+ENTRYPOINT ["dumb-init", "--", "/docker-entrypoint.sh"]
+CMD []
