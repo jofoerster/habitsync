@@ -146,7 +146,8 @@ services:
       # Create hash using: htpasswd -bnBC 10 "" password123 | tr -d ':\n' | sed 's/\$/\$\$/g'
       # $ get replaced with $$ to work in env variables. This might be different in other environments
       - APP_SECURITY_BASIC-AUTH-USERS_<username>=<bcrypt-password-hash>
-      # Mail setup for notifications
+      # Mail setup for notifications (disabled by default)
+      - SPRING_MAIL_ENABLED=false
       - SPRING_MAIL_HOST=<mail-host>
       - SPRING_MAIL_USERNAME=<mail-username>
       - SPRING_MAIL_PASSWORD=<mail-password>
