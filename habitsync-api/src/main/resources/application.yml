@@ -31,6 +31,7 @@ spring:
         jwt:
           issuer-uri: # Leave empty, handled in code
   mail:
+    enabled: false
     host: <host>
     port: 587
     username: <mail-username>
@@ -62,6 +63,9 @@ spring:
             threadsInheritContextClassLoaderOfInitializingThread: true
 
 management:
+  health:
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
