@@ -78,21 +78,20 @@ export default function TabLayout() {
                         ),
                     }}
                 />
-                {showChallengesTab && (
-                    <Tabs.Screen
-                        name="challenges"
-                        options={{
-                            title: 'Challenges',
-                            tabBarIcon: ({focused, color, size}) => (
-                                <MaterialCommunityIcons
-                                    size={size}
-                                    name={focused ? 'trophy' : 'trophy-outline'}
-                                    color={color}
-                                />
-                            ),
-                        }}
-                    />
-                )}
+                <Tabs.Screen
+                    name="challenges"
+                    options={{
+                        title: 'Challenges',
+                        href: showChallengesTab ? undefined : null,
+                        tabBarIcon: ({focused, color, size}) => (
+                            <MaterialCommunityIcons
+                                size={size}
+                                name={focused ? 'trophy' : 'trophy-outline'}
+                                color={color}
+                            />
+                        ),
+                    }}
+                />
                 <Tabs.Screen
                     name="profile"
                     options={{
