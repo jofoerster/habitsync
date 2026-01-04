@@ -32,7 +32,10 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
     const [activeTab, setActiveTab] = useState<'share' | 'participants'>('share');
     const [inviteAuthId, setInviteAuthId] = useState('');
-    const {data: participants, isLoading: loadingParticipantsData} = useHabitParticipants(isOwnHabit ? habitDetail.uuid : undefined);
+    const {
+        data: participants,
+        isLoading: loadingParticipantsData
+    } = useHabitParticipants(isOwnHabit ? habitDetail.uuid : undefined);
     const inviteParticipantMutation = useInviteParticipant();
     const removeParticipantMutation = useRemoveParticipant();
     const createSharedHabitMutation = useCreateSharedHabit();
@@ -171,7 +174,8 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                     <View>
                                         <Text style={styles.sectionTitle}>Share Link</Text>
                                         <Text style={styles.description}>
-                                            Share this link with others to let them join and track this habit together.
+                                            Share this link with others to let them CONNECT their own habit and track
+                                            this habit together.
                                         </Text>
 
                                         <View style={styles.shareLinkContainer}>
@@ -218,7 +222,9 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                             <View style={styles.participantsContent}>
                                 <Text style={styles.sectionTitle}>Invite Participants</Text>
                                 <Text style={styles.description}>
-                                    Invite others directly by their authentication ID to participate in this habit.
+                                    Invite others directly by their authentication ID to participate in THIS habit. The
+                                    other person will be able to track progress on the SAME habit. Use this for things
+                                    you do together, or need to be only be done by one person at a time.
                                 </Text>
 
                                 <View style={styles.inviteContainer}>
