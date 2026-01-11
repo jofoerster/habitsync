@@ -8,6 +8,9 @@
 
 </div>
 
+> [!WARNING]
+> **Breaking Change in v0.17.0**: The Docker user configuration has changed. Instead of specifying the user directly in `docker run` or `docker-compose.yml`, you now need to use the `PUID` and `PGID` environment variables. See the [Docker Compose](#docker-compose-recommended-for-production-use) section for details.
+
 <p align="center">
     <a href="https://github.com/jofoerster/habitsync/actions/workflows/release.yml">
         <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/jofoerster/habitsync/release.yml">
