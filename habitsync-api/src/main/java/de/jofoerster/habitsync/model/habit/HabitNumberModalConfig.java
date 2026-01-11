@@ -3,6 +3,7 @@ package de.jofoerster.habitsync.model.habit;
 import de.jofoerster.habitsync.dto.HabitNumberModalConfigDTO;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.Transient;
 import lombok.Data;
 
 import java.util.ArrayList;
@@ -18,6 +19,7 @@ public class HabitNumberModalConfig {
 
     String configValues = "";
 
+    @Transient
     private final String STRING_DELIMITER = ";";
 
     public void addConfigValue(String configValue) {

@@ -25,6 +25,8 @@ spring:
     hibernate:
       ddl-auto: none
     open-in-view: false
+    properties:
+      hibernate.auto_quote_keyword: true
   security:
     oauth2:
       resourceserver:

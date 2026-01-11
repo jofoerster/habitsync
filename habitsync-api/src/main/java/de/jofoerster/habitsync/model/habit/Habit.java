@@ -45,6 +45,7 @@ public class Habit {
     private String name;
 
     @JsonProperty("desc")
+    @Column(name = "\"desc\"")
     private String desc;
 
     private Integer color;
