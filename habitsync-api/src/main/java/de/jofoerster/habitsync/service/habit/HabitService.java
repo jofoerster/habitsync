@@ -180,10 +180,10 @@ public class HabitService {
                 .map(this::getApiHabitReadFromHabit).toList();
     }
 
-    public List<String> getAllUserHabitUuids(Account currentAccount) {
-        List<String> uuids = new ArrayList<>(
+    public List<HabitReadUuidDTO> getAllUserHabitUuids(Account currentAccount) {
+        List<HabitReadUuidDTO> uuids = new ArrayList<>(
                 habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
-                        .stream().map(Habit::getUuid)
+                        .stream().map(HabitService::getHabitReadUuidsDTO)
                         .toList());
         List<HabitParticipant> participants =
                 habitParticipantRepository
@@ -193,11 +193,16 @@ public class HabitService {
             Optional<Habit> habitOpt = habitRepository.findByUuid(p.getHabitUuid());
             habitOpt.ifPresent(h -> {
                 if (h.getStatus() == 1) {
-                    uuids.add(h.getUuid());
+                    uuids.add(getHabitReadUuidsDTO(h));
                 }
             });
         });
         return uuids;
+    }
+
+    private static HabitReadUuidDTO getHabitReadUuidsDTO(Habit h) {
+        return HabitReadUuidDTO.builder().uuid(h.getUuid()).groupName(h.getGroupName())
+                .sortPosition(h.getSortPosition()).build();
     }
 
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {

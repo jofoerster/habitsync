@@ -20,6 +20,12 @@ export interface ApiHabitRead {
     records: ApiHabitRecordRead[];
 }
 
+export interface ApiHabitUuidRead {
+    uuid: string;
+    groupName?: string;
+    sortPosition: number;
+}
+
 export interface PercentageHistoryDTO {
     month: string; // "YYYY-MM"
     dailyPercentages: { [epochDay: number]: number }; // epochDay -> percentage
@@ -306,7 +312,7 @@ export const habitApi = {
         return response.json();
     },
 
-    getUserHabitUuids: async (): Promise<string[]> => {
+    getUserHabitUuids: async (): Promise<ApiHabitUuidRead[]> => {
         const response = await authenticatedFetch(`/api/habit/uuids/list`);
         if (!response.ok) throw new Error('Failed to fetch habits');
         return response.json();

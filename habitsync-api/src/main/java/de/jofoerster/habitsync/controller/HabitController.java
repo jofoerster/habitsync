@@ -64,7 +64,7 @@ public class HabitController {
      * @return A list of {@link HabitReadDTO} objects representing the user's habits.
      */
     @GetMapping("/uuids/list")
-    public ResponseEntity<List<String>> getUserHabitUuids() {
+    public ResponseEntity<List<HabitReadUuidDTO>> getUserHabitUuids() {
         return ResponseEntity.ok(habitService.getAllUserHabitUuids(accountService.getCurrentAccount()));
     }
 

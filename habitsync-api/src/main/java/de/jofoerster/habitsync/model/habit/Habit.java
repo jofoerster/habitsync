@@ -284,9 +284,7 @@ public class Habit {
         if (apiHabitWrite.getColor() != null) {
             this.color = apiHabitWrite.getColor();
         }
-        if (apiHabitWrite.getGroup() != null) {
-            this.groupName = apiHabitWrite.getGroup();
-        }
+        this.groupName = apiHabitWrite.getGroup();
         if (apiHabitWrite.getProgressComputation() != null) {
             applyChanges(apiHabitWrite.getProgressComputation());
         }
@@ -295,7 +293,8 @@ public class Habit {
     public void applyChanges(ComputationReadWriteDTO computationReadWriteDTO) {
         this.dailyGoalUnit = computationReadWriteDTO.getUnit();
         String dailyDefault =
-                computationReadWriteDTO.getDailyDefault() == null || computationReadWriteDTO.getDailyDefault().isBlank() ?
+                computationReadWriteDTO.getDailyDefault() == null ||
+                        computationReadWriteDTO.getDailyDefault().isBlank() ?
                         String.valueOf(computationReadWriteDTO.getDailyReachableValue()) :
                         computationReadWriteDTO.getDailyDefault();
         this.dailyGoal = Math.abs(Double.parseDouble(dailyDefault));
