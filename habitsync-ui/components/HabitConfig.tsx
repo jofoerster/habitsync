@@ -225,6 +225,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             && parseInt(habit.progressComputation.dailyReachableValue?.toString() || '0') >= (MAX_INTEGER - 1));
                         setNotificationFrequency(habit.notificationFrequency);
                         setSelectedWeekdays(habit.progressComputation.weekdayFilterWhitelist || []);
+                        setGroup(habit.group || "");
                     }
                     if (configType === ConfigType.CHALLENGE) {
                         setChallengeType(habit?.progressComputation.challengeComputationType || ChallengeComputationType.ABSOLUTE);
@@ -835,7 +836,6 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
                             <Text style={styles.sectionTitle}>Habit Group (optional, experimental)</Text>
-                            {isFieldLocked() && <LockIcon/>}
                         </View>
                         <View>
                             {groupNames.length > 0 && (
@@ -849,8 +849,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                                     styles.groupChip,
                                                     group === groupName && styles.selectedGroupChip
                                                 ]}
-                                                onPress={() => !isFieldLocked() && setGroup(groupName)}
-                                                disabled={isFieldLocked()}
+                                                onPress={() => setGroup(groupName)}
                                                 activeOpacity={0.7}
                                             >
                                                 <Text style={[
@@ -866,12 +865,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 </View>
                             )}
                             <TextInput
-                                style={[styles.input, isFieldLocked() && styles.lockedInput]}
+                                style={styles.input}
                                 value={group}
-                                onChangeText={isFieldLocked() ? undefined : setGroup}
+                                onChangeText={setGroup}
                                 placeholder="Enter habit group name"
                                 placeholderTextColor="#999"
-                                editable={!isFieldLocked()}
                             />
                         </View>
                     </View>

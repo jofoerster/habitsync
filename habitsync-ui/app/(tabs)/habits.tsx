@@ -8,9 +8,9 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
-import {useHabits, useSortHabits} from "@/hooks/useHabits";
+import {useHabitUuids, useSortHabits} from "@/hooks/useHabits";
 import {useConfiguration} from "@/hooks/useConfiguration";
-import {ApiHabitRead} from "@/services/api";
+import {ApiHabitUuidRead} from "@/services/api";
 
 const DateHeader = () => {
     const {theme} = useTheme();
@@ -57,7 +57,7 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
-    const {data: habits = [], isLoading: loading} = useHabits();
+    const {data: habits = [], isLoading: loading} = useHabitUuids();
 
     const sortHabitsMutation = useSortHabits();
 
@@ -67,15 +67,15 @@ const HabitTrackerScreen = () => {
 
     // Group habits by their group property and create a unified sorted list
     const groupedData = useMemo(() => {
-        const groups: { [key: string]: ApiHabitRead[] } = {};
-        const ungrouped: ApiHabitRead[] = [];
+        const groups: { [key: string]: ApiHabitUuidRead[] } = {};
+        const ungrouped: ApiHabitUuidRead[] = [];
 
         habits.forEach(habit => {
-            if (habit.group) {
-                if (!groups[habit.group]) {
-                    groups[habit.group] = [];
+            if (habit.groupName) {
+                if (!groups[habit.groupName]) {
+                    groups[habit.groupName] = [];
                 }
-                groups[habit.group].push(habit);
+                groups[habit.groupName].push(habit);
             } else {
                 ungrouped.push(habit);
             }
@@ -91,8 +91,8 @@ const HabitTrackerScreen = () => {
 
         // Create a unified list with groups and ungrouped habits sorted by position
         type ListItem =
-            | { type: 'group'; groupName: string; anchor: number; habits: ApiHabitRead[] }
-            | { type: 'habit'; habit: ApiHabitRead; anchor: number };
+            | { type: 'group'; groupName: string; anchor: number; habits: ApiHabitUuidRead[] }
+            | { type: 'habit'; habit: ApiHabitUuidRead; anchor: number };
 
         const items: ListItem[] = [];
 
@@ -122,7 +122,7 @@ const HabitTrackerScreen = () => {
         // Sort all items by anchor position
         items.sort((a, b) => a.anchor - b.anchor);
 
-        return { groups, ungrouped, items };
+        return {groups, ungrouped, items};
     }, [habits]);
 
     const toggleHabitExpansion = (habitUuid: string) => {
