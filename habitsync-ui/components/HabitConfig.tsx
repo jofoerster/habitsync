@@ -834,7 +834,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {configType === ConfigType.HABIT && (
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.sectionTitle}>Habit Group (optional)</Text>
+                            <Text style={styles.sectionTitle}>Habit Group (optional, experimental)</Text>
                             {isFieldLocked() && <LockIcon/>}
                         </View>
                         <View>
