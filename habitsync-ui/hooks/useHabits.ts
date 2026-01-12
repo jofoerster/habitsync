@@ -246,6 +246,7 @@ export const useSortHabits = () => {
 /**
  * Create a habit record
  * Automatically invalidates habit and records caches
+ * Uses optimistic updates for immediate UI feedback
  */
 export const useCreateHabitRecord = () => {
     const queryClient = useQueryClient();
@@ -258,6 +259,61 @@ export const useCreateHabitRecord = () => {
             isDetailView: boolean,
         }) =>
             habitRecordApi.createRecord(habitUuid, record),
+        // Enable offline mutations for habit records
+        networkMode: 'always',
+        // Optimistic update for immediate UI feedback
+        onMutate: async ({habitUuid, record, isChallenge, isDetailView}) => {
+            // Cancel outgoing refetches
+            await queryClient.cancelQueries({queryKey: habitKeys.detail(habitUuid)});
+            
+            // Snapshot the previous value
+            const previousHabit = queryClient.getQueryData<ApiHabitRead>(habitKeys.detail(habitUuid));
+            
+            // Optimistically update the habit
+            if (previousHabit) {
+                queryClient.setQueryData<ApiHabitRead>(habitKeys.detail(habitUuid), (old) => {
+                    if (!old) return old;
+                    
+                    // Update or add the record
+                    const existingRecordIndex = old.records.findIndex(r => r.epochDay === record.epochDay);
+                    let updatedRecords = [...old.records];
+                    
+                    if (existingRecordIndex >= 0) {
+                        // Update existing record
+                        updatedRecords[existingRecordIndex] = {
+                            ...updatedRecords[existingRecordIndex],
+                            recordValue: record.recordValue,
+                            // Keep existing completion status for now, server will calculate it
+                        };
+                    } else {
+                        // Add new record (we'll let server determine the completion status)
+                        updatedRecords.push({
+                            uuid: `temp-${Date.now()}`, // Temporary UUID
+                            habitUuid: habitUuid,
+                            epochDay: record.epochDay,
+                            recordValue: record.recordValue,
+                            completion: record.recordValue > 0 ? 1 : 0, // COMPLETED : MISSED
+                        });
+                    }
+                    
+                    return {
+                        ...old,
+                        records: updatedRecords,
+                    };
+                });
+            }
+            
+            return { previousHabit };
+        },
+        // If mutation fails, rollback
+        onError: (err, variables, context) => {
+            if (context?.previousHabit) {
+                queryClient.setQueryData(
+                    habitKeys.detail(variables.habitUuid),
+                    context.previousHabit
+                );
+            }
+        },
         onSuccess: ({habitUuid}, variables) => {
             if (variables.isDetailView) {
                 queryClient.invalidateQueries({

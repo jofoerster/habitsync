@@ -11,9 +11,13 @@ const queryClient = new QueryClient({
       refetchOnReconnect: true,
       staleTime: 1000 * 60,
       gcTime: 1000 * 60 * 60 * 24 * 30,
+      // Enable network mode that allows queries to work offline with cached data
+      networkMode: 'offlineFirst',
     },
     mutations: {
       retry: 1,
+      // Most mutations should only work online, but we'll override for habit records
+      networkMode: 'online',
     },
   },
 });
@@ -21,6 +25,7 @@ const queryClient = new QueryClient({
 const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
   key: 'REACT_QUERY_OFFLINE_CACHE',
+  throttleTime: 1000,
 });
 
 interface ReactQueryProviderProps {
@@ -31,7 +36,16 @@ export const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children
   return (
     <PersistQueryClientProvider
       client={queryClient}
-      persistOptions={{ persister: asyncStoragePersister }}
+      persistOptions={{ 
+        persister: asyncStoragePersister,
+        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+        dehydrateOptions: {
+          shouldDehydrateQuery: (query) => {
+            // Persist all queries for offline support
+            return true;
+          },
+        },
+      }}
     >
       {children}
     </PersistQueryClientProvider>

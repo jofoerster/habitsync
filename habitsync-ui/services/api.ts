@@ -745,24 +745,34 @@ const getAuthHeaders = async (): Promise<HeadersInit> => {
 const authenticatedFetch = async (url: string, options: RequestInit = {}, retries = 0): Promise<Response> => {
     const headers = await getAuthHeaders();
     const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-    const response = await fetch(`${baseUrl}${url}`, {
-        ...options,
-        credentials: 'include',
-        headers: {
-            ...headers,
-            ...options.headers,
-        },
-    } as any);
+    
+    try {
+        const response = await fetch(`${baseUrl}${url}`, {
+            ...options,
+            credentials: 'include',
+            headers: {
+                ...headers,
+                ...options.headers,
+            },
+        } as any);
 
-    if (response.status === 401 && retries <= 3) {
-        console.log('Unauthorized, attempting token refresh');
+        // Only attempt refresh on 401 if we haven't retried too many times
+        if (response.status === 401 && retries <= 3) {
+            console.log('Unauthorized, attempting token refresh');
 
-        const refreshSuccess = await auth.refresh();
-        if (refreshSuccess) {
-            console.log('Token refreshed successfully, retrying request, retry number ', retries + 1);
-            await new Promise(resolve => setTimeout(resolve, 100));
-            return await authenticatedFetch(url, options, retries++);
+            const refreshSuccess = await auth.refresh();
+            if (refreshSuccess) {
+                console.log('Token refreshed successfully, retrying request, retry number ', retries + 1);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                return await authenticatedFetch(url, options, retries + 1);
+            }
         }
+        
+        return response;
+    } catch (error) {
+        // Network errors - don't redirect to login, just throw the error
+        // This allows queries to use cached data when offline
+        console.log('Network error during fetch:', error);
+        throw error;
     }
-    return response;
 };

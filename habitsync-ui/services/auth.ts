@@ -95,9 +95,29 @@ export class AuthService {
             });
             return true;
         } catch (error) {
-            console.error('Auth initialization failed:', error);
-            await this.clearAuth();
-            return false;
+            console.error('Auth refresh failed:', error);
+            // Don't clear auth on network errors - keep offline access
+            // Only clear if it's an authentication error (401/403)
+            const isNetworkError = error instanceof TypeError || 
+                                   (error && typeof error === 'object' && 'message' in error && 
+                                    (error.message.includes('Network') || error.message.includes('fetch')));
+            
+            if (isNetworkError) {
+                console.log('Network error during refresh, keeping cached credentials for offline access');
+                // Set state as authenticated with cached credentials
+                this.setState({
+                    isLoading: false,
+                    isAuthenticated: true,
+                    isApproved: true, // Assume approved for offline mode
+                    userInfo: null,
+                    error: null,
+                });
+                return true;
+            } else {
+                // Authentication error - clear credentials
+                await this.clearAuth();
+                return false;
+            }
         }
     }
 
@@ -113,8 +133,15 @@ export class AuthService {
     }
 
     private async _performInitialization(): Promise<void> {
-        this.setState({isLoading: true});
-        await this.refresh();
+        // Don't block page load - quickly set loading to false
+        this.setState({isLoading: false});
+        
+        // Do token refresh in the background
+        this.refresh().then(() => {
+            console.log('Background token refresh completed');
+        }).catch((error) => {
+            console.log('Background token refresh failed:', error);
+        });
     }
 
     public async loginWithOAuth2Provider(provider: SupportedOIDCIssuer, redirectPath?: string): Promise<void> {

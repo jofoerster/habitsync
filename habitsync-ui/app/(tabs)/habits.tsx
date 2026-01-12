@@ -8,6 +8,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
+import {useNetwork} from "@/context/NetworkContext";
 import {useHabitUuids, useSortHabits} from "@/hooks/useHabits";
 import {useConfiguration} from "@/hooks/useConfiguration";
 import {ApiHabitUuidRead} from "@/services/api";
@@ -56,6 +57,7 @@ const DateHeader = () => {
 const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const {isOnline} = useNetwork();
 
     const {data: habits = [], isLoading: loading} = useHabitUuids();
 
@@ -338,6 +340,12 @@ const HabitTrackerScreen = () => {
                     />
                 </View>
             </View>
+            {!isOnline && (
+                <View style={styles.offlineIndicator}>
+                    <MaterialCommunityIcons name="wifi-off" size={16} color="#fff" />
+                    <Text style={styles.offlineText}>Offline Mode</Text>
+                </View>
+            )}
             <DateHeader/>
             {loading ? (
                 <View style={styles.emptyState}>
@@ -530,6 +538,20 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     topRightButtons: {
         flexDirection: 'row',
         alignItems: 'center',
+    },
+    offlineIndicator: {
+        backgroundColor: '#FF9800',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    offlineText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
     },
 }));
 

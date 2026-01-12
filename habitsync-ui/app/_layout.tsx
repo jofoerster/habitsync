@@ -6,6 +6,7 @@ import {useEffect} from 'react';
 import {ThemeProvider} from "@/context/ThemeContext";
 import {AlertProvider} from "@/context/AlertContext";
 import {ReactQueryProvider} from "@/context/ReactQueryContext";
+import {NetworkProvider} from "@/context/NetworkContext";
 import {StatusBar} from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import {Platform} from 'react-native';
@@ -37,14 +38,16 @@ export default function RootLayout() {
 
     return (
         <ThemeProvider>
-            <ReactQueryProvider>
-                <AlertProvider>
-                    <AuthProvider>
-                        <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
-                        <Stack screenOptions={{headerShown: false}}/>
-                    </AuthProvider>
-                </AlertProvider>
-            </ReactQueryProvider>
+            <NetworkProvider>
+                <ReactQueryProvider>
+                    <AlertProvider>
+                        <AuthProvider>
+                            <StatusBar style="dark" translucent={true} backgroundColor="transparent" />
+                            <Stack screenOptions={{headerShown: false}}/>
+                        </AuthProvider>
+                    </AlertProvider>
+                </ReactQueryProvider>
+            </NetworkProvider>
         </ThemeProvider>
     );
 }

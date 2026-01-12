@@ -4,6 +4,7 @@ import {usePathname, useRouter} from 'expo-router';
 import {ActivityIndicator, StyleSheet, View} from 'react-native';
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
+import {useNetwork} from "@/context/NetworkContext";
 
 const createStyles = createThemedStyles((theme) => StyleSheet.create({
     loadingContainer: {
@@ -25,6 +26,7 @@ export default function AuthGuard({children}: AuthGuardProps) {
     const styles = createStyles(theme);
 
     const {authState} = useAuth();
+    const {isOnline} = useNetwork();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -33,18 +35,20 @@ export default function AuthGuard({children}: AuthGuardProps) {
 
         if (PUBLIC_ROUTES.includes(pathname)) return;
 
-        if (!authState.isAuthenticated) {
-            console.log("not authenticated, redirecting to login");
+        // Only redirect to login if we're online and not authenticated
+        // When offline, allow access if user was previously authenticated
+        if (!authState.isAuthenticated && isOnline) {
+            console.log("not authenticated and online, redirecting to login");
             router.replace(`/login?redirectPath=${encodeURIComponent(pathname)}`);
             return;
         }
 
-        if (authState.isAuthenticated && !authState.isApproved) {
+        if (authState.isAuthenticated && !authState.isApproved && isOnline) {
             console.log("authenticated but not approved");
             router.replace('/waiting-approval');
             return;
         }
-    }, [authState, pathname, router]);
+    }, [authState, pathname, router, isOnline]);
 
     if (authState.isLoading) {
         return (
@@ -54,8 +58,13 @@ export default function AuthGuard({children}: AuthGuardProps) {
         );
     }
 
+    // Allow access if:
+    // 1. It's a public route, OR
+    // 2. User is authenticated and approved, OR
+    // 3. User is offline (assume they were authenticated before going offline)
     if (PUBLIC_ROUTES.includes(pathname) ||
-        (authState.isAuthenticated && authState.isApproved)) {
+        (authState.isAuthenticated && authState.isApproved) ||
+        !isOnline) {
         return <>{children}</>;
     }
 
