@@ -262,7 +262,7 @@ export const useCreateHabitRecord = () => {
         // Enable offline mutations for habit records
         networkMode: 'always',
         // Optimistic update for immediate UI feedback
-        onMutate: async ({habitUuid, record, isChallenge, isDetailView}) => {
+        onMutate: async ({habitUuid, record}) => {
             // Cancel outgoing refetches
             await queryClient.cancelQueries({queryKey: habitKeys.detail(habitUuid)});
             
@@ -273,16 +273,17 @@ export const useCreateHabitRecord = () => {
             if (previousHabit) {
                 queryClient.setQueryData<ApiHabitRead>(habitKeys.detail(habitUuid), (old) => {
                     if (!old) return old;
-                    
+
                     // Update or add the record
                     const existingRecordIndex = old.records.findIndex(r => r.epochDay === record.epochDay);
                     let updatedRecords = [...old.records];
                     
                     if (existingRecordIndex >= 0) {
-                        // Update existing record - keep the completion as is, server will recalculate
+                        // Update existing record - show value immediately, keep grey (LOADING) until server responds
                         updatedRecords[existingRecordIndex] = {
                             ...updatedRecords[existingRecordIndex],
                             recordValue: record.recordValue,
+                            completion: 'LOADING' as any,
                         };
                     } else {
                         // Add new record with deterministic temporary ID
@@ -298,7 +299,7 @@ export const useCreateHabitRecord = () => {
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,
-                            completion: 0, // Temporary status - server will recalculate based on habit config
+                            completion: 'LOADING' as any,
                         });
                     }
                     
@@ -320,10 +321,35 @@ export const useCreateHabitRecord = () => {
                 );
             }
         },
-        onSuccess: ({habitUuid}, variables) => {
+        onSuccess: (serverRecord, variables) => {
+            // Always update the cache with the real completion status from server
+            // This replaces the LOADING state with the correct color
+            queryClient.setQueryData<ApiHabitRead>(habitKeys.detail(variables.habitUuid), (old) => {
+                if (!old) return old;
+
+                const updatedRecords = old.records.map(r => {
+                    if (r.epochDay === serverRecord.epochDay) {
+                        // Replace with server response (real UUID and completion status)
+                        return serverRecord;
+                    }
+                    return r;
+                });
+
+                // If the record wasn't in the list (edge case), add it
+                const recordExists = old.records.some(r => r.epochDay === serverRecord.epochDay);
+                if (!recordExists) {
+                    updatedRecords.push(serverRecord);
+                }
+
+                return {
+                    ...old,
+                    records: updatedRecords,
+                };
+            });
+
             if (variables.isDetailView) {
                 queryClient.invalidateQueries({
-                    queryKey: habitKeys.detail(habitUuid),
+                    queryKey: habitKeys.detail(variables.habitUuid),
                 })
             }
             if (variables.isChallenge) {
