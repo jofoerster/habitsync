@@ -120,15 +120,11 @@ export class AuthService {
                         console.error('Failed to parse cached user info:', parseError);
                     }
                 }
-                // Fallback if no cached user info - assume approved for backwards compatibility
-                this.setState({
-                    isLoading: false,
-                    isAuthenticated: true,
-                    isApproved: true,
-                    userInfo: null,
-                    error: null,
-                });
-                return true;
+                // No cached user info - this should not happen in normal flow
+                // Log as potential security concern and clear auth to be safe
+                console.warn('SECURITY: No cached user info found during offline access - clearing auth');
+                await this.clearAuth();
+                return false;
             } else {
                 // Authentication error - clear credentials
                 await this.clearAuth();
@@ -174,15 +170,27 @@ export class AuthService {
     }
 
     private async _performInitialization(): Promise<void> {
-        // Don't block page load - quickly set loading to false
-        this.setState({isLoading: false});
+        // Check if we have cached credentials before setting loading to false
+        const refreshToken = await secureStorage.getItem(REFRESH_TOKEN_KEY);
         
-        // Do token refresh in the background
-        this.refresh().then(() => {
-            console.log('Background token refresh completed');
-        }).catch((error) => {
-            console.log('Background token refresh failed:', error);
-        });
+        if (refreshToken) {
+            // We have cached credentials, attempt background refresh
+            this.setState({isLoading: false});
+            this.refresh().then(() => {
+                console.log('Background token refresh completed');
+            }).catch((error) => {
+                console.log('Background token refresh failed:', error);
+            });
+        } else {
+            // No cached credentials, we're done loading and not authenticated
+            this.setState({
+                isLoading: false,
+                isAuthenticated: false,
+                isApproved: false,
+                userInfo: null,
+                error: null,
+            });
+        }
     }
 
     public async loginWithOAuth2Provider(provider: SupportedOIDCIssuer, redirectPath?: string): Promise<void> {

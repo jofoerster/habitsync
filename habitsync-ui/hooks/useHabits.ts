@@ -287,7 +287,7 @@ export const useCreateHabitRecord = () => {
                     } else {
                         // Add new record - use a basic completion status, server will calculate correctly
                         updatedRecords.push({
-                            uuid: `optimistic-${habitUuid}-${record.epochDay}`, // Predictable temporary identifier
+                            uuid: `__optimistic__${habitUuid}__${record.epochDay}`, // Distinctive temporary identifier
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,
