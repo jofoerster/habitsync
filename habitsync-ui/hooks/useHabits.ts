@@ -287,11 +287,11 @@ export const useCreateHabitRecord = () => {
                     } else {
                         // Add new record - use a basic completion status, server will calculate correctly
                         updatedRecords.push({
-                            uuid: `temp-${Date.now()}`, // Temporary UUID
+                            uuid: `optimistic-${habitUuid}-${record.epochDay}`, // Deterministic temporary UUID
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,
-                            completion: 0, // MISSED - server will calculate proper status
+                            completion: 0, // Temporary status - server will recalculate based on habit config
                         });
                     }
                     
