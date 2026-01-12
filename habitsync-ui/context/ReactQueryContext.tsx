@@ -50,9 +50,13 @@ export const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children
         dehydrateOptions: {
           shouldDehydrateQuery: (query) => {
             // Only persist queries that are useful for offline access
+            // Check if first element of queryKey matches habit-related keys
+            const queryKey = query.queryKey;
+            if (!queryKey || queryKey.length === 0) return false;
+            
+            const firstKey = queryKey[0] as string;
             // Persist habit-related queries for offline functionality
-            const queryKey = query.queryKey[0] as string;
-            return queryKey === 'habits' || queryKey === 'percentage-history';
+            return firstKey === 'habits' || firstKey === 'percentage-history';
           },
         },
       }}

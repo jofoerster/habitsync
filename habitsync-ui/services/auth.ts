@@ -27,6 +27,7 @@ export class AuthService {
     private hasInitialized = false;
     private initializationPromise: Promise<void> | null = null;
     private isInitializing = false;
+    private isRefreshing = false;
 
     private constructor() {
         this.initialize().catch(console.error);
@@ -176,11 +177,18 @@ export class AuthService {
         if (refreshToken) {
             // We have cached credentials, attempt background refresh
             this.setState({isLoading: false});
-            this.refresh().then(() => {
-                console.log('Background token refresh completed');
-            }).catch((error) => {
-                console.log('Background token refresh failed:', error);
-            });
+            
+            // Prevent concurrent refresh attempts
+            if (!this.isRefreshing) {
+                this.isRefreshing = true;
+                this.refresh().then(() => {
+                    console.log('Background token refresh completed');
+                }).catch((error) => {
+                    console.log('Background token refresh failed:', error);
+                }).finally(() => {
+                    this.isRefreshing = false;
+                });
+            }
         } else {
             // No cached credentials, we're done loading and not authenticated
             this.setState({

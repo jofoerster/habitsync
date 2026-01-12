@@ -286,12 +286,12 @@ export const useCreateHabitRecord = () => {
                         };
                     } else {
                         // Add new record with predictable temporary ID
-                        // Format: __optimistic__{habitUuid}__{epochDay}
-                        // - Double underscores make collision with real UUIDs extremely unlikely
+                        // Format: __optimistic-{habitUuid}-{epochDay}
+                        // - Uses hyphens for UUID-safe formatting
                         // - Deterministic format prevents duplicates on retry
                         // - Server will replace with real UUID on sync
                         updatedRecords.push({
-                            uuid: `__optimistic__${habitUuid}__${record.epochDay}`,
+                            uuid: `__optimistic-${habitUuid}-${record.epochDay}`,
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,
