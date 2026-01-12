@@ -9,6 +9,7 @@ import alert from "@/services/alert";
 import {createThemedStyles} from "@/constants/styles";
 import {useTheme} from "@/context/ThemeContext";
 import {useNetwork} from "@/context/NetworkContext";
+import {useIsMutating} from "@tanstack/react-query";
 import {useHabitUuids, useSortHabits} from "@/hooks/useHabits";
 import {useConfiguration} from "@/hooks/useConfiguration";
 import {ApiHabitUuidRead} from "@/services/api";
@@ -58,6 +59,7 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
     const {isOnline} = useNetwork();
+    const isMutating = useIsMutating();
 
     const {data: habits = [], isLoading: loading} = useHabitUuids();
 
@@ -346,6 +348,12 @@ const HabitTrackerScreen = () => {
                     <Text style={styles.offlineText}>Offline Mode</Text>
                 </View>
             )}
+            {isOnline && isMutating > 0 && (
+                <View style={styles.syncIndicator}>
+                    <MaterialCommunityIcons name="sync" size={16} color="#fff" />
+                    <Text style={styles.syncText}>Syncing changes...</Text>
+                </View>
+            )}
             <DateHeader/>
             {loading ? (
                 <View style={styles.emptyState}>
@@ -549,6 +557,20 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
         gap: 8,
     },
     offlineText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    syncIndicator: {
+        backgroundColor: '#2196F3',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    syncText: {
         color: '#fff',
         fontSize: 14,
         fontWeight: '600',

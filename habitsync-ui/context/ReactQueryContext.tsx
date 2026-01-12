@@ -1,8 +1,16 @@
-import React from 'react';
-import { QueryClient } from '@tanstack/react-query';
+import React, { useEffect } from 'react';
+import { QueryClient, onlineManager } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+
+// Configure React Query's online manager to use NetInfo
+onlineManager.setEventListener((setOnline) => {
+  return NetInfo.addEventListener((state) => {
+    setOnline(!!state.isConnected);
+  });
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
