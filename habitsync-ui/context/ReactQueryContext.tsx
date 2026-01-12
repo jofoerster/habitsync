@@ -49,8 +49,10 @@ export const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children
         maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
         dehydrateOptions: {
           shouldDehydrateQuery: (query) => {
-            // Persist all queries for offline support
-            return true;
+            // Only persist queries that are useful for offline access
+            // Persist habit-related queries for offline functionality
+            const queryKey = query.queryKey[0] as string;
+            return queryKey === 'habits' || queryKey === 'percentage-history';
           },
         },
       }}

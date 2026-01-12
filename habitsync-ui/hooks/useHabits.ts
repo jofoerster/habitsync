@@ -285,9 +285,13 @@ export const useCreateHabitRecord = () => {
                             recordValue: record.recordValue,
                         };
                     } else {
-                        // Add new record - use a basic completion status, server will calculate correctly
+                        // Add new record with predictable temporary ID
+                        // Format: __optimistic__{habitUuid}__{epochDay}
+                        // - Double underscores make collision with real UUIDs extremely unlikely
+                        // - Deterministic format prevents duplicates on retry
+                        // - Server will replace with real UUID on sync
                         updatedRecords.push({
-                            uuid: `__optimistic__${habitUuid}__${record.epochDay}`, // Distinctive temporary identifier
+                            uuid: `__optimistic__${habitUuid}__${record.epochDay}`,
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,

@@ -60,12 +60,20 @@ export default function AuthGuard({children}: AuthGuardProps) {
 
     // Allow access if:
     // 1. It's a public route, OR
-    // 2. User is authenticated and approved, OR
-    // 3. User is offline (assume they were authenticated before going offline)
+    // 2. User is authenticated and approved (online or offline), OR
+    // 3. User was authenticated but we're offline (keep last known auth state)
     if (PUBLIC_ROUTES.includes(pathname) ||
-        (authState.isAuthenticated && authState.isApproved) ||
-        !isOnline) {
+        (authState.isAuthenticated && authState.isApproved)) {
         return <>{children}</>;
+    }
+
+    // If offline and no authentication state, redirect to login when back online
+    if (!isOnline && !authState.isAuthenticated) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#2196F3"/>
+            </View>
+        );
     }
 
     return (
