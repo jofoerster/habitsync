@@ -86,6 +86,8 @@ export class AuthService {
             await this.setTokens(response.accessToken, response.refreshToken);
 
             const userInfo = await authApi.getUserInfo();
+            // Cache the user info for offline access
+            await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
             this.setState({
                 isLoading: false,
                 isAuthenticated: userInfo?.authenticated || false,
@@ -96,19 +98,33 @@ export class AuthService {
             return true;
         } catch (error) {
             console.error('Auth refresh failed:', error);
-            // Don't clear auth on network errors - keep offline access
-            // Only clear if it's an authentication error (401/403)
-            const isNetworkError = error instanceof TypeError || 
-                                   (error && typeof error === 'object' && 'message' in error && 
-                                    (error.message.includes('Network') || error.message.includes('fetch')));
+            // Check if this is a network error vs authentication error
+            const isNetworkError = this.isNetworkError(error);
             
             if (isNetworkError) {
                 console.log('Network error during refresh, keeping cached credentials for offline access');
-                // Set state as authenticated with cached credentials
+                // Try to get cached user info to maintain approval status
+                const cachedUserInfo = await secureStorage.getItem(USER_INFO_KEY);
+                if (cachedUserInfo) {
+                    try {
+                        const userInfo = JSON.parse(cachedUserInfo);
+                        this.setState({
+                            isLoading: false,
+                            isAuthenticated: true,
+                            isApproved: userInfo?.approved || false, // Use cached approval status
+                            userInfo: userInfo,
+                            error: null,
+                        });
+                        return true;
+                    } catch (parseError) {
+                        console.error('Failed to parse cached user info:', parseError);
+                    }
+                }
+                // Fallback if no cached user info - assume approved for backwards compatibility
                 this.setState({
                     isLoading: false,
                     isAuthenticated: true,
-                    isApproved: true, // Assume approved for offline mode
+                    isApproved: true,
                     userInfo: null,
                     error: null,
                 });
@@ -121,8 +137,33 @@ export class AuthService {
         }
     }
 
+    private isNetworkError(error: any): boolean {
+        // More robust network error detection
+        if (!error) return false;
+        
+        // TypeError is common for network failures
+        if (error instanceof TypeError) return true;
+        
+        // Check for common network error patterns
+        if (error.message) {
+            const msg = error.message.toLowerCase();
+            return msg.includes('network') || 
+                   msg.includes('fetch') || 
+                   msg.includes('timeout') ||
+                   msg.includes('connection') ||
+                   msg.includes('offline');
+        }
+        
+        // Check for fetch errors
+        if (error.name === 'FetchError' || error.name === 'NetworkError') return true;
+        
+        return false;
+    }
+
     public async updateUserInfo(): Promise<void> {
         const userInfo = await authApi.getUserInfo();
+        // Cache the user info for offline access
+        await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
         this.setState({
             isLoading: false,
             isAuthenticated: userInfo?.authenticated || false,
@@ -155,6 +196,8 @@ export class AuthService {
                 await this.setTokens(tokenPair.accessToken, tokenPair.refreshToken);
 
                 const userInfo = await authApi.getUserInfo();
+                // Cache the user info for offline access
+                await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
                 this.setState({
                     isLoading: false,
                     isAuthenticated: userInfo?.authenticated || false,
@@ -188,6 +231,8 @@ export class AuthService {
             await this.setTokens(tokenPair.accessToken, tokenPair.refreshToken);
 
             const userInfo = await authApi.getUserInfo();
+            // Cache the user info for offline access
+            await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
             this.setState({
                 isLoading: false,
                 isAuthenticated: userInfo?.authenticated || false,
