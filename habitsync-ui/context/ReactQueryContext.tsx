@@ -40,6 +40,9 @@ interface ReactQueryProviderProps {
   children: React.ReactNode;
 }
 
+// Query keys that should be persisted for offline access
+const OFFLINE_QUERY_KEYS = ['habits', 'percentage-history'];
+
 export const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children }) => {
   return (
     <PersistQueryClientProvider
@@ -50,13 +53,13 @@ export const ReactQueryProvider: React.FC<ReactQueryProviderProps> = ({ children
         dehydrateOptions: {
           shouldDehydrateQuery: (query) => {
             // Only persist queries that are useful for offline access
-            // Check if first element of queryKey matches habit-related keys
+            // Check if first element of queryKey matches allowed keys
             const queryKey = query.queryKey;
             if (!queryKey || queryKey.length === 0) return false;
             
             const firstKey = queryKey[0] as string;
-            // Persist habit-related queries for offline functionality
-            return firstKey === 'habits' || firstKey === 'percentage-history';
+            // Check against whitelist of offline-enabled queries
+            return OFFLINE_QUERY_KEYS.includes(firstKey);
           },
         },
       }}
