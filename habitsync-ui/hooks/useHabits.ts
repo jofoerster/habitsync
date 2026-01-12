@@ -279,20 +279,19 @@ export const useCreateHabitRecord = () => {
                     let updatedRecords = [...old.records];
                     
                     if (existingRecordIndex >= 0) {
-                        // Update existing record
+                        // Update existing record - keep the completion as is, server will recalculate
                         updatedRecords[existingRecordIndex] = {
                             ...updatedRecords[existingRecordIndex],
                             recordValue: record.recordValue,
-                            // Keep existing completion status for now, server will calculate it
                         };
                     } else {
-                        // Add new record (we'll let server determine the completion status)
+                        // Add new record - use a basic completion status, server will calculate correctly
                         updatedRecords.push({
                             uuid: `temp-${Date.now()}`, // Temporary UUID
                             habitUuid: habitUuid,
                             epochDay: record.epochDay,
                             recordValue: record.recordValue,
-                            completion: record.recordValue > 0 ? 1 : 0, // COMPLETED : MISSED
+                            completion: 0, // MISSED - server will calculate proper status
                         });
                     }
                     
