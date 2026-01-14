@@ -131,14 +131,14 @@ services:
   web:
     image: ghcr.io/jofoerster/habitsync:latest
     environment:
-      - BASE_URL=https://your-domain.com/
+      - BASE_URL=https://your-domain.com
       # Choose one or more of the following authentication methods:
       # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
       # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback
       # more than one issuer can be configured
       # scopes: openid, profile, email
       # issues setting this up? -> create an issue on github
-      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url>
+      - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_URL=<issuer-url> # no trailing `/`
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_CLIENT-ID=<client-id>
       - APP_SECURITY_ISSUERS_<YOUR-ISSUER_NAME>_NEEDS-CONFIRMATION=true # New users need to to be 'let in' by other user, default: true 
       # Google: Use normal web client settings, set CLIENT-SECRET as workaround for Google
@@ -160,6 +160,7 @@ services:
       - APPRISE_API_URL=<your-apprise-url> # optional, see Notifications section below
       - TRACKER_DATEFORMAT_TEMPLATE=DD.MM. # optional, only DD, MM supported currently, sets date format in tracker globally
       - PAGE_CHALLENGES_VISIBLE=true # optional, show challenges page in navigation, set to false to hide globally
+      # available from version 0.17.0:
       - PUID=1000 # optional, user ID to run as, defaults to 6842
       - PGID=1000 # optional, group ID to run as, defaults to 6842
     volumes:
