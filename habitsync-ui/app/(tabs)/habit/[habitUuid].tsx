@@ -139,7 +139,10 @@ const HabitDetailsScreen = () => {
     };
 
     const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
-        return progressComputation.frequencyType === FrequencyTypeDTO.DAILY || progressComputation.frequency !== 1;
+        console.log(progressComputation.frequencyType);
+        return progressComputation.frequencyType === FrequencyTypeDTO.DAILY
+            || (progressComputation.frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
+                (progressComputation.frequency !== 1 || progressComputation.timesPerXDays !== 1));
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
@@ -147,7 +150,7 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
-        if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
+        if (progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
             (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1)) {
             return "Daily";
         }
@@ -368,7 +371,8 @@ const HabitDetailsScreen = () => {
                                     </View>
                                 )}
 
-                                {typeof habitDetail?.progressComputation?.dailyReachableValue === "number" && (
+                                {typeof habitDetail?.progressComputation?.dailyReachableValue === "number" &&
+                                    habitDetail?.progressComputation?.dailyReachableValue !== 1 && (
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="ruler" size={20} color="#9C27B0"/>
                                         <Text style={styles.progressDetailText}>
