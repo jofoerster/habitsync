@@ -255,7 +255,7 @@ const UserSettingsComponent = () => {
                             <Text style={styles.label}>Apprise Target URL</Text>
                             <TextInput
                                 style={styles.input}
-                                value={settings?.appriseTarget}
+                                value={updatedSettings?.appriseTarget}
                                 onChangeText={(apprise) => setUpdatedSettings({
                                     ...updatedSettings,
                                     appriseTarget: apprise,

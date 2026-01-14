@@ -55,5 +55,10 @@ tracker:
     template: DD/MM
 
 
+apprise:
+  api:
+    url: http://dummy.url-for-tests
+
+
 
 
