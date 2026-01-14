@@ -149,7 +149,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         };
 
         const applyFrequencyChanges = () => {
-            if (tempFrequencyType !== FrequencyTypeDTO.X_TIMES_PER_Y_DAYS || tempFrequency <= tempTimesPerXDays) {
+            if (tempFrequencyType !== FrequencyTypeDTO.X_TIMES_PER_Y_DAYS || parseInt(tempFrequency) <= parseInt(tempTimesPerXDays)) {
                 setFrequencyType(tempFrequencyType);
                 setFrequency(tempFrequency);
                 setTimesPerXDays(tempTimesPerXDays);
@@ -456,7 +456,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 <View style={[styles.inputContainer, {marginBottom: 5}]}>
                                     <TextInput
                                         style={[styles.input, tempFrequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && tempTimesPerXDays &&
-                                        tempFrequency > tempTimesPerXDays && {color: "red"}]}
+                                        parseInt(tempFrequency) > parseInt(tempTimesPerXDays) && {color: "red"}]}
                                         value={tempFrequency}
                                         onChangeText={(text) => {
                                             const numericValue = text.replace(/[^0-9.]/g, '');
