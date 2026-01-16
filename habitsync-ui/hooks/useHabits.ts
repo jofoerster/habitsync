@@ -3,6 +3,9 @@ import {ApiHabitRead, ApiHabitRecordWrite, ApiHabitWrite, habitApi, habitRecordA
 import {challengeKeys} from "@/hooks/useChallenges";
 import {userKeys} from "@/hooks/useUser";
 import {SortHabitRequestBody} from "../services/api";
+import {getEpochDay} from "@/util/util";
+import {queryClient} from "@/context/ReactQueryContext";
+import {useEffect} from "react";
 
 export const habitKeys = {
     all: ['habits'] as const,
@@ -45,11 +48,54 @@ export const useHabits = () => {
  * Use this for habit detail screens
  */
 export const useHabit = (uuid: string, enabled = true) => {
-    return useQuery({
+    const query = useQuery({
         queryKey: habitKeys.detail(uuid),
         queryFn: () => habitApi.getHabitByUuid(uuid),
         enabled: enabled && !!uuid,
         staleTime: 1000 * 60 * 2,
+    });
+
+    useEffect(() => {
+        if (query.data?.records) {
+            queryClient.setQueryData(
+                [...habitKeys.records(uuid), 'current'],
+                query.data.records
+            );
+        }
+    }, [query.data, uuid]);
+
+    return query;
+};
+
+const twoDaysAgo = new Date();
+twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+export const useCurrentHabitRecords = (
+    habitUuid: string,
+) => {
+    return useQuery({
+        queryKey: [...habitKeys.records(habitUuid), 'current'],
+        queryFn: () =>
+            habitRecordApi.getRecords(habitUuid, getEpochDay(twoDaysAgo), getEpochDay(new Date())),
+        enabled: !!habitUuid,
+        staleTime: 1000 * 60 * 2,
+        initialData: () => {
+            const habit = queryClient.getQueryData<ApiHabitRead>(habitKeys.detail(habitUuid));
+            return habit?.records;
+        },
+    });
+};
+
+export const useHabitRecords = (
+    habitUuid: string,
+    epochDayFrom?: number,
+    epochDayTo?: number,
+) => {
+    return useQuery({
+        queryKey: [...habitKeys.records(habitUuid), epochDayFrom, epochDayTo],
+        queryFn: () => habitRecordApi.getRecords(habitUuid, epochDayFrom, epochDayTo),
+        enabled: !!habitUuid,
+        staleTime: 1000 * 30,
     });
 };
 
@@ -98,23 +144,6 @@ export const useHabitParticipants = (uuid?: string) => {
         queryFn: () => habitApi.listParticipants(uuid!),
         enabled: !!uuid,
         staleTime: 1000 * 60 * 2,
-    });
-};
-
-/**
- * Get habit records
- */
-
-export const useHabitRecords = (
-    habitUuid: string,
-    epochDayFrom?: number,
-    epochDayTo?: number,
-) => {
-    return useQuery({
-        queryKey: [...habitKeys.records(habitUuid), epochDayFrom, epochDayTo],
-        queryFn: () => habitRecordApi.getRecords(habitUuid, epochDayFrom, epochDayTo),
-        enabled: !!habitUuid,
-        staleTime: 1000 * 30,
     });
 };
 
@@ -259,6 +288,16 @@ export const useCreateHabitRecord = () => {
         }) =>
             habitRecordApi.createRecord(habitUuid, record),
         onSuccess: ({habitUuid}, variables) => {
+            console.log(`Updating cache for habit ${habitUuid} with new record`, variables.record);
+            queryClient.setQueryData(
+                [...habitKeys.records(habitUuid), 'current'],
+                (old: any) => {
+                    if (!old) return [variables.record];
+                    const filtered = old.filter((r: any) => r.epochDay !== variables.record.epochDay);
+                    return [...filtered, variables.record];
+                }
+            );
+
             if (variables.isDetailView) {
                 queryClient.invalidateQueries({
                     queryKey: habitKeys.detail(habitUuid),
