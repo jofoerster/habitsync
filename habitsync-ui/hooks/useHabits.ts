@@ -72,12 +72,13 @@ twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
 
 export const useCurrentHabitRecords = (
     habitUuid: string,
+    enabled = true
 ) => {
     return useQuery({
         queryKey: [...habitKeys.records(habitUuid), 'current'],
         queryFn: () =>
             habitRecordApi.getRecords(habitUuid, getEpochDay(twoDaysAgo), getEpochDay(new Date())),
-        enabled: !!habitUuid,
+        enabled: !!habitUuid && enabled,
         staleTime: 1000 * 60 * 2,
         initialData: () => {
             const habit = queryClient.getQueryData<ApiHabitRead>(habitKeys.detail(habitUuid));

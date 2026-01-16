@@ -196,7 +196,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
 
     const {data: habit, isLoading: habitLoading, refetch: refetchHabit} = useHabit(habitUuid, true);
-    const {data: records, isLoading: habitRecordsLoading} = useCurrentHabitRecords(habitUuid)
+    const {data: records, isLoading: habitRecordsLoading} = useCurrentHabitRecords(habitUuid, !habitLoading)
     const recordsMap = habitRecordsLoading || !records || !records ? new Map() : new Map(records!.map(record => [record.epochDay, record]));
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
