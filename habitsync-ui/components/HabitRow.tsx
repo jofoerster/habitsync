@@ -5,10 +5,10 @@ import NumberModal from "./NumberModal";
 import ProgressRing from "./ProgressRing";
 import {Link} from 'expo-router';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
-import {getIcon} from "@/util/util";
+import {getEpochDay, getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {habitKeys, useConnectedHabits, useCreateHabitRecord, useHabit} from "@/hooks/useHabits";
+import {habitKeys, useConnectedHabits, useCreateHabitRecord, useCurrentHabitRecords, useHabit} from "@/hooks/useHabits";
 import {challengeKeys} from "@/hooks/useChallenges";
 import {queryClient} from "@/context/ReactQueryContext";
 
@@ -193,11 +193,11 @@ const HabitRow: React.FC<HabitRowProps> = ({
         epochDay: null,
         habitUuid: null,
     });
-    const getEpochDay = (date: Date): number =>
-        Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+
 
     const {data: habit, isLoading: habitLoading, refetch: refetchHabit} = useHabit(habitUuid, true);
-    const recordsMap = habitLoading || !habit || !habit.records ? new Map() : new Map(habit!.records!.map(record => [record.epochDay, record]));
+    const {data: records, isLoading: habitRecordsLoading} = useCurrentHabitRecords(habitUuid, !habitLoading)
+    const recordsMap = habitRecordsLoading || !records || !records ? new Map() : new Map(records!.map(record => [record.epochDay, record]));
 
     const hasConnectedHabits = !isConnectedHabitView && !isChallengeHabit && habit && habit.hasConnectedHabits;
 
@@ -303,22 +303,22 @@ const HabitRow: React.FC<HabitRowProps> = ({
 
     if (loading || !habit) {
         return (<View style={{marginBottom: 16}}>
-            <View style={{
-                backgroundColor: theme.surface,
-                borderRadius: 10,
-                padding: 4,
-                shadowColor: '#000',
-                shadowOffset: {width: 0, height: 1},
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 1,
-            }}>
-                <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text, padding: 10}}>
-                    Loading...
-                </Text>
+                <View style={{
+                    backgroundColor: theme.surface,
+                    borderRadius: 10,
+                    padding: 4,
+                    shadowColor: '#000',
+                    shadowOffset: {width: 0, height: 1},
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                    elevation: 1,
+                }}>
+                    <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text, padding: 10}}>
+                        Loading...
+                    </Text>
+                </View>
             </View>
-        </View>
-    );
+        );
     }
 
     return (
