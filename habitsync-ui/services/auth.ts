@@ -10,7 +10,7 @@ export interface AuthState {
     isLoading: boolean;
     isAuthenticated: boolean;
     isApproved: boolean;
-    userInfo: any | null;
+    userInfo: ApiAccountRead | null;
     error: string | null;
     isRefreshing: boolean;
 }
@@ -88,13 +88,13 @@ export class AuthService {
             const response = await authApi.getTokenPairFromRefreshToken(refreshToken);
             await this.setTokens(response.accessToken, response.refreshToken);
 
-            const userInfo = await authApi.getUserInfo();
+            const userInfo = await userApi.getUserInfo();
             await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
 
             this.setState({
                 isLoading: false,
-                isAuthenticated: userInfo?.authenticated || false,
-                isApproved: userInfo?.approved || false,
+                isAuthenticated: true,
+                isApproved: true,
                 userInfo: userInfo || null,
                 error: null,
                 isRefreshing: false,
@@ -108,14 +108,14 @@ export class AuthService {
     }
 
     public async updateUserInfo(): Promise<void> {
-        const userInfo = await authApi.getUserInfo();
+        const userInfo = await userApi.getUserInfo();
         // Store user info for future optimistic loads
         await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
 
         this.setState({
             isLoading: false,
-            isAuthenticated: userInfo?.authenticated || false,
-            isApproved: userInfo?.approved || false,
+            isAuthenticated: true,
+            isApproved: true,
             userInfo: userInfo || null,
             error: null,
             isRefreshing: false,
@@ -132,7 +132,7 @@ export class AuthService {
             this.setState({
                 isLoading: false,
                 isAuthenticated: true,
-                isApproved: userInfo?.approved ?? true,
+                isApproved: true,
                 userInfo: userInfo,
                 error: null,
                 isRefreshing: true,
@@ -175,13 +175,13 @@ export class AuthService {
                 const tokenPair = await authApi.getTokenPair(result.idToken || result.accessToken || '');
                 await this.setTokens(tokenPair.accessToken, tokenPair.refreshToken);
 
-                const userInfo = await authApi.getUserInfo();
+                const userInfo = await userApi.getUserInfo();
                 await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
 
                 this.setState({
                     isLoading: false,
-                    isAuthenticated: userInfo?.authenticated || false,
-                    isApproved: userInfo?.approved || false,
+                    isAuthenticated: true,
+                    isApproved: true,
                     userInfo: userInfo || null,
                     error: null,
                     isRefreshing: false,
@@ -213,13 +213,13 @@ export class AuthService {
 
             await this.setTokens(tokenPair.accessToken, tokenPair.refreshToken);
 
-            const userInfo = await authApi.getUserInfo();
+            const userInfo = await userApi.getUserInfo();
             await secureStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
 
             this.setState({
                 isLoading: false,
-                isAuthenticated: userInfo?.authenticated || false,
-                isApproved: userInfo?.approved || false,
+                isAuthenticated: true,
+                isApproved: true,
                 userInfo: userInfo || null,
                 error: null,
                 isRefreshing: false,
