@@ -25,3 +25,6 @@ export function getIcon(completion: 'COMPLETED' | 'PARTIALLY_COMPLETED' | 'COMPL
             return '✗';
     }
 }
+
+export const getEpochDay = (date: Date): number =>
+    Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);

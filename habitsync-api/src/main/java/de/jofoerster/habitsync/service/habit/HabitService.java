@@ -46,12 +46,11 @@ public class HabitService {
     ObjectMapper mapper = new ObjectMapper();
 
     public List<Habit> getAllUserHabitsByType(Account account, HabitType habitType) {
-        List<Habit> habits = habitRepository
-                .findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
+        List<Habit> habits =
+                habitRepository.findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
         List<HabitParticipant> participants =
-                habitParticipantRepository
-                        .getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
-                                HabitParticipationStatus.ACCEPTED, account.getAuthenticationId());
+                habitParticipantRepository.getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
+                        HabitParticipationStatus.ACCEPTED, account.getAuthenticationId());
         participants.forEach(p -> {
             Optional<Habit> habitOpt = habitRepository.findByUuid(p.getHabitUuid());
             habitOpt.ifPresent(h -> {
@@ -85,8 +84,7 @@ public class HabitService {
             if (habitOpt.isEmpty()) {
                 Habit usedHabit = sharedHabit.getMainNotificationRule(notificationRuleService)
                         .map(NotificationRule::getInternalHabitForComputationOfGoal)
-                        .orElse(sharedHabit.getHabitByOwner(sharedHabit.getOwner())
-                                .orElse(new Habit()));
+                        .orElse(sharedHabit.getHabitByOwner(sharedHabit.getOwner()).orElse(new Habit()));
                 habitToAdd.setName(sharedHabit.getTitle());
                 habitToAdd.setAccount(accountService.getCurrentAccount());
                 habitToAdd.setFreqCustom(usedHabit.getFreqCustom());
@@ -98,8 +96,7 @@ public class HabitService {
                 habitToAdd.setSortPosition(this.getNewHabitSortPosition(account));
                 habitToAdd.setType(usedHabit.getType());
                 habitToAdd.setStatus(1);
-                habitToAdd.setStartDate((int) LocalDate.now()
-                        .toEpochDay());
+                habitToAdd.setStartDate((int) LocalDate.now().toEpochDay());
                 habitToAdd.setColor(rand.nextInt(10) + 1);
                 habitToAdd.setConnectedSharedHabitId(sharedHabit.getId());
                 this.saveHabit(habitToAdd);
@@ -114,8 +111,7 @@ public class HabitService {
         return Optional.empty();
     }
 
-    public void removeHabitFromShared(String shareCode, Account currentAccount,
-                                      SharedHabitService sharedHabitService) {
+    public void removeHabitFromShared(String shareCode, Account currentAccount, SharedHabitService sharedHabitService) {
         Optional<SharedHabit> sharedHabitOpt = sharedHabitRepository.findByShareCode(shareCode);
 
         if (sharedHabitOpt.isPresent()) {
@@ -123,10 +119,8 @@ public class HabitService {
             if (sharedHabit.getOwner().equals(currentAccount)) {
                 sharedHabit.setAllowEditingOfAllUsers(true);
             }
-            List<Habit> habits = sharedHabit.getHabits()
-                    .stream()
-                    .filter(h -> h.getAccount().equals(currentAccount))
-                    .toList();
+            List<Habit> habits =
+                    sharedHabit.getHabits().stream().filter(h -> h.getAccount().equals(currentAccount)).toList();
             habits.forEach(h -> {
                 cachingNumberOfConnectedHabitsService.evictCache(h.getUuid());
                 sharedHabit.removeHabit(h);
@@ -151,8 +145,8 @@ public class HabitService {
 
     public Habit deleteHabit(Habit habit) {
         habit.setStatus(2);
-        this.fixHabitSortPositions(this.getAllUserHabitsByType(habit.getAccount(), HabitType.INTERNAL)
-                .stream().filter(h -> !h.isChallengeHabit()).toList());
+        this.fixHabitSortPositions(this.getAllUserHabitsByType(habit.getAccount(), HabitType.INTERNAL).stream()
+                .filter(h -> !h.isChallengeHabit()).toList());
         return saveHabit(habit);
     }
 
@@ -164,31 +158,26 @@ public class HabitService {
         }
         List<SharedHabit> sharedHabits = sharedHabitRepository.findAllByHabitsContaining(List.of(habit.get()));
         List<SharedHabitHabitPair> result = new ArrayList<>();
-        sharedHabits.forEach(sh -> sh.getHabits()
-                .forEach(h -> {
-                    if (!h.getAccount()
-                            .equals(account)) {
-                        result.add(new SharedHabitHabitPair(sh, h));
-                    }
-                }));
+        sharedHabits.forEach(sh -> sh.getHabits().forEach(h -> {
+            if (!h.getAccount().equals(account)) {
+                result.add(new SharedHabitHabitPair(sh, h));
+            }
+        }));
         return result;
     }
 
     public List<HabitReadDTO> getAllUserHabits(Account currentAccount) {
         return this.getAllUserHabitsByType(currentAccount, HabitType.INTERNAL).stream()
-                .filter(h -> !h.isChallengeHabit())
-                .map(this::getApiHabitReadFromHabit).toList();
+                .filter(h -> !h.isChallengeHabit()).map(this::getApiHabitReadFromHabit).toList();
     }
 
     public List<HabitReadUuidDTO> getAllUserHabitUuids(Account currentAccount) {
         List<HabitReadUuidDTO> uuids = new ArrayList<>(
                 habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
-                        .stream().map(HabitService::getHabitReadUuidsDTO)
-                        .toList());
+                        .stream().map(HabitService::getHabitReadUuidsDTO).toList());
         List<HabitParticipant> participants =
-                habitParticipantRepository
-                        .getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
-                                HabitParticipationStatus.ACCEPTED, currentAccount.getAuthenticationId());
+                habitParticipantRepository.getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
+                        HabitParticipationStatus.ACCEPTED, currentAccount.getAuthenticationId());
         participants.forEach(p -> {
             Optional<Habit> habitOpt = habitRepository.findByUuid(p.getHabitUuid());
             habitOpt.ifPresent(h -> {
@@ -208,25 +197,16 @@ public class HabitService {
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {
         Double currentPercentage = cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now());
         String currentMedal = getLastMonthMedalString(habit);
-        return HabitReadDTO.builder()
-                .color(habit.getColor())
-                .uuid(habit.getUuid())
-                .name(habit.getName())
-                .account(habit.getAccount().getApiAccountRead())
-                .progressComputation(habit.getApiComputationReadWrite())
-                .currentPercentage(currentPercentage)
-                .currentMedal(currentMedal)
-                .sortPosition(habit.getSortPosition())
-                .group(habit.getGroupName())
-                .isChallengeHabit(habit.isChallengeHabit())
+        return HabitReadDTO.builder().color(habit.getColor()).uuid(habit.getUuid()).name(habit.getName())
+                .account(habit.getAccount().getApiAccountRead()).progressComputation(habit.getApiComputationReadWrite())
+                .currentPercentage(currentPercentage).currentMedal(currentMedal).sortPosition(habit.getSortPosition())
+                .group(habit.getGroupName()).isChallengeHabit(habit.isChallengeHabit())
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
-                .notificationFrequency(this.getNotificationConfig(habit))
-                .numberModalConfig(habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
-                        .getApiHabitNumberModalConfig())
-                .records(getRecordsOfCurrentDays(habit))
+                .notificationFrequency(this.getNotificationConfig(habit)).numberModalConfig(
+                        habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
+                                .getApiHabitNumberModalConfig()).records(getRecordsOfCurrentDays(habit))
                 .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(),
-                        habit.getHabitType()) > 0)
-                .build();
+                        habit.getHabitType()) > 0).build();
 
     }
 
@@ -281,8 +261,7 @@ public class HabitService {
         habit.setAccount(account);
         habit.setName("Challenge Habit");
         habit.setChallengeHabit(true);
-        habit.setStartDate((int) LocalDate.now()
-                .toEpochDay());
+        habit.setStartDate((int) LocalDate.now().toEpochDay());
         habit.setStatus(1);
         habit.setHabitType(HabitType.INTERNAL);
         habit.setDailyGoal(1d);
@@ -293,8 +272,9 @@ public class HabitService {
     }
 
     public void moveHabit(Account account, Habit habit, boolean moveUp) {
-        List<Habit> habits = new ArrayList<>(getAllUserHabitsByType(account, HabitType.INTERNAL)
-                .stream().filter(h -> !h.isChallengeHabit()).toList());
+        List<Habit> habits = new ArrayList<>(
+                getAllUserHabitsByType(account, HabitType.INTERNAL).stream().filter(h -> !h.isChallengeHabit())
+                        .toList());
         int oldPosition = habits.indexOf(habit);
         int newPosition = moveUp ? oldPosition - 1 : oldPosition + 1;
         if (newPosition < 0 || newPosition >= habits.size() || oldPosition < 0) {
@@ -347,14 +327,9 @@ public class HabitService {
             try {
                 DeprecatedNotificationFrequencyDTO configDTO =
                         mapper.readValue(reminderCustom, DeprecatedNotificationFrequencyDTO.class);
-                return List.of(NotificationConfigRuleDTO.builder()
-                        .type(NotificationTypeEnum.fixed)
-                        .enabled(true)
-                        .triggerIfFulfilled(false)
-                        .weekdays(configDTO.weekdays)
-                        .frequency(configDTO.frequency)
-                        .time(configDTO.time)
-                        .build());
+                return List.of(NotificationConfigRuleDTO.builder().type(NotificationTypeEnum.fixed).enabled(true)
+                        .triggerIfFulfilled(false).weekdays(configDTO.weekdays).frequency(configDTO.frequency)
+                        .time(configDTO.time).build());
             } catch (Exception ex) {
                 log.warn("Could not parse notification reminderCustom: {}", reminderCustom, e);
                 return new ArrayList<>();
@@ -371,9 +346,9 @@ public class HabitService {
 
         sharedHabit = sharedHabits.getFirst();
 
-        List<SharedHabitResult> results = sharedHabitResultsRepository
-                .getSharedHabitResultBySharedHabitAndAccount(sharedHabit, h.getAccount());
-        List<SharedHabitResult> resultsFiltered = results.stream().filter(r -> r.getId().getDate()
+        List<SharedHabitResult> results =
+                sharedHabitResultsRepository.getSharedHabitResultBySharedHabitAndAccount(sharedHabit, h.getAccount());
+        List<SharedHabitResult> resultsFiltered = results.stream().filter(r -> r.getId().getDate().withDayOfMonth(1)
                 .equals(LocalDate.now().minusMonths(1).withDayOfMonth(1))).toList();
         if (!resultsFiltered.isEmpty()) {
             switch (resultsFiltered.getFirst().getPlacement()) {
@@ -389,8 +364,7 @@ public class HabitService {
     }
 
     public boolean hasHabitBeenCompletedToday(Habit habit, HabitRecordSupplier habitRecordSupplier) {
-        return habitRecordSupplier.getHabitRecordsInRange(habit, LocalDate.now(), LocalDate.now())
-                .stream()
+        return habitRecordSupplier.getHabitRecordsInRange(habit, LocalDate.now(), LocalDate.now()).stream()
                 .anyMatch(r -> r.getRecordValue() != null && r.getRecordValue() != 0);
     }
 

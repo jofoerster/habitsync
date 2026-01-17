@@ -127,6 +127,20 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const {data: groupNames = []} = useHabitGroupNames();
 
+        const calculateDefaultTargetDays = (freqType: FrequencyTypeDTO, freqValue: string, customDays: string): number => {
+            let periodInDays = 1;
+
+            if (freqType === FrequencyTypeDTO.WEEKLY) {
+                periodInDays = 7;
+            } else if (freqType === FrequencyTypeDTO.MONTHLY) {
+                periodInDays = 30;
+            } else if (freqType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && customDays) {
+                periodInDays = parseInt(customDays) || 1;
+            }
+
+            return Math.max(30, periodInDays * 3);
+        };
+
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
                 frequency === '1' && timesPerXDays === '1') {
@@ -153,6 +167,12 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setFrequencyType(tempFrequencyType);
                 setFrequency(tempFrequency);
                 setTimesPerXDays(tempTimesPerXDays);
+
+                if (!habit?.uuid && configType !== ConfigType.CHALLENGE) {
+                    const newTargetDays = calculateDefaultTargetDays(tempFrequencyType, tempFrequency, tempTimesPerXDays);
+                    setTargetDays(newTargetDays.toString());
+                }
+
                 setFrequencyModalVisible(false);
             }
         };
@@ -175,6 +195,17 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             }
             if (newType === 'Daily') {
                 setFrequencyType(FrequencyTypeDTO.DAILY)
+            }
+
+            if (!habit?.uuid && configType !== ConfigType.CHALLENGE) {
+                let newFreqType = FrequencyTypeDTO.DAILY;
+                if (newType === 'Weekly') {
+                    newFreqType = FrequencyTypeDTO.WEEKLY;
+                } else if (newType === 'Monthly') {
+                    newFreqType = FrequencyTypeDTO.MONTHLY;
+                }
+                const newTargetDays = calculateDefaultTargetDays(newFreqType, "1", "");
+                setTargetDays(newTargetDays.toString());
             }
         }
 
@@ -296,12 +327,23 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setFrequencyType(FrequencyTypeDTO.WEEKLY);
                         setFrequency((prev.length - 1).toString())
                         setGoalType('Daily');
+
+                        if (!habit?.uuid && configType !== ConfigType.CHALLENGE) {
+                            const newTargetDays = calculateDefaultTargetDays(FrequencyTypeDTO.WEEKLY, (prev.length - 1).toString(), "");
+                            setTargetDays(newTargetDays.toString());
+                        }
                     }
                     return prev.filter(d => d !== day);
                 } else {
                     setFrequencyType(FrequencyTypeDTO.WEEKLY);
                     setFrequency((prev.length + 1).toString());
                     setGoalType('Daily');
+
+                    if (!habit?.uuid && configType !== ConfigType.CHALLENGE) {
+                        const newTargetDays = calculateDefaultTargetDays(FrequencyTypeDTO.WEEKLY, (prev.length + 1).toString(), "");
+                        setTargetDays(newTargetDays.toString());
+                    }
+
                     return [...prev, day].sort();
                 }
             });

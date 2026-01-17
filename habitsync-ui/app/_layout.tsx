@@ -9,6 +9,7 @@ import {ReactQueryProvider} from "@/context/ReactQueryContext";
 import {StatusBar} from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import {Platform} from 'react-native';
+import React from 'react';
 
 SplashScreen.preventAutoHideAsync();
 
