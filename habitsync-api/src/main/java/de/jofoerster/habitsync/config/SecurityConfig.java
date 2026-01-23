@@ -65,6 +65,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/api/**").access(this::checkUserAccess)
                         .requestMatchers("/h2-console/**").access(this::checkUserAccess)
                         .anyRequest().permitAll()

@@ -1,6 +1,9 @@
 server:
   port: 6842
 
+application:
+  version: @project.version@
+
 spring:
   application:
     name: syncserver
