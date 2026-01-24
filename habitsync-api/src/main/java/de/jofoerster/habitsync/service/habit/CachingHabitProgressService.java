@@ -195,7 +195,7 @@ public class CachingHabitProgressService {
         double totalAchievement = 0;
         double totalWeight = 0;
 
-        int timesPerWeek = Math.min(timesPerWeekRaw, 1);
+        int timesPerWeek = Math.max(timesPerWeekRaw, 1);
         boolean calculateWeekly = timesPerWeekRaw == 0 && isNegative;
 
         while (weekStart.isBefore(weekEnd) || weekStart.equals(weekEnd)) {
@@ -252,7 +252,7 @@ public class CachingHabitProgressService {
         double totalAchievement = 0;
         double totalWeight = 0;
 
-        int timesPerMonth = Math.min(timesPerMonthRaw, 1);
+        int timesPerMonth = Math.max(timesPerMonthRaw, 1);
         boolean calculateMonthly = timesPerMonthRaw == 0 && isNegative;
 
         while (!monthStart.isAfter(endDate)) {
