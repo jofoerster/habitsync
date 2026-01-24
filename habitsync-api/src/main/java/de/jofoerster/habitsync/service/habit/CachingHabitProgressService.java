@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.service.habit;
 
+import de.jofoerster.habitsync.dto.FrequencyTypeDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
 import de.jofoerster.habitsync.model.habit.HabitRecord;
 import de.jofoerster.habitsync.repository.habit.HabitRecordRepository;
@@ -181,7 +182,7 @@ public class CachingHabitProgressService {
     }
 
     private Map<String, Double> calculateWeeklyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
-                                                           int timesPerWeek, Habit habitToUseRecordsOf,
+                                                           int timesPerWeekRaw, Habit habitToUseRecordsOf,
                                                            LocalDate forcedStartDate,
                                                            LocalDate forcedEndDate, boolean isNegative,
                                                            List<Integer> weekdayFilterWhitelist) {
@@ -193,6 +194,9 @@ public class CachingHabitProgressService {
 
         double totalAchievement = 0;
         double totalWeight = 0;
+
+        int timesPerWeek = Math.min(timesPerWeekRaw, 1);
+        boolean calculateWeekly = timesPerWeekRaw == 0 && isNegative;
 
         while (weekStart.isBefore(weekEnd) || weekStart.equals(weekEnd)) {
             LocalDate periodStart = weekStart;
@@ -213,9 +217,17 @@ public class CachingHabitProgressService {
             totalWeight += weekWeight;
 
             List<LocalDate> daysInWeek = getDatesInRange(periodStart, periodEnd);
-            double achievedDays = countAchievedDays(daysInWeek, daily_goal, records, isNegative);
 
-            double weekAchievementPercentage = Math.min(1.0, achievedDays / timesPerWeek);
+            double weekAchievementPercentage;
+            if (!calculateWeekly) {
+                double achievedDays = countAchievedDays(daysInWeek, daily_goal, records, isNegative);
+                weekAchievementPercentage = Math.min(1.0, achievedDays / timesPerWeek);
+            } else {
+                double achievedInWeek = countAchievedSumForWeeksOrMonthsWhenNegative(daysInWeek, daily_goal, records
+                );
+                weekAchievementPercentage = achievedInWeek <= daily_goal ? 1.0 : 0.0;
+            }
+
             totalAchievement += weekAchievementPercentage * weekWeight;
 
             weekStart = weekStart.plusWeeks(1);
@@ -225,7 +237,7 @@ public class CachingHabitProgressService {
     }
 
     private Map<String, Double> calculateMonthlyAchievement(LocalDate startDate, LocalDate endDate, double daily_goal,
-                                                            int timesPerMonth,
+                                                            int timesPerMonthRaw,
                                                             Habit habitToUseRecordsOf, LocalDate forcedStartDate,
                                                             LocalDate forcedEndDate, boolean isNegative,
                                                             List<Integer> weekdayFilterWhitelist) {
@@ -239,6 +251,9 @@ public class CachingHabitProgressService {
         double totalAchievementComplete = records.stream().map(HabitRecord::getRecordValue).reduce(0.0, Double::sum);
         double totalAchievement = 0;
         double totalWeight = 0;
+
+        int timesPerMonth = Math.min(timesPerMonthRaw, 1);
+        boolean calculateMonthly = timesPerMonthRaw == 0 && isNegative;
 
         while (!monthStart.isAfter(endDate)) {
             LocalDate periodStart = monthStart;
@@ -261,9 +276,17 @@ public class CachingHabitProgressService {
             totalWeight += monthWeight;
 
             List<LocalDate> daysInMonthList = getDatesInRange(periodStart, periodEnd);
-            double achievedDays = countAchievedDays(daysInMonthList, daily_goal, records, isNegative);
 
-            double monthAchievementPercentage = Math.min(1.0, achievedDays / timesPerMonth);
+            double monthAchievementPercentage;
+            if (!calculateMonthly) {
+                double achievedDays = countAchievedDays(daysInMonthList, daily_goal, records, isNegative);
+                monthAchievementPercentage = Math.min(1.0, achievedDays / timesPerMonth);
+            } else {
+                double achievedInMonth =
+                        countAchievedSumForWeeksOrMonthsWhenNegative(daysInMonthList, daily_goal, records
+                        );
+                monthAchievementPercentage = achievedInMonth <= daily_goal ? 1.0 : 0.0;
+            }
 
             totalAchievement += monthAchievementPercentage * monthWeight;
 
@@ -383,6 +406,21 @@ public class CachingHabitProgressService {
         return totalAchievement;
     }
 
+    private double countAchievedSumForWeeksOrMonthsWhenNegative(List<LocalDate> days, double daily_goal,
+                                                                List<HabitRecord> records) {
+
+        Map<LocalDate, Double> valuesByDay = removeDuplicateDates(records).stream()
+                .collect(Collectors.toMap(HabitRecord::getRecordDateAsDate, HabitRecord::getRecordValue));
+        double totalAchievement = 0;
+
+        for (LocalDate day : days) {
+            double value = valuesByDay.get(day) != null ? valuesByDay.get(day) : 0;
+            totalAchievement += value;
+        }
+
+        return totalAchievement;
+    }
+
     private List<LocalDate> getDatesInRange(LocalDate start, LocalDate end) {
         List<LocalDate> dates = new ArrayList<>();
         LocalDate current = start;
@@ -412,6 +450,11 @@ public class CachingHabitProgressService {
         if (configHabit.getFreqType() == null || configHabit.getDailyGoal() == null) {
             return false;
         }
+
+        boolean calculateOverWholeTimeframeNegative =
+                configHabit.getParsedFrequencyType() != FrequencyTypeDTO.X_TIMES_PER_Y_DAYS
+                        && configHabit.parseFrequencyValue() == 0 && configHabit.getIsNegative();
+
         return switch (configHabit.getFreqType()) {
             case 1:
                 LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
@@ -419,6 +462,11 @@ public class CachingHabitProgressService {
                 List<HabitRecord> habitRecordsWeek =
                         getHabitRecords(habitToUseValuesOf, weekStart, weekEnd, null,
                                 configHabit.getDayFilterWhitelistAsList());
+                if (calculateOverWholeTimeframeNegative) {
+                    yield configHabit.getReachableDailyValue() >=
+                            countAchievedSumForWeeksOrMonthsWhenNegative(getDatesInRange(weekStart, weekEnd),
+                                    configHabit.getReachableDailyValue(), habitRecordsWeek);
+                }
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(weekStart, weekEnd), configHabit.getReachableDailyValue(),
                                 habitRecordsWeek, configHabit.getIsNegative());
@@ -428,6 +476,11 @@ public class CachingHabitProgressService {
                 List<HabitRecord> habitRecordsMonth =
                         getHabitRecords(habitToUseValuesOf, monthStart, monthEnd, null,
                                 configHabit.getDayFilterWhitelistAsList());
+                if (calculateOverWholeTimeframeNegative) {
+                    yield configHabit.getReachableDailyValue() >=
+                            countAchievedSumForWeeksOrMonthsWhenNegative(getDatesInRange(monthStart, monthEnd),
+                                    configHabit.getReachableDailyValue(), habitRecordsMonth);
+                }
                 yield configHabit.parseFrequencyValue() <=
                         countAchievedDays(getDatesInRange(monthStart, monthEnd), configHabit.getReachableDailyValue(),
                                 habitRecordsMonth, configHabit.getIsNegative());

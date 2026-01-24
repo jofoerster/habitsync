@@ -222,7 +222,7 @@ const ActivityCalendar = ({
                                                 fontWeight: day.isCurrentMonth ? 'bold' : 'normal'
                                             }
                                         ]}>
-                                            {isBooleanHabit ? getIcon(day.record.completion as any, day.record.recordValue) : day.record.recordValue}
+                                            {isBooleanHabit ? getIcon(day.record.completion as any, day.record.recordValue) : getRecordValue(day.record.recordValue)}
                                         </Text>
                                     </Pressable>
                                 ) : (
@@ -247,6 +247,13 @@ const ActivityCalendar = ({
             </View>
         );
     };
+
+    const getRecordValue = (value: number) => {
+        if (value > 99999) {
+            return Math.floor(value / 1000) + 'k';
+        }
+        return value;
+    }
 
     const handlePreviousMonth = () => {
         const year = currentMonth.getFullYear();

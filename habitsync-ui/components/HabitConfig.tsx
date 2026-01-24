@@ -186,7 +186,13 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 configType === ConfigType.CHALLENGE && possibleNewType === "Weekly" ? "Monthly" as 'Daily' | 'Weekly' | 'Monthly'
                     : possibleNewType;
             setGoalType(newType);
-            setFrequency("1");
+
+            if (isNegative && newType !== 'Daily') {
+                setFrequency("0"); // For negative habits, set to 0 for Weekly/Monthly to enable week/month completion
+                console.log("Set frequency to 0 for negative habit with type ", newType);
+            } else {
+                setFrequency("1");
+            }
             if (newType === 'Weekly') {
                 setFrequencyType(FrequencyTypeDTO.WEEKLY)
             }
@@ -263,7 +269,9 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         setFrequencyType(FrequencyTypeDTO.MONTHLY);
                         setTargetDays('31');
                     }
-                    if (habit?.progressComputation.frequency === 1 && habit?.progressComputation.dailyReachableValue !== 1) {
+                    if (((habit?.progressComputation.frequency === 1 && !habit?.progressComputation.isNegative)
+                            || habit?.progressComputation.frequency === 0)
+                        && habit?.progressComputation.dailyReachableValue !== 1) {
                         if (habit.progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
                             setGoalType('Weekly');
                         } else if (habit.progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
@@ -727,9 +735,10 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                             >
                                                 <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
                                             </TouchableOpacity>
-                                            <Text style={styles.label}> { isNegative ? "Max" : "Goal"}</Text>
+                                            <Text style={styles.label}> {isNegative ? "Max" : "Goal"}</Text>
                                         </View>
-                                        {!isNegative ? (<HelpIcon tooltipKey="maxDailyValue"/>) : (<HelpIcon tooltipKey="maxDailyValueNegative"/>)}
+                                        {!isNegative ? (<HelpIcon tooltipKey="maxDailyValue"/>) : (
+                                            <HelpIcon tooltipKey="maxDailyValueNegative"/>)}
                                         {isFieldLocked() && <LockIcon/>}
                                     </View>
                                     <TextInput
@@ -844,14 +853,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     </View>
                     <View style={styles.weekdayContainer}>
                         {[
-                            { day: 1, label: 'Mon' },
-                            { day: 2, label: 'Tue' },
-                            { day: 3, label: 'Wed' },
-                            { day: 4, label: 'Thu' },
-                            { day: 5, label: 'Fri' },
-                            { day: 6, label: 'Sat' },
-                            { day: 7, label: 'Sun' }
-                        ].map(({ day, label }) => (
+                            {day: 1, label: 'Mon'},
+                            {day: 2, label: 'Tue'},
+                            {day: 3, label: 'Wed'},
+                            {day: 4, label: 'Thu'},
+                            {day: 5, label: 'Fri'},
+                            {day: 6, label: 'Sat'},
+                            {day: 7, label: 'Sun'}
+                        ].map(({day, label}) => (
                             <TouchableOpacity
                                 key={day}
                                 style={[
@@ -882,7 +891,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         <View>
                             {groupNames.length > 0 && (
                                 <View style={styles.dropdownContainer}>
-                                    <Text style={[styles.label, { marginBottom: 8 }]}>Select from existing groups:</Text>
+                                    <Text style={[styles.label, {marginBottom: 8}]}>Select from existing groups:</Text>
                                     <View style={styles.groupChipsContainer}>
                                         {groupNames.map((groupName, index) => (
                                             <TouchableOpacity
@@ -903,7 +912,8 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                             </TouchableOpacity>
                                         ))}
                                     </View>
-                                    <Text style={[styles.label, { marginTop: 16, marginBottom: 8 }]}>Or enter a new group name:</Text>
+                                    <Text style={[styles.label, {marginTop: 16, marginBottom: 8}]}>Or enter a new group
+                                        name:</Text>
                                 </View>
                             )}
                             <TextInput

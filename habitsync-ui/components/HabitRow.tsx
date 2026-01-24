@@ -101,10 +101,18 @@ const DayButton: React.FC<DayButtonProps> = ({
     };
 
     const getValueString = (value: number | undefined) => {
+        console.log(`getValueString called with value: ${value}`);
         if (typeof value !== 'number' || isNaN(value)) {
+            const numberValue = Number(value);
+            if (numberValue && numberValue > 99999) {
+                return Math.floor(numberValue / 1000) + 'k';
+            }
             return value;
         }
         if (Number.isInteger(value)) {
+            if (value > 99999) {
+                return Math.floor(value / 1000) + 'k';
+            }
             return value.toString();
         } else {
             return value.toFixed(2);
