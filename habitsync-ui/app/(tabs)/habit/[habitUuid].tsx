@@ -139,10 +139,10 @@ const HabitDetailsScreen = () => {
     };
 
     const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
-        console.log(progressComputation.frequencyType);
+        console.log(progressComputation.frequencyType, progressComputation.frequency, progressComputation.timesPerXDays);
         return progressComputation.frequencyType === FrequencyTypeDTO.DAILY
-            || (progressComputation.frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
-                (progressComputation.frequency !== 1 || progressComputation.timesPerXDays !== 1));
+            || ((progressComputation.frequency !== 1 || progressComputation.isNegative) && progressComputation.frequency !== 0 && progressComputation.timesPerXDays !== 1)
+            || progressComputation.dailyReachableValue === 1 || (progressComputation.dailyReachableValue === 0 && progressComputation.frequency !== 0);
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
@@ -151,7 +151,8 @@ const HabitDetailsScreen = () => {
 
     const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
         if (progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
-            (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1)) {
+            (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1) ||
+            (progressComputation.frequency !== 0 && progressComputation.isNegative)) {
             return "Daily";
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {

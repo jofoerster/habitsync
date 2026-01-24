@@ -1,5 +1,6 @@
 package de.jofoerster.habitsync.service.habit;
 
+import de.jofoerster.habitsync.dto.FrequencyTypeDTO;
 import de.jofoerster.habitsync.dto.HabitRecordReadDTO;
 import de.jofoerster.habitsync.dto.HabitRecordWriteDTO;
 import de.jofoerster.habitsync.model.habit.Habit;
@@ -43,6 +44,17 @@ public class HabitRecordService {
                     ? HabitRecordCompletion.PARTIALLY_COMPLETED
                     : HabitRecordCompletion.MISSED;
         } else {
+            if (habit.getParsedFrequencyType() != FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && habit.parseFrequencyValue() == 0) {
+                // real monthly or weekly computation negative habit
+                if (!completion) {
+                    return HabitRecordCompletion.FAILED;
+                }
+                else if (habitRecord.getRecordValue() > 0) {
+                    return HabitRecordCompletion.PARTIALLY_COMPLETED;
+                } else {
+                    return HabitRecordCompletion.COMPLETED;
+                }
+            }
             if (!disabledByFilter && habitRecord.getRecordValue() <= habit.getReachableDailyValue()) {
                 return HabitRecordCompletion.COMPLETED;
             } else if (completion) {
