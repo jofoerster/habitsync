@@ -237,6 +237,7 @@ export interface ServerConfig {
     appriseActive: boolean;
     hideChallenges: boolean;
     templateDateFormat: string;
+    firstDayOfWeek: string;
 }
 
 export interface SortHabitRequestBody {

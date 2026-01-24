@@ -5,7 +5,8 @@ import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "rea
 import {getIcon} from "@/util/util";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
-import {useHabitPercentageHistory, useHabitRecords} from "@/hooks/useHabits";
+import {useHabitRecords} from "@/hooks/useHabits";
+import {useConfiguration} from "@/hooks/useConfiguration";
 
 // Platform-specific imports for Victory charts - only on web
 let VictoryLine: any, VictoryChart: any, VictoryAxis: any;
@@ -32,6 +33,7 @@ const ActivityCalendar = ({
 }) => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const {data: config} = useConfiguration();
 
     const [currentMonth, setCurrentMonth] = useState(new Date());
     // Only enable graph toggle on web
@@ -162,14 +164,21 @@ const ActivityCalendar = ({
             new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
 
+        const firstDayOfWeek = config?.firstDayOfWeek || 'MONDAY';
+        const isSundayFirst = firstDayOfWeek === 'SUNDAY';
+
         const dayOfWeek = firstDay.getDay();
-        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-        startDate.setDate(startDate.getDate() - mondayOffset);
+        // Calculate offset based on first day of week setting
+        const offset = isSundayFirst
+            ? dayOfWeek  // Sunday = 0, no offset needed
+            : (dayOfWeek === 0 ? 6 : dayOfWeek - 1);  // Monday first: adjust so Monday = 0
+        startDate.setDate(startDate.getDate() - offset);
 
         const days = [];
         const current = new Date(startDate);
 
-        while (current <= lastDay || current.getDay() !== 1) {
+        const targetEndDay = isSundayFirst ? 0 : 1;
+        while (current <= lastDay || current.getDay() !== targetEndDay) {
             const dayEpoch = Math.floor(Date.UTC(current.getFullYear(), current.getMonth(), current.getDate()) / (1000 * 60 * 60 * 24));
             const record = calendarRecords.find(r => r.epochDay === dayEpoch);
             const isCurrentMonth = current.getMonth() === month;
@@ -191,10 +200,14 @@ const ActivityCalendar = ({
             weeks.push(days.slice(i, i + 7));
         }
 
+        const weekDays = isSundayFirst
+            ? ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+            : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
         return (
             <View style={styles.calendarContainer}>
                 <View style={styles.weekDaysHeader}>
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
+                    {weekDays.map(day => (
                         <Text key={day} style={styles.weekDayText}>{day}</Text>
                     ))}
                 </View>
