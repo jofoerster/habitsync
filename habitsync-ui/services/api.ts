@@ -79,6 +79,13 @@ export interface ApiHabitWrite {
     color?: number;
     group?: number;
     progressComputation: ApiComputationReadWrite;
+    status?: HabitStatusFilter;
+}
+
+export enum HabitStatusFilter {
+    ACTIVE = 1,
+    ARCHIVED = 2,
+    DELETED = 3
 }
 
 export interface ApiHabitRecordRead {
@@ -231,7 +238,10 @@ export interface OvertakeNotificationConfigRule extends BaseNotificationConfigRu
     type: 'overtake';
 }
 
-export type NotificationConfigRule = FixedTimeNotificationConfigRule | ThresholdNotificationConfigRule | OvertakeNotificationConfigRule;
+export type NotificationConfigRule =
+    FixedTimeNotificationConfigRule
+    | ThresholdNotificationConfigRule
+    | OvertakeNotificationConfigRule;
 
 export interface ServerConfig {
     appriseActive: boolean;
@@ -307,8 +317,8 @@ export const userApi = {
 
 // Habit API
 export const habitApi = {
-    getUserHabits: async (): Promise<ApiHabitRead[]> => {
-        const response = await authenticatedFetch(`/api/habit/list`);
+    getUserHabits: async (statusFilter?: HabitStatusFilter): Promise<ApiHabitRead[]> => {
+        const response = await authenticatedFetch(`/api/habit/list${statusFilter ? `?statusFilter=${HabitStatusFilter[statusFilter]}` : ''}`);
         if (!response.ok) throw new Error('Failed to fetch habits');
         return response.json();
     },

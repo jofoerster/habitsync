@@ -1,6 +1,10 @@
 package de.jofoerster.habitsync.model.habit;
 
+import lombok.Getter;
+
+@Getter
 public enum HabitStatus {
+    UNKNOWN(0),
     ACTIVE(1),
     ARCHIVED(2),
     DELETED(3);
@@ -11,7 +15,4 @@ public enum HabitStatus {
         this.value = value;
     }
 
-    public int getValue() {
-        return value;
-    }
 }

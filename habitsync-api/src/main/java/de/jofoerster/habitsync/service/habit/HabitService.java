@@ -143,7 +143,7 @@ public class HabitService {
     }
 
     public Habit deleteHabit(Habit habit) {
-        habit.setStatus(HabitStatus.DELETED.getValue());
+        habit.setStatus(HabitStatus.ARCHIVED.getValue());
         return saveHabit(habit);
     }
 
