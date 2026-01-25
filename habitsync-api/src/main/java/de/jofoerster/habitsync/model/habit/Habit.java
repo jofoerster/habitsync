@@ -41,7 +41,7 @@ public class Habit {
     private Long modifyT;
 
     private Integer type;
-    private Integer status = 1; // 1 = active, 2 = deleted, 3 = archived
+    private Integer status = 1; // 1 = active, 2 = archived, 3 = deleted
     private String name;
 
     @JsonProperty("desc")
