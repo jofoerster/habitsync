@@ -16,6 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -283,6 +284,10 @@ public class Habit {
         }
         if (apiHabitWrite.getColor() != null) {
             this.color = apiHabitWrite.getColor();
+        }
+        if (apiHabitWrite.getStatus() != null &&
+                Arrays.stream(HabitStatus.values()).anyMatch(s -> s == apiHabitWrite.getStatus())) {
+            this.status = apiHabitWrite.getStatus().getValue();
         }
         this.groupName = apiHabitWrite.getGroup();
         if (apiHabitWrite.getProgressComputation() != null) {
