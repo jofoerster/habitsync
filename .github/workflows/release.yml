@@ -171,7 +171,8 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          LATEST_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          # Find the last non-beta release tag
+          LATEST_TAG=$(git tag -l --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
           if [ -n "$LATEST_TAG" ]; then
             CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
           else

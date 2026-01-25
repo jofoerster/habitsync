@@ -1,8 +1,15 @@
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {ApiHabitRead, ApiHabitRecordWrite, ApiHabitWrite, habitApi, habitRecordApi,} from '@/services/api';
+import {
+    ApiHabitRead,
+    ApiHabitRecordWrite,
+    ApiHabitWrite,
+    habitApi,
+    habitRecordApi,
+    HabitStatusFilter,
+    SortHabitRequestBody
+} from '@/services/api';
 import {challengeKeys} from "@/hooks/useChallenges";
 import {userKeys} from "@/hooks/useUser";
-import {SortHabitRequestBody} from "../services/api";
 import {getEpochDay} from "@/util/util";
 import {queryClient} from "@/context/ReactQueryContext";
 import {useEffect} from "react";
@@ -11,6 +18,7 @@ export const habitKeys = {
     all: ['habits'] as const,
     lists: () => [...habitKeys.all, 'list'] as const,
     list: () => [...habitKeys.lists()] as const,
+    archivedList: () => [...habitKeys.lists(), 'archived'] as const,
     uuidlists: () => [...habitKeys.all, 'list-uuid'] as const,
     uuidlist: () => [...habitKeys.list()] as const,
     details: () => [...habitKeys.all, 'detail'] as const,
@@ -40,6 +48,14 @@ export const useHabits = () => {
         queryFn: () => habitApi.getUserHabits(),
         staleTime: 1000 * 60 * 5,
         refetchOnMount: 'always', // always refetch when component mounts
+    });
+};
+
+export const useArchivedHabits = () => {
+    return useQuery({
+        queryKey: habitKeys.archivedList(),
+        queryFn: () => habitApi.getUserHabits(HabitStatusFilter.ARCHIVED),
+        staleTime: 1000 * 60 * 5,
     });
 };
 

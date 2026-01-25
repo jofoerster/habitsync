@@ -73,3 +73,9 @@ management:
     web:
       exposure:
         include: health
+
+tracker:
+  dateformat:
+    template: DD.MM.
+  firstDayOfWeek: MONDAY
+

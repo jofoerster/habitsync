@@ -21,7 +21,8 @@ interface DayButtonProps {
     onLongPress: () => void,
     disabled?: boolean,
     hideDates?: boolean,
-    showCheckMarkIcon?: boolean
+    showCheckMarkIcon?: boolean,
+    isNegative?: boolean
 }
 
 const DayButton: React.FC<DayButtonProps> = ({
@@ -32,7 +33,8 @@ const DayButton: React.FC<DayButtonProps> = ({
                                                  onLongPress,
                                                  disabled,
                                                  hideDates,
-                                                 showCheckMarkIcon
+                                                 showCheckMarkIcon,
+                                                 isNegative
                                              }) => {
     const {theme, isDark} = useTheme();
 
@@ -153,7 +155,7 @@ const DayButton: React.FC<DayButtonProps> = ({
             onPress={disabled ? undefined : onPress}
             onLongPress={disabled ? undefined : onLongPress}
         >
-            {value == 0 || (value == 1 && showCheckMarkIcon) ? (
+            {(value === 0 && !isNegative) || (value === 1 && showCheckMarkIcon) ? (
                 <Text style={{color: 'white', fontSize: 18, fontWeight: 'bold'}}>
                     {getIcon(completion, value)}
                 </Text>) : (
@@ -442,6 +444,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                 hideDates={hideDates}
                                                 showCheckMarkIcon={habit.progressComputation.dailyReachableValue === 1 &&
                                                     !habit.progressComputation.isNegative}
+                                                isNegative={habit.progressComputation.isNegative}
                                             />
                                         </View>
                                     );

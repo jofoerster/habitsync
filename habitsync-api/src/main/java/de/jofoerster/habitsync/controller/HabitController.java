@@ -3,6 +3,7 @@ package de.jofoerster.habitsync.controller;
 import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
 import de.jofoerster.habitsync.model.habit.Habit;
+import de.jofoerster.habitsync.model.habit.HabitStatus;
 import de.jofoerster.habitsync.model.habit.HabitType;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
 import de.jofoerster.habitsync.service.account.AccountService;
@@ -54,8 +55,9 @@ public class HabitController {
      * @return A list of {@link HabitReadDTO} objects representing the user's habits.
      */
     @GetMapping("/list")
-    public ResponseEntity<List<HabitReadDTO>> getUserHabits() {
-        return ResponseEntity.ok(habitService.getAllUserHabits(accountService.getCurrentAccount()));
+    public ResponseEntity<List<HabitReadDTO>> getUserHabits(
+            @RequestParam(required = false) HabitStatus statusFilter) {
+        return ResponseEntity.ok(habitService.getAllUserHabits(accountService.getCurrentAccount(), statusFilter));
     }
 
     /**

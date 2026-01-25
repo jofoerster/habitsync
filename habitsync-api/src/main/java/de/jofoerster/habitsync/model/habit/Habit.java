@@ -16,6 +16,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,7 +42,7 @@ public class Habit {
     private Long modifyT;
 
     private Integer type;
-    private Integer status = 1; // 1 = active, 2 = deleted, 3 = archived
+    private Integer status = 1; // 1 = active, 2 = archived, 3 = deleted
     private String name;
 
     @JsonProperty("desc")
@@ -283,6 +284,10 @@ public class Habit {
         }
         if (apiHabitWrite.getColor() != null) {
             this.color = apiHabitWrite.getColor();
+        }
+        if (apiHabitWrite.getStatus() != null &&
+                Arrays.stream(HabitStatus.values()).anyMatch(s -> s == apiHabitWrite.getStatus())) {
+            this.status = apiHabitWrite.getStatus().getValue();
         }
         this.groupName = apiHabitWrite.getGroup();
         if (apiHabitWrite.getProgressComputation() != null) {

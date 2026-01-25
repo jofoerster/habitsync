@@ -146,13 +146,12 @@ public class AccountService {
         return createAccount(true);
     }
 
-    ;
-
     private Account createAccount(boolean needsConfirmation) {
         log.info("Creating account {}", getCurrentAccountUsername());
         Account account = new Account();
         account.setAuthenticationId(getCurrentAccountId());
         account.setUserName(getCurrentAccountUsername());
+        account.setDisplayName(getCurrentAccountUsername());
         account.setEmail(getEmail());
         account.setAccountStatus(needsConfirmation ? AccountStatus.AWAITING_APPROVAL : AccountStatus.ACTIVE);
         return updateAccount(account);

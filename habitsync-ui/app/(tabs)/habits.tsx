@@ -2,7 +2,7 @@ import HabitRow from '@/components/HabitRow';
 import HabitGroup from '@/components/HabitGroup';
 import React, {useMemo, useState} from 'react';
 import {Animated, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
-import {Link} from 'expo-router';
+import {Link, useRouter} from 'expo-router';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
@@ -56,6 +56,7 @@ const DateHeader = () => {
 const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const router = useRouter();
 
     const {data: habits = [], isLoading: loading} = useHabitUuids();
 
@@ -320,6 +321,14 @@ const HabitTrackerScreen = () => {
                     <Text style={styles.header}>HabitSync</Text>
                 </View>
                 <View style={styles.topRightButtons}>
+                    <MaterialCommunityIcons.Button
+                        name="archive-outline"
+                        backgroundColor={theme.background}
+                        color={theme.text}
+                        size={14}
+                        style={{marginRight: 0, marginTop: 16}}
+                        onPress={() => router.push('/archived-habits')}
+                    />
                     <MaterialCommunityIcons.Button
                         name="help-circle"
                         backgroundColor={theme.background}

@@ -171,15 +171,15 @@ const HabitDetailsScreen = () => {
         }
 
         alert(
-            'Delete Habit',
-            'Are you sure you want to delete this habit? This action cannot be undone.',
+            'Archive Habit',
+            'Are you sure you want to archive this habit?',
             [
                 {
                     text: 'Cancel',
                     style: 'cancel'
                 },
                 {
-                    text: 'Delete',
+                    text: 'Archive',
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -458,7 +458,7 @@ const HabitDetailsScreen = () => {
                     <TouchableOpacity style={[styles.secondaryButton, styles.deleteButton]}
                                       onPress={handleDeleteHabit}>
                         <MaterialCommunityIcons name="delete" size={20} color="#F44336"/>
-                        <Text style={[styles.secondaryButtonText, {color: '#F44336'}]}>Delete</Text>
+                        <Text style={[styles.secondaryButtonText, {color: '#F44336'}]}>Archive</Text>
                     </TouchableOpacity>
                 </View>
             )}

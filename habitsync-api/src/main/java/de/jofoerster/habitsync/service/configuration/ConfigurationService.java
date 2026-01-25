@@ -18,11 +18,15 @@ public class ConfigurationService {
     @Value("${tracker.dateformat.template:DD.MM.}")
     private String templateDateFormat;
 
+    @Value("${tracker.firstDayOfWeek:MONDAY}")
+    private String firstDayOfWeek;
+
     public ConfigReadDTO getConfiguration() {
         return ConfigReadDTO.builder()
                 .appriseActive(notificationService.isAppriseActive())
                 .hideChallenges(!challengePageVisible)
                 .templateDateFormat(templateDateFormat)
+                .firstDayOfWeek(firstDayOfWeek)
                 .build();
     }
 }

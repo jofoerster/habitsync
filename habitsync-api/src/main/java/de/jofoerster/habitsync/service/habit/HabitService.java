@@ -3,10 +3,7 @@ package de.jofoerster.habitsync.service.habit;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.jofoerster.habitsync.dto.*;
 import de.jofoerster.habitsync.model.account.Account;
-import de.jofoerster.habitsync.model.habit.Habit;
-import de.jofoerster.habitsync.model.habit.HabitParticipant;
-import de.jofoerster.habitsync.model.habit.HabitParticipationStatus;
-import de.jofoerster.habitsync.model.habit.HabitType;
+import de.jofoerster.habitsync.model.habit.*;
 import de.jofoerster.habitsync.model.notification.NotificationRule;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabit;
 import de.jofoerster.habitsync.model.sharedHabit.SharedHabitHabitPair;
@@ -45,9 +42,11 @@ public class HabitService {
 
     ObjectMapper mapper = new ObjectMapper();
 
-    public List<Habit> getAllUserHabitsByType(Account account, HabitType habitType) {
+    public List<Habit> getAllUserHabitsByType(Account account, HabitType habitType, HabitStatus statusFilter) {
+        HabitStatus status = statusFilter != null ? statusFilter : HabitStatus.ACTIVE;
         List<Habit> habits =
-                habitRepository.findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType, 1);
+                habitRepository.findByAccountAndHabitTypeAndStatusOrderBySortPosition(account, habitType,
+                        status.getValue());
         List<HabitParticipant> participants =
                 habitParticipantRepository.getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
                         HabitParticipationStatus.ACCEPTED, account.getAuthenticationId());
@@ -144,9 +143,7 @@ public class HabitService {
     }
 
     public Habit deleteHabit(Habit habit) {
-        habit.setStatus(2);
-        this.fixHabitSortPositions(this.getAllUserHabitsByType(habit.getAccount(), HabitType.INTERNAL).stream()
-                .filter(h -> !h.isChallengeHabit()).toList());
+        habit.setStatus(HabitStatus.ARCHIVED.getValue());
         return saveHabit(habit);
     }
 
@@ -166,14 +163,15 @@ public class HabitService {
         return result;
     }
 
-    public List<HabitReadDTO> getAllUserHabits(Account currentAccount) {
-        return this.getAllUserHabitsByType(currentAccount, HabitType.INTERNAL).stream()
+    public List<HabitReadDTO> getAllUserHabits(Account currentAccount, HabitStatus statusFilter) {
+        return this.getAllUserHabitsByType(currentAccount, HabitType.INTERNAL, statusFilter).stream()
                 .filter(h -> !h.isChallengeHabit()).map(this::getApiHabitReadFromHabit).toList();
     }
 
     public List<HabitReadUuidDTO> getAllUserHabitUuids(Account currentAccount) {
         List<HabitReadUuidDTO> uuids = new ArrayList<>(
-                habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false, 1)
+                habitRepository.findByAccountAndChallengeHabitAndStatusOrderBySortPosition(currentAccount, false,
+                                HabitStatus.ACTIVE.getValue())
                         .stream().map(HabitService::getHabitReadUuidsDTO).toList());
         List<HabitParticipant> participants =
                 habitParticipantRepository.getHabitParticipantsByHabitParticipationStatusAndParticipantAuthenticationId(
@@ -273,7 +271,8 @@ public class HabitService {
 
     public void moveHabit(Account account, Habit habit, boolean moveUp) {
         List<Habit> habits = new ArrayList<>(
-                getAllUserHabitsByType(account, HabitType.INTERNAL).stream().filter(h -> !h.isChallengeHabit())
+                getAllUserHabitsByType(account, HabitType.INTERNAL, HabitStatus.ACTIVE).stream()
+                        .filter(h -> !h.isChallengeHabit())
                         .toList());
         int oldPosition = habits.indexOf(habit);
         int newPosition = moveUp ? oldPosition - 1 : oldPosition + 1;
