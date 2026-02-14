@@ -160,6 +160,7 @@ services:
       - APPRISE_API_URL=<your-apprise-url> # optional, see Notifications section below
       - TRACKER_DATEFORMAT_TEMPLATE=DD.MM. # optional, only DD, MM supported currently, sets date format in tracker globally
       - PAGE_CHALLENGES_VISIBLE=true # optional, show challenges page in navigation, set to false to hide globally
+      - TRACKER_FIRSTDAYOFWEEK=MONDAY # optional, overwrites the default first day of week in the activity calendar
       # available from version 0.17.0:
       - PUID=1000 # optional, user ID to run as, defaults to 6842
       - PGID=1000 # optional, group ID to run as, defaults to 6842
