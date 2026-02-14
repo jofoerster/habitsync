@@ -12,6 +12,13 @@ import de.jofoerster.habitsync.service.habit.CachingNumberOfConnectedHabitsServi
 import de.jofoerster.habitsync.service.habit.HabitParticipationService;
 import de.jofoerster.habitsync.service.habit.HabitService;
 import de.jofoerster.habitsync.service.notification.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +31,12 @@ import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfIsOwne
 
 @RestController
 @RequestMapping("/api/habit")
+@Tag(name = "Habits", description = "Habit management endpoints - authentication required")
+@SecurityRequirements({
+        @SecurityRequirement(name = "bearerAuth"),
+        @SecurityRequirement(name = "apiKey"),
+        @SecurityRequirement(name = "basicAuth")
+})
 public class HabitController {
 
     private final HabitService habitService;
@@ -54,9 +67,17 @@ public class HabitController {
      *
      * @return A list of {@link HabitReadDTO} objects representing the user's habits.
      */
+    @Operation(
+            summary = "Get all user habits",
+            description = "Returns a list of all habits belonging to the authenticated user, optionally filtered by status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved habits"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("/list")
     public ResponseEntity<List<HabitReadDTO>> getUserHabits(
-            @RequestParam(required = false) HabitStatus statusFilter) {
+            @Parameter(description = "Filter habits by status") @RequestParam(required = false) HabitStatus statusFilter) {
         return ResponseEntity.ok(habitService.getAllUserHabits(accountService.getCurrentAccount(), statusFilter));
     }
 
@@ -65,6 +86,14 @@ public class HabitController {
      *
      * @return A list of {@link HabitReadDTO} objects representing the user's habits.
      */
+    @Operation(
+            summary = "Get all user habit UUIDs",
+            description = "Returns a list of UUIDs for all habits belonging to the authenticated user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved habit UUIDs"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("/uuids/list")
     public ResponseEntity<List<HabitReadUuidDTO>> getUserHabitUuids() {
         return ResponseEntity.ok(habitService.getAllUserHabitUuids(accountService.getCurrentAccount()));
@@ -77,8 +106,19 @@ public class HabitController {
      * @param uuid The UUID of the habit to retrieve.
      * @return A ResponseEntity containing the {@link HabitReadDTO} object if found, or an error response if not found.
      */
+    @Operation(
+            summary = "Get habit by UUID",
+            description = "Retrieves a specific habit by its UUID. User must own the habit or have access via a shared habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved habit"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @GetMapping("/{uuid}")
-    public ResponseEntity<HabitReadDTO> getHabitByUuid(@PathVariable String uuid) {
+    public ResponseEntity<HabitReadDTO> getHabitByUuid(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Optional<Habit> habit = habitService.getHabitByUuid(uuid);
         permissionChecker.checkIfisAllowedToRead(habit.orElse(null), accountService.getCurrentAccount(),
                 habitService);
@@ -93,6 +133,15 @@ public class HabitController {
      * @param apiHabitWrite The {@link HabitWriteDTO} object containing the details of the habit to create.
      * @return A ResponseEntity containing the created {@link HabitReadDTO} object.
      */
+    @Operation(
+            summary = "Create a new habit",
+            description = "Creates a new habit for the authenticated user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successfully created habit"),
+            @ApiResponse(responseCode = "400", description = "Invalid habit data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @PostMapping
     public ResponseEntity<HabitReadDTO> createHabit(@RequestBody HabitWriteDTO apiHabitWrite) {
         return ResponseEntity.status(201)
@@ -105,9 +154,21 @@ public class HabitController {
      * @param habitWriteDTO The {@link HabitWriteDTO} object containing the updated details of the habit.
      * @return A ResponseEntity containing the updated {@link HabitReadDTO} object.
      */
+    @Operation(
+            summary = "Update a habit",
+            description = "Updates an existing habit. User must have edit permissions for the habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated habit"),
+            @ApiResponse(responseCode = "400", description = "Invalid habit data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no edit access to this habit"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @PutMapping("/{uuid}")
-    public ResponseEntity<HabitReadDTO> updateHabit(@PathVariable String uuid,
-                                                    @RequestBody HabitWriteDTO habitWriteDTO) {
+    public ResponseEntity<HabitReadDTO> updateHabit(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid,
+            @RequestBody HabitWriteDTO habitWriteDTO) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
         permissionChecker.checkIfisAllowedToEdit(habitOpt.orElse(null), accountService.getCurrentAccount());
         habitOpt.ifPresent(notificationService::markHabitAsUpdated);
@@ -120,8 +181,19 @@ public class HabitController {
      * @param uuid The UUID of the habit to delete.
      * @return A ResponseEntity indicating the result of the deletion operation.
      */
+    @Operation(
+            summary = "Delete a habit",
+            description = "Deletes a habit by its UUID. User must have delete permissions for the habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted habit"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no delete access to this habit"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @DeleteMapping("/{uuid}")
-    public ResponseEntity<Void> deleteHabit(@PathVariable String uuid) {
+    public ResponseEntity<Void> deleteHabit(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Optional<Habit> habitOpt = habitService.getHabitByUuid(uuid);
         permissionChecker.checkIfisAllowedToDelete(habitService.getHabitByUuid(uuid).orElse(null),
                 accountService.getCurrentAccount());
@@ -140,8 +212,18 @@ public class HabitController {
      * @param uuid The UUID of the habit for which to retrieve connected habits.
      * @return A ResponseEntity containing a list of {@link HabitReadDTO} objects representing the connected habits.
      */
+    @Operation(
+            summary = "Get connected habits",
+            description = "Returns habits connected to a specific habit via shared habits."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved connected habits"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit")
+    })
     @GetMapping("/connected-habits/{uuid}")
-    public ResponseEntity<List<HabitReadDTO>> getConnectedHabits(@PathVariable String uuid) {
+    public ResponseEntity<List<HabitReadDTO>> getConnectedHabits(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         permissionChecker.checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null),
                 accountService.getCurrentAccount());
         List<SharedHabitHabitPair> habits =
@@ -153,15 +235,35 @@ public class HabitController {
                 .stream().map(habitService::getApiHabitReadFromHabit).toList());
     }
 
+    @Operation(
+            summary = "Get connected habit count",
+            description = "Returns the count of habits connected to a specific habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved count"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit")
+    })
     @GetMapping("/connected-habits/{uuid}/count")
-    public ResponseEntity<Long> getConnectedHabitCount(@PathVariable String uuid) {
+    public ResponseEntity<Long> getConnectedHabitCount(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         permissionChecker.checkIfisAllowedToEdit(habitService.getHabitByUuid(uuid).orElse(null),
                 accountService.getCurrentAccount());
         return ResponseEntity.ok(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(uuid, HabitType.INTERNAL));
     }
 
+    @Operation(
+            summary = "Move habit up in sort order",
+            description = "Moves a habit up in the user's habit sort order."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully moved habit"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit")
+    })
     @PostMapping("/{uuid}/sort-position/move-up")
-    public ResponseEntity moveHabitUp(@PathVariable String uuid) {
+    public ResponseEntity moveHabitUp(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         Account account = accountService.getCurrentAccount();
         permissionChecker.checkIfisAllowedToEdit(habit, account);
@@ -169,8 +271,18 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Move habit down in sort order",
+            description = "Moves a habit down in the user's habit sort order."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully moved habit"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit")
+    })
     @PostMapping("/{uuid}/sort-position/move-down")
-    public ResponseEntity moveHabitDown(@PathVariable String uuid) {
+    public ResponseEntity moveHabitDown(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         Account account = accountService.getCurrentAccount();
         permissionChecker.checkIfisAllowedToEdit(habit, account);
@@ -178,6 +290,15 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Sort habits",
+            description = "Reorders multiple habits in the user's habit list."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully sorted habits"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to one or more habits")
+    })
     @PostMapping("/sort")
     public ResponseEntity sortHabits(@RequestBody HabitSortBody habitSortBody) {
         Account account = accountService.getCurrentAccount();
@@ -190,8 +311,21 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Invite participant to habit",
+            description = "Invites another user to participate in a habit. Only the habit owner can invite participants."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully sent invitation"),
+            @ApiResponse(responseCode = "400", description = "Cannot invite yourself"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only habit owner can invite"),
+            @ApiResponse(responseCode = "404", description = "Habit or user not found")
+    })
     @PostMapping("/{uuid}/participant/invite/{participantAuthId}")
-    public ResponseEntity<Void> inviteParticipant(@PathVariable String uuid, @PathVariable String participantAuthId) {
+    public ResponseEntity<Void> inviteParticipant(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid,
+            @Parameter(description = "Authentication ID of the user to invite") @PathVariable String participantAuthId) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -209,8 +343,20 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Remove participant from habit",
+            description = "Removes a participant from a habit. Only the habit owner can remove participants."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully removed participant"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only habit owner can remove"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @PostMapping("/{uuid}/participant/remove/{participantAuthId}")
-    public ResponseEntity<Void> removeParticipant(@PathVariable String uuid, @PathVariable String participantAuthId) {
+    public ResponseEntity<Void> removeParticipant(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid,
+            @Parameter(description = "Authentication ID of the participant to remove") @PathVariable String participantAuthId) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -221,8 +367,18 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Accept habit participation invitation",
+            description = "Accepts an invitation to participate in a habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully accepted invitation"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @PostMapping("/{uuid}/participant/accept-invitation")
-    public ResponseEntity<Void> acceptInvitation(@PathVariable String uuid) {
+    public ResponseEntity<Void> acceptInvitation(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -232,8 +388,18 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "Decline habit participation invitation",
+            description = "Declines an invitation to participate in a habit."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully declined invitation"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @PostMapping("/{uuid}/participant/decline-invitation")
-    public ResponseEntity<Void> declineInvitation(@PathVariable String uuid) {
+    public ResponseEntity<Void> declineInvitation(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -243,8 +409,19 @@ public class HabitController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(
+            summary = "List habit participants",
+            description = "Lists all participants of a habit. Only the habit owner can list participants."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved participants"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only habit owner can list"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @GetMapping("/{uuid}/participant/list")
-    public ResponseEntity<List<AccountReadDTO>> listParticipants(@PathVariable String uuid) {
+    public ResponseEntity<List<AccountReadDTO>> listParticipants(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -254,9 +431,20 @@ public class HabitController {
         return ResponseEntity.ok(habitParticipationService.listParticipants(habit));
     }
 
+    @Operation(
+            summary = "Get habit percentage history",
+            description = "Returns the percentage completion history for a habit in a specific month."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved history"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - no access to this habit"),
+            @ApiResponse(responseCode = "404", description = "Habit not found")
+    })
     @GetMapping("/{uuid}/percentage-history")
-    public ResponseEntity<PercentageHistoryDTO> getPercentageHistoryForMonth(@PathVariable String uuid,
-                                                                             @RequestParam String month) {
+    public ResponseEntity<PercentageHistoryDTO> getPercentageHistoryForMonth(
+            @Parameter(description = "UUID of the habit") @PathVariable String uuid,
+            @Parameter(description = "Month in format YYYY-MM") @RequestParam String month) {
         Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
         if (habit == null) {
             return ResponseEntity.notFound().build();
@@ -269,6 +457,14 @@ public class HabitController {
         return ResponseEntity.ok(dto);
     }
 
+    @Operation(
+            summary = "Get habit group names",
+            description = "Returns all unique habit group names for the authenticated user."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved group names"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("/group-names")
     public ResponseEntity<List<String>> getGroupNames() {
         Account account = accountService.getCurrentAccount();

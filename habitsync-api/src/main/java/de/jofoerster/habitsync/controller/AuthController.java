@@ -3,6 +3,10 @@ package de.jofoerster.habitsync.controller;
 import de.jofoerster.habitsync.dto.LoginOptionsDTO;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.auth.TokenService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,17 +29,32 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@Tag(name = "Authentication", description = "Public authentication endpoints - no authentication required")
 public class AuthController {
 
     private final AccountService accountService;
     private final TokenService tokenService;
 
+    @Operation(
+            summary = "Get available login options",
+            description = "Returns the available authentication methods configured on the server. This endpoint is public."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved login options")
+    })
     @GetMapping("/login-options")
     public ResponseEntity<LoginOptionsDTO> getLoginOptions() {
         LoginOptionsDTO loginOptionsDTO = accountService.getLoginOptions();
         return ResponseEntity.ok(loginOptionsDTO);
     }
 
+    @Operation(
+            summary = "Get authentication status",
+            description = "Returns the current authentication status including user information if authenticated. This endpoint is public but returns different data based on authentication state."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved authentication status")
+    })
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getAuthStatus(
             Authentication authentication,
@@ -82,6 +101,14 @@ public class AuthController {
         return ResponseEntity.ok(status);
     }
 
+    @Operation(
+            summary = "Refresh authentication tokens",
+            description = "Exchange a valid refresh token for a new access token and refresh token pair. This endpoint is public."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully refreshed tokens"),
+            @ApiResponse(responseCode = "401", description = "Invalid refresh token")
+    })
     @PostMapping("/refresh-token")
     public Map<String, String> refreshToken(@RequestBody Map<String, String> body) {
         String refreshToken = body.get("refreshToken");
