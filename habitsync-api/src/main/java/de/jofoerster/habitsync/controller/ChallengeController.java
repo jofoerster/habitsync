@@ -15,6 +15,13 @@ import de.jofoerster.habitsync.service.challenge.ChallengeService;
 import de.jofoerster.habitsync.service.challenge.VoteService;
 import de.jofoerster.habitsync.service.habit.CachingHabitProgressService;
 import de.jofoerster.habitsync.service.habit.HabitService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,6 +33,12 @@ import static de.jofoerster.habitsync.controller.PermissionChecker.checkIfisAllo
 
 @RestController
 @RequestMapping("/api/challenge")
+@Tag(name = "Challenges", description = "Challenge management endpoints - authentication required")
+@SecurityRequirements({
+        @SecurityRequirement(name = "bearerAuth"),
+        @SecurityRequirement(name = "apiKey"),
+        @SecurityRequirement(name = "basicAuth")
+})
 public class ChallengeController {
 
     private final ChallengeService challengeService;
@@ -47,6 +60,14 @@ public class ChallengeController {
         this.cachingHabitProgressService = cachingHabitProgressService;
     }
 
+    @Operation(
+            summary = "Get challenge overview",
+            description = "Returns an overview of the current challenge including progress and status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved challenge overview"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("/overview")
     public ResponseEntity<ChallengeOverviewReadDTO> getCurrentChallengeOverview() {
         return ResponseEntity.ok(challengeService.getChallengeOverview(accountService.getCurrentAccount()));
@@ -61,13 +82,31 @@ public class ChallengeController {
      *
      * @return
      */
+    @Operation(
+            summary = "Get challenge list",
+            description = "Returns a list of all challenges. CREATED challenges are only visible to creators, PROPOSED challenges are visible to all."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved challenges"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("/list")
     public ResponseEntity<List<ChallengeReadDTO>> getChallengeList() {
         return ResponseEntity.ok(challengeService.getChallengeList(accountService.getCurrentAccount()));
     }
 
+    @Operation(
+            summary = "Get challenge by ID",
+            description = "Retrieves a specific challenge by its ID."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved challenge"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "404", description = "Challenge not found")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<ChallengeReadDTO> getChallengeById(@PathVariable Long id) {
+    public ResponseEntity<ChallengeReadDTO> getChallengeById(
+            @Parameter(description = "ID of the challenge") @PathVariable Long id) {
         Challenge challenge = challengeService.getChallengeById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found"));
         return ResponseEntity.ok(challengeService.getApiChallengeRead(challenge, accountService.getCurrentAccount()));
@@ -79,6 +118,15 @@ public class ChallengeController {
      * @param challenge The {@link ChallengeWriteDTO} object containing the details of the challenge to create.
      * @return A ResponseEntity containing the created {@link ChallengeReadDTO} object.
      */
+    @Operation(
+            summary = "Create a new challenge",
+            description = "Creates a new challenge in CREATED status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Successfully created challenge"),
+            @ApiResponse(responseCode = "400", description = "Invalid challenge data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @PostMapping
     public ResponseEntity<ChallengeReadDTO> createChallenge(@RequestBody ChallengeWriteDTO challenge) {
         ChallengeReadDTO createdChallenge =
@@ -92,6 +140,16 @@ public class ChallengeController {
      * @param challenge The {@link ChallengeWriteDTO} object containing the updated details of the challenge.
      * @return A ResponseEntity containing the updated {@link ChallengeReadDTO} object.
      */
+    @Operation(
+            summary = "Update a challenge",
+            description = "Updates an existing challenge. Only the creator can update and challenge must be in CREATED status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated challenge"),
+            @ApiResponse(responseCode = "400", description = "Invalid challenge data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only creator can update")
+    })
     @PutMapping
     public ResponseEntity<ChallengeReadDTO> updateChallenge(@RequestBody ChallengeWriteDTO challenge) {
         checkIfisAllowedToEdit(challengeService.getChallengeById(challenge.getChallengeId()).orElse(null),
@@ -108,8 +166,19 @@ public class ChallengeController {
      * @param id The ID of the challenge to delete.
      * @return A ResponseEntity indicating the result of the deletion operation.
      */
+    @Operation(
+            summary = "Delete a challenge",
+            description = "Deletes a challenge. Only the creator can delete and challenge must be in CREATED or PROPOSED status."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted challenge"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only creator can delete"),
+            @ApiResponse(responseCode = "404", description = "Challenge not found")
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteChallenge(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteChallenge(
+            @Parameter(description = "ID of the challenge") @PathVariable Long id) {
         checkIfisAllowedToDelete(challengeService.getChallengeById(id).orElse(null),
                 accountService.getCurrentAccount());
         boolean deleted = challengeService.deleteChallenge(id);
@@ -127,8 +196,18 @@ public class ChallengeController {
      * @param id The ID of the challenge to propose.
      * @return A ResponseEntity containing the proposed {@link ChallengeReadDTO} object.
      */
+    @Operation(
+            summary = "Propose a challenge",
+            description = "Changes a challenge from CREATED to PROPOSED status, making it visible for voting."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully proposed challenge"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - only creator can propose")
+    })
     @PostMapping("/{id}/propose")
-    public ResponseEntity<ChallengeReadDTO> proposeChallenge(@PathVariable Long id) {
+    public ResponseEntity<ChallengeReadDTO> proposeChallenge(
+            @Parameter(description = "ID of the challenge") @PathVariable Long id) {
         checkIfisAllowedToEdit(challengeService.getChallengeById(id).orElse(null), accountService.getCurrentAccount());
         ChallengeReadDTO proposedChallenge = challengeService.proposeChallenge(id, accountService.getCurrentAccount());
         return ResponseEntity.ok(proposedChallenge);
@@ -141,8 +220,19 @@ public class ChallengeController {
      * @param vote Boolean indicating the vote (true for upvote, false for downvote).
      * @return A ResponseEntity containing the updated {@link ChallengeReadDTO} object after voting.
      */
+    @Operation(
+            summary = "Vote on a challenge",
+            description = "Cast a vote on a proposed challenge. True for upvote, false for downvote."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully voted"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
+            @ApiResponse(responseCode = "404", description = "Challenge not found or not votable")
+    })
     @PostMapping("{id}/vote")
-    public ResponseEntity<ChallengeReadDTO> voteOnChallenge(@PathVariable Long id, @RequestParam Boolean vote) {
+    public ResponseEntity<ChallengeReadDTO> voteOnChallenge(
+            @Parameter(description = "ID of the challenge") @PathVariable Long id,
+            @Parameter(description = "Vote: true for upvote, false for downvote") @RequestParam Boolean vote) {
         Challenge votedChallenge = challengeService.getChallengeById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Challenge not found or not votable"));
         voteService.createOrUpdateVote(accountService.getCurrentAccount(), votedChallenge,
@@ -151,6 +241,14 @@ public class ChallengeController {
                 challengeService.getApiChallengeRead(votedChallenge, accountService.getCurrentAccount()));
     }
 
+    @Operation(
+            summary = "Get user's challenge habit",
+            description = "Returns the user's challenge habit, creating one if it doesn't exist."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved challenge habit"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
+    })
     @GetMapping("challenge-habit")
     public ResponseEntity<HabitReadDTO> getChallengeHabitForUser() {
         List<Habit> challengeHabits = habitService.getChallengeHabits(accountService.getCurrentAccount());
