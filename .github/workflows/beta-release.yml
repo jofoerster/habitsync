@@ -192,16 +192,23 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate changelog
+      - name: Extract changelog
         id: changelog
         run: |
-          # Get commits since last tag
-          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          if [ -n "$LATEST_TAG" ]; then
-            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
-          else
-            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
+          # Extract the [Unreleased] section from CHANGELOG.md for beta releases
+          CHANGELOG=$(awk '
+            BEGIN { found=0; content="" }
+            /^## \[Unreleased\]/ { found=1; next }
+            /^## \[/ { if (found) exit }
+            found && /^[^#]/ && !/^$/ && !/^<!--/ && !/^-->/ { content = content $0 "\n" }
+            found && /^###/ { content = content $0 "\n" }
+            END { print content }
+          ' CHANGELOG.md)
+          
+          if [ -z "$CHANGELOG" ]; then
+            CHANGELOG="No changelog entries yet."
           fi
+          
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT

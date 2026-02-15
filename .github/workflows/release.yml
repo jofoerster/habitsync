@@ -168,16 +168,29 @@ jobs:
           git tag -a "v${{ github.event.inputs.version }}" -m "Release v${{ github.event.inputs.version }}"
           git push origin "v${{ github.event.inputs.version }}"
 
-      - name: Generate changelog
+      - name: Extract changelog
         id: changelog
         run: |
-          # Find the last non-beta release tag
-          LATEST_TAG=$(git tag -l --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
-          if [ -n "$LATEST_TAG" ]; then
-            CHANGELOG=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
-          else
-            CHANGELOG=$(git log --oneline --pretty=format:"- %s" | grep -Ev "Merge pull request|Prepare release|android prebuild" | head -20)
+          VERSION="${{ github.event.inputs.version }}"
+          
+          # Extract changelog section for this version from CHANGELOG.md
+          CHANGELOG=$(awk -v ver="$VERSION" '
+            BEGIN { found=0; content="" }
+            /^## \[/ {
+              if (found) exit
+              if ($0 ~ "\\[" ver "\\]") { found=1; next }
+            }
+            found && /^[^#]/ { content = content $0 "\n" }
+            found && /^###/ { content = content $0 "\n" }
+            END { print content }
+          ' CHANGELOG.md)
+          
+          if [ -z "$CHANGELOG" ]; then
+            echo "ERROR: No changelog entry found for version $VERSION in CHANGELOG.md"
+            echo "Please add a changelog entry for version $VERSION before releasing."
+            exit 1
           fi
+          
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
