@@ -134,7 +134,7 @@ services:
       - BASE_URL=https://your-domain.com
       # Choose one or more of the following authentication methods:
       # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
-      # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback
+      # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback (FROM 0.19.0: habitsync://auth-callback)
       # more than one issuer can be configured
       # scopes: openid, profile, email
       # issues setting this up? -> create an issue on github
