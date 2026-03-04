@@ -166,7 +166,7 @@ export class OAuthService {
             scheme: 'habitsync',
             path: 'auth-callback',
             preferLocalhost: false,
-            isTripleSlashed: true,
+            isTripleSlashed: false,
         });
     }
 
