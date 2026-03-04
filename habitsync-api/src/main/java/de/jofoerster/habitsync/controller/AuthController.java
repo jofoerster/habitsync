@@ -1,6 +1,7 @@
 package de.jofoerster.habitsync.controller;
 
 import de.jofoerster.habitsync.dto.LoginOptionsDTO;
+import de.jofoerster.habitsync.dto.TokenExchangeRequestDTO;
 import de.jofoerster.habitsync.service.account.AccountService;
 import de.jofoerster.habitsync.service.auth.TokenService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -116,6 +117,33 @@ public class AuthController {
         }
 
         String userId = tokenService.getUserIdFromToken(refreshToken);
+        return tokenService.createTokenPair(userId);
+    }
+
+    @Operation(
+            summary = "Exchange external credentials for internal tokens",
+            description = "Exchanges an external OAuth access token or username/password credentials for internal access and refresh tokens. Provide either 'accessToken' OR both 'username' and 'password' in the request body."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully exchanged credentials for tokens"),
+            @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    @PostMapping("/token-exchange")
+    public Map<String, String> tokenExchange(@RequestBody TokenExchangeRequestDTO request) {
+        String userId = null;
+
+        if (request.getAccessToken() != null && !request.getAccessToken().isEmpty()) {
+            userId = tokenService.validateExternalTokenAndGetUserId(request.getAccessToken());
+        }
+
+        if (userId == null && request.getUsername() != null && request.getPassword() != null) {
+            userId = tokenService.validateUsernamePasswordAndGetUserId(request.getUsername(), request.getPassword());
+        }
+
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+
         return tokenService.createTokenPair(userId);
     }
 }

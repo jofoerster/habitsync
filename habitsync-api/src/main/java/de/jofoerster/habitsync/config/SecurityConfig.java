@@ -102,11 +102,7 @@ public class SecurityConfig {
     private AuthorizationDecision checkUserAccess(java.util.function.Supplier<Authentication> authSupplier,
                                                   RequestAuthorizationContext context) {
         Authentication auth = authSupplier.get();
-        List<String> allowedURIs = List.of("/api/user/refresh-token");
-        boolean granted = true;
-        if (!allowedURIs.contains(context.getRequest().getRequestURI())) {
-            granted = accountService.isUserAllowed(auth);
-        }
+        boolean granted = accountService.isUserAllowed(auth);
         return new AuthorizationDecision(granted);
     }
 

@@ -165,17 +165,4 @@ public class AccountController {
         apiKeyService.revokeApiKeys(accountService.getCurrentAccount());
         return ResponseEntity.ok().build();
     }
-
-    @Operation(
-            summary = "Get refresh token",
-            description = "Returns a new access and refresh token pair for the authenticated user."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved tokens"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required")
-    })
-    @GetMapping("/refresh-token")
-    public Map<String, String> refreshTokenGet() {
-        return tokenService.createTokenPair(accountService.getAuthenticationIdWithoutCreatingUser());
-    }
 }

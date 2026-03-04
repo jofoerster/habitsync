@@ -678,12 +678,14 @@ export const authApi = {
 
     getTokenPair: async (accessToken: string): Promise<JWTTokenPair> => {
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
+        const response = await fetch(`${baseUrl}/api/auth/token-exchange`, {
+            method: 'POST',
             headers: {
-                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
             },
+            body: JSON.stringify({ accessToken }),
         });
-        if (!response.ok) throw new Error('Failed to refresh token');
+        if (!response.ok) throw new Error('Failed to exchange token');
         return response.json();
     },
 
@@ -701,12 +703,13 @@ export const authApi = {
     },
 
     getTokenPairFromUsernamePassword: async (username: string, password: string): Promise<JWTTokenPair> => {
-        const credentials = btoa(`${username}:${password}`);
         const baseUrl = Platform.OS === 'web' ? BACKEND_BASE_URL : await getBackendBaseUrl();
-        const response = await fetch(`${baseUrl}/api/user/refresh-token`, {
+        const response = await fetch(`${baseUrl}/api/auth/token-exchange`, {
+            method: 'POST',
             headers: {
-                'Authorization': `Basic ${credentials}`,
-            }
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
         });
         if (!response.ok) throw new Error('Failed to authenticate with username and password');
         return response.json();
