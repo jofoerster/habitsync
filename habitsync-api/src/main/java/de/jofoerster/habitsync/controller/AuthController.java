@@ -117,7 +117,8 @@ public class AuthController {
         }
 
         String userId = tokenService.getUserIdFromToken(refreshToken);
-        return tokenService.createTokenPair(userId);
+        Map<String, String> claims = tokenService.getClaimsFromOwnToken(refreshToken);
+        return tokenService.createTokenPair(userId, claims);
     }
 
     @Operation(
@@ -131,9 +132,19 @@ public class AuthController {
     @PostMapping("/token-exchange")
     public Map<String, String> tokenExchange(@RequestBody TokenExchangeRequestDTO request) {
         String userId = null;
+        Map<String, String> additionalClaims = new HashMap<>();
 
         if (request.getAccessToken() != null && !request.getAccessToken().isEmpty()) {
-            userId = tokenService.validateExternalTokenAndGetUserId(request.getAccessToken());
+            Jwt externalJwt = tokenService.validateExternalToken(request.getAccessToken());
+            if (externalJwt != null) {
+                userId = externalJwt.getSubject();
+                String email = externalJwt.getClaimAsString("email");
+                String name = externalJwt.getClaimAsString("name");
+                String preferredUsername = externalJwt.getClaimAsString("preferred_username");
+                if (email != null) additionalClaims.put("email", email);
+                if (name != null) additionalClaims.put("name", name);
+                if (preferredUsername != null) additionalClaims.put("preferred_username", preferredUsername);
+            }
         }
 
         if (userId == null && request.getUsername() != null && request.getPassword() != null) {
@@ -144,6 +155,6 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
-        return tokenService.createTokenPair(userId);
+        return tokenService.createTokenPair(userId, additionalClaims);
     }
 }

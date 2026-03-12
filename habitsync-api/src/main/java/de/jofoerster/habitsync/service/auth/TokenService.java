@@ -44,8 +44,12 @@ public class TokenService {
     }
 
     public Map<String, String> createTokenPair(String userId) {
-        String accessToken = this.createToken(userId, "access", 15 * 60 * 1000);
-        String refreshToken = this.createToken(userId, "refresh", 30L * 24 * 60 * 60 * 1000);
+        return createTokenPair(userId, Map.of());
+    }
+
+    public Map<String, String> createTokenPair(String userId, Map<String, String> additionalClaims) {
+        String accessToken = this.createToken(userId, "access", 15 * 60 * 1000, additionalClaims);
+        String refreshToken = this.createToken(userId, "refresh", 30L * 24 * 60 * 60 * 1000, additionalClaims);
 
         return Map.of(
                 "accessToken", accessToken,
@@ -54,13 +58,23 @@ public class TokenService {
     }
 
     public String createToken(String userId, String type, long durationMs) {
-        return Jwts.builder()
+        return createToken(userId, type, durationMs, Map.of());
+    }
+
+    public String createToken(String userId, String type, long durationMs, Map<String, String> additionalClaims) {
+        var builder = Jwts.builder()
                 .subject(userId)
                 .issuer(baseUrl)
                 .expiration(new Date(System.currentTimeMillis() + durationMs))
-                .claim("type", type)
-                .signWith(secretKey)
-                .compact();
+                .claim("type", type);
+
+        additionalClaims.forEach((key, value) -> {
+            if (value != null && !value.isEmpty()) {
+                builder.claim(key, value);
+            }
+        });
+
+        return builder.signWith(secretKey).compact();
     }
 
     public boolean isOwnTokenValid(String token, String expectedType) {
@@ -89,6 +103,19 @@ public class TokenService {
         return claims.getPayload().getSubject();
     }
 
+    public Map<String, String> getClaimsFromOwnToken(String token) {
+        Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
+        Claims payload = claims.getPayload();
+        Map<String, String> result = new java.util.HashMap<>();
+        for (String key : List.of("email", "name", "preferred_username")) {
+            String value = payload.get(key, String.class);
+            if (value != null) {
+                result.put(key, value);
+            }
+        }
+        return result;
+    }
+
     public JwtDecoder getCustomJwtDecoder() {
         return NimbusJwtDecoder.withSecretKey(secretKey)
                 .macAlgorithm(MacAlgorithm.HS512)
@@ -111,11 +138,11 @@ public class TokenService {
     }
 
     /**
-     * Validates an external OAuth access token and extracts the user ID (subject).
+     * Validates an external OAuth access token and returns the decoded JWT.
      * @param accessToken The external OAuth access token
-     * @return The user ID (subject) from the token, or null if invalid
+     * @return The decoded JWT, or null if invalid
      */
-    public String validateExternalTokenAndGetUserId(String accessToken) {
+    public Jwt validateExternalToken(String accessToken) {
         if (accessToken == null || accessToken.isEmpty()) {
             return null;
         }
@@ -129,7 +156,7 @@ public class TokenService {
                 // Verify the issuer matches
                 String issuer = jwt.getIssuer() != null ? jwt.getIssuer().toString() : null;
                 if (issuer != null && securityProperties.getAllowedIssuers().contains(issuer)) {
-                    return jwt.getSubject();
+                    return jwt;
                 }
             } catch (JwtException e) {
                 // Token not valid for this issuer, try next
