@@ -107,7 +107,7 @@ public class TokenService {
         Jws<Claims> claims = Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token);
         Claims payload = claims.getPayload();
         Map<String, String> result = new java.util.HashMap<>();
-        for (String key : List.of("email", "name", "preferred_username")) {
+        for (String key : List.of("email", "name", "preferred_username", "original_issuer")) {
             String value = payload.get(key, String.class);
             if (value != null) {
                 result.put(key, value);
@@ -123,17 +123,31 @@ public class TokenService {
     }
 
     public boolean checkIfNeedsConfirmation(JwtAuthenticationToken jwtAuth) {
-        String issuer = jwtAuth.getToken().getIssuer() != null ? jwtAuth.getToken().getIssuer().toString() : null;
-        List issuerUrls = securityProperties.getIssuers().values().stream().map(SecurityProperties.IssuerConfig::getUrl).toList();
-        if (issuer == null || (!securityProperties.getIssuers().containsKey(issuer) && !issuerUrls.contains(issuer)) || issuer.equals(baseUrl)) {
+        String tokenIssuer = jwtAuth.getToken().getIssuer() != null ? jwtAuth.getToken().getIssuer().toString() : null;
+
+        String issuer;
+        if (tokenIssuer != null && tokenIssuer.equals(baseUrl)) {
+            String originalIssuer = jwtAuth.getToken().getClaimAsString("original_issuer");
+            if (originalIssuer != null && !originalIssuer.isEmpty()) {
+                issuer = originalIssuer;
+            } else {
+                return false;
+            }
+        } else {
+            issuer = tokenIssuer;
+        }
+
+        List<String> issuerUrls = securityProperties.getIssuers().values().stream()
+                .map(SecurityProperties.IssuerConfig::getUrl).toList();
+        if (issuer == null || (!issuerUrls.contains(issuer))) {
             return false;
         }
-        SecurityProperties.IssuerConfig config = securityProperties.getIssuers().get(issuer);
-        if (config != null) {
-            return config.isNeedsConfirmation();
-        } else {
-            config = securityProperties.getIssuers().values().stream().filter(i -> i.getUrl().equals(issuer)).findFirst().get();
-        }
+
+        SecurityProperties.IssuerConfig config = securityProperties.getIssuers().values().stream()
+                .filter(i -> i.getUrl().equals(issuer))
+                .findFirst()
+                .orElse(null);
+
         return config == null || config.isNeedsConfirmation();
     }
 
