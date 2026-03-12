@@ -158,10 +158,7 @@ const ActivityCalendar = ({
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         const firstDay = new Date(year, month, 1);
-        const isCurrentMonth = month === new Date().getMonth() && year === new Date().getFullYear();
-        const lastDay = isCurrentMonth ?
-            new Date() :
-            new Date(year, month + 1, 0);
+        const lastDay = new Date(year, month + 1, 0);
         const startDate = new Date(firstDay);
 
         const firstDayOfWeek = config?.firstDayOfWeek || 'MONDAY';
@@ -249,10 +246,9 @@ const ActivityCalendar = ({
                                         ]}
                                     />
                                 )}
-                                {day.record && !day.isInFuture && (
-                                    <Text style={styles.dayValue}>
-                                        {day.date.getDate()}
-                                    </Text>)}
+                                <Text style={[styles.dayValue, { opacity: day.isCurrentMonth ? 1 : 0.3 }]}>
+                                    {day.date.getDate()}
+                                </Text>
                             </View>
                         ))}
                     </View>
