@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,8 +31,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -77,22 +80,28 @@ public class SecurityConfig {
     }
 
     private JwtIssuerAuthenticationManagerResolver createAuthenticationManagerResolver() {
-        Map<String, JwtDecoder> jwtDecoders = securityProperties.getIssuers().entrySet().stream()
-                .collect(Collectors.toMap(
-                        entry -> entry.getValue().getUrl(),
-                        entry -> JwtDecoders.fromIssuerLocation(entry.getValue().getUrl())
-                ));
+        Map<String, AuthenticationManager> authenticationManagers = new ConcurrentHashMap<>();
 
         String customIssuer = baseUrl;
         JwtDecoder customJwtDecoder = tokenService.getCustomJwtDecoder();
-        jwtDecoders.put(customIssuer, customJwtDecoder);
+        authenticationManagers.put(customIssuer, new JwtAuthenticationProvider(customJwtDecoder)::authenticate);
+
+        Set<String> allowedIssuers = securityProperties.getIssuers().values().stream()
+                .map(SecurityProperties.IssuerConfig::getUrl)
+                .collect(Collectors.toSet());
 
         return new JwtIssuerAuthenticationManagerResolver(
                 issuer -> {
-                    JwtDecoder decoder = jwtDecoders.get(issuer);
-                    if (decoder != null) {
-                        JwtAuthenticationProvider provider = new JwtAuthenticationProvider(decoder);
-                        return provider::authenticate;
+                    if (customIssuer.equals(issuer) || allowedIssuers.contains(issuer)) {
+                        return authenticationManagers.computeIfAbsent(issuer, key -> {
+                            try {
+                                JwtDecoder decoder = JwtDecoders.fromIssuerLocation(key);
+                                JwtAuthenticationProvider provider = new JwtAuthenticationProvider(decoder);
+                                return provider::authenticate;
+                            } catch (Exception e) {
+                                throw new AuthenticationServiceException("Unable to resolve issuer: " + key, e);
+                            }
+                        });
                     }
                     return null;
                 }
