@@ -105,20 +105,7 @@ public class AccountService {
                 .getAuthentication();
 
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            Jwt jwt = jwtAuth.getToken();
-            String name = jwt.getClaimAsString("name");
-            String preferredUsername = jwt.getClaimAsString("preferred_username");
-            String email = jwt.getClaimAsString("email");
-
-            if (name != null && !name.trim().isEmpty()) {
-                return name;
-            } else if (preferredUsername != null && !preferredUsername.trim().isEmpty()) {
-                return preferredUsername;
-            } else if (email != null && !email.trim().isEmpty()) {
-                return email;
-            } else {
-                return jwt.getSubject();
-            }
+            return usernameFromJwt(jwtAuth.getToken());
         }
 
         return authentication.getName();
@@ -129,32 +116,49 @@ public class AccountService {
                 .getAuthentication();
 
         if (authentication instanceof JwtAuthenticationToken jwtAuth) {
-            Jwt jwt = jwtAuth.getToken();
-            return jwt.getClaimAsString("email");
+            return emailFromJwt(jwtAuth.getToken());
         }
 
-        // For username/password authentication, we might not have email in the token
-        // This could be enhanced to fetch from user details or database
         return "";
     }
 
     private Account createAccount(JwtAuthenticationToken jwtAuth) {
-        return createAccount(tokenService.checkIfNeedsConfirmation(jwtAuth));
+        Jwt jwt = jwtAuth.getToken();
+        boolean needsConfirmation = tokenService.checkIfNeedsConfirmation(jwtAuth);
+        return createAccount(jwt.getSubject(), usernameFromJwt(jwt), emailFromJwt(jwt), needsConfirmation);
     }
 
     private Account createAccount() {
-        return createAccount(true);
+        return createAccount(getCurrentAccountId(), getCurrentAccountUsername(), getEmail(), true);
     }
 
-    private Account createAccount(boolean needsConfirmation) {
-        log.info("Creating account {}", getCurrentAccountUsername());
+    private Account createAccount(String authenticationId, String username, String email, boolean needsConfirmation) {
+        log.info("Creating account {}", username);
         Account account = new Account();
-        account.setAuthenticationId(getCurrentAccountId());
-        account.setUserName(getCurrentAccountUsername());
-        account.setDisplayName(getCurrentAccountUsername());
-        account.setEmail(getEmail());
+        account.setAuthenticationId(authenticationId);
+        account.setUserName(username);
+        account.setDisplayName(username);
+        account.setEmail(email);
         account.setAccountStatus(needsConfirmation ? AccountStatus.AWAITING_APPROVAL : AccountStatus.ACTIVE);
         return updateAccount(account);
+    }
+
+    private static String usernameFromJwt(Jwt jwt) {
+        String name = jwt.getClaimAsString("name");
+        if (name != null && !name.trim().isEmpty()) return name;
+
+        String preferredUsername = jwt.getClaimAsString("preferred_username");
+        if (preferredUsername != null && !preferredUsername.trim().isEmpty()) return preferredUsername;
+
+        String email = jwt.getClaimAsString("email");
+        if (email != null && !email.trim().isEmpty()) return email;
+
+        return jwt.getSubject();
+    }
+
+    private static String emailFromJwt(Jwt jwt) {
+        String email = jwt.getClaimAsString("email");
+        return email != null ? email : "";
     }
 
     public Account updateAccount(Account account) {

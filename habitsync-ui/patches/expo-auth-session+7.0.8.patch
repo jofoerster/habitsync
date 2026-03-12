@@ -1,0 +1,28 @@
+diff --git a/node_modules/expo-auth-session/build/Fetch.js b/node_modules/expo-auth-session/build/Fetch.js
+index 783e03d..dfd3cbb 100644
+--- a/node_modules/expo-auth-session/build/Fetch.js
++++ b/node_modules/expo-auth-session/build/Fetch.js
+@@ -29,8 +29,7 @@ export async function requestAsync(requestUrl, fetchRequest) {
+         // NOTE: Github authentication will return XML if this includes the standard `*/*`
+         headers['Accept'] = 'application/json, text/javascript; q=0.01';
+     }
+-    // Fix a problem with React Native `URL` causing a trailing slash to be added.
+-    const correctedUrl = url.toString().replace(/\/$/, '');
++    const correctedUrl = url;
+     const response = await fetch(correctedUrl, request);
+     const contentType = response.headers.get('content-type');
+     if (isJsonDataType || contentType?.includes('application/json')) {
+diff --git a/node_modules/expo-auth-session/src/Fetch.ts b/node_modules/expo-auth-session/src/Fetch.ts
+index cff1ca1..a71141a 100644
+--- a/node_modules/expo-auth-session/src/Fetch.ts
++++ b/node_modules/expo-auth-session/src/Fetch.ts
+@@ -47,8 +47,7 @@ export async function requestAsync<T>(requestUrl: string, fetchRequest: FetchReq
+     headers['Accept'] = 'application/json, text/javascript; q=0.01';
+   }
+ 
+-  // Fix a problem with React Native `URL` causing a trailing slash to be added.
+-  const correctedUrl = url.toString().replace(/\/$/, '');
++  const correctedUrl = url;
+ 
+   const response = await fetch(correctedUrl, request);
+ 
