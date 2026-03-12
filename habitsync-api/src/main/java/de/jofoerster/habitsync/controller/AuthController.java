@@ -141,9 +141,11 @@ public class AuthController {
                 String email = externalJwt.getClaimAsString("email");
                 String name = externalJwt.getClaimAsString("name");
                 String preferredUsername = externalJwt.getClaimAsString("preferred_username");
+                String originalIssuer = externalJwt.getIssuer() != null ? externalJwt.getIssuer().toString() : null;
                 if (email != null) additionalClaims.put("email", email);
                 if (name != null) additionalClaims.put("name", name);
                 if (preferredUsername != null) additionalClaims.put("preferred_username", preferredUsername);
+                if (originalIssuer != null) additionalClaims.put("original_issuer", originalIssuer);
             }
         }
 
