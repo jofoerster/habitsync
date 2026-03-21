@@ -4,7 +4,7 @@ import {Picker} from '@react-native-picker/picker';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {FixedTimeNotificationConfigRule, NotificationConfig} from "@/services/api";
-import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime} from "@/services/timezone";
+import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime, shiftWeekdays} from "@/services/timezone";
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
@@ -45,7 +45,7 @@ const FrequencyPicker: React.FC<Props> = ({
             setHour(localTime.hour);
             setMinute(localTime.minute);
             if (notificationConfigRule.frequency === 'weekly' && notificationConfigRule.weekdays) {
-                setWeekdays(notificationConfigRule.weekdays);
+                setWeekdays(shiftWeekdays(notificationConfigRule.weekdays, localTime.dayOffset));
             } else {
                 setWeekdays([]);
             }
@@ -55,7 +55,8 @@ const FrequencyPicker: React.FC<Props> = ({
     useEffect(() => {
         const utcTime = convertLocalTimeToUTC(hour, minute);
         const time = formatTime(utcTime.hour, utcTime.minute);
-        onChange?.({frequency, weekdays, time});
+        const utcWeekdays = shiftWeekdays(weekdays, utcTime.dayOffset);
+        onChange?.({frequency, weekdays: utcWeekdays, time});
     }, [frequency, weekdays, hour, minute, onChange]);
 
     return (
