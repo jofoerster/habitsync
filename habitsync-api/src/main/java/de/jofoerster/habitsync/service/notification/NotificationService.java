@@ -197,7 +197,12 @@ public class NotificationService {
     }
 
     private void scheduleAllNotificationJobsForHabit(Habit habit) {
-        List<NotificationConfigRuleDTO> fixedTimeRules = habitService.getFixedTimeNotificationRules(habit);
+        List<NotificationConfigRuleDTO> fixedTimeRules = habitService.getFixedTimeNotificationRules(habit)
+                .stream().filter(NotificationConfigRuleDTO::isEnabled).toList();
+        if (fixedTimeRules.isEmpty()) {
+            schedulingService.removeNotificationJob(habit.getUuid());
+            return;
+        }
         fixedTimeRules.forEach(rule ->
                 schedulingService.scheduleNotificationJob(habit.getUuid(), rule));
     }

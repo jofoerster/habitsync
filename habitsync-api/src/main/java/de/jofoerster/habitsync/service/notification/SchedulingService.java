@@ -1,10 +1,11 @@
 package de.jofoerster.habitsync.service.notification;
 
-import de.jofoerster.habitsync.dto.NotificationConfigDTO;
 import de.jofoerster.habitsync.dto.NotificationConfigRuleDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
+
+import java.util.Set;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -20,30 +21,19 @@ public class SchedulingService {
         TriggerKey triggerKey =
                 TriggerKey.triggerKey("notifyTrigger_" + id, "notifications");
         try {
-            if (scheduler.checkExists(jobKey)) {
-                log.debug("Job {} already exists", jobKey);
-                Trigger newTrigger = TriggerBuilder.newTrigger()
-                        .withIdentity(triggerKey)
-                        .withSchedule(getScheduleFromFrequency(notificationRuleConfig))
-                        .forJob(jobKey)
-                        .build();
+            JobDetail jobDetail = JobBuilder.newJob(PushNotificationJob.class)
+                    .withIdentity(jobKey)
+                    .usingJobData("jobId", id)
+                    .build();
 
-                scheduler.rescheduleJob(triggerKey, newTrigger);
-            } else {
-                log.debug("Job {} does not exist, creating new", jobKey);
-                JobDetail jobDetail = JobBuilder.newJob(PushNotificationJob.class)
-                        .withIdentity(jobKey)
-                        .usingJobData("jobId", id)
-                        .build();
+            Trigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey)
+                    .withSchedule(getScheduleFromFrequency(notificationRuleConfig))
+                    .forJob(jobDetail)
+                    .build();
 
-                Trigger trigger = TriggerBuilder.newTrigger()
-                        .withIdentity(triggerKey)
-                        .withSchedule(getScheduleFromFrequency(notificationRuleConfig))
-                        .forJob(jobDetail)
-                        .build();
-
-                scheduler.scheduleJob(jobDetail, trigger);
-            }
+            scheduler.scheduleJob(jobDetail, Set.of(trigger), true);
+            log.debug("Scheduled notification job {} (replaced if existing)", jobKey);
         } catch (SchedulerException e) {
             log.error("Failed to schedule notification job for habit {}", id, e);
         }
