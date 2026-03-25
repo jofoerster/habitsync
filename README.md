@@ -9,7 +9,7 @@
 </div>
 
 > [!WARNING]
-> **Breaking Change in v0.17.0**: The Docker user configuration has changed. Instead of specifying the user directly in `docker run` or `docker-compose.yml`, you now need to use the `PUID` and `PGID` environment variables. See the [Docker Compose](#docker-compose-recommended-for-production-use) section for details.
+> **Breaking Change in v0.19.0**: The redirect URI scheme for mobile OIDC providers has changed from a triple slash to a double slash. See the [Docker Compose](#docker-compose-recommended-for-production-use) section for details.
 
 <p align="center">
     <a href="https://github.com/jofoerster/habitsync/actions/workflows/release.yml">
@@ -134,7 +134,7 @@ services:
       - BASE_URL=https://your-domain.com
       # Choose one or more of the following authentication methods:
       # OIDC Issuers (tested with Authelia, Google), use public client settings (PKCE flow), 
-      # set BASE_URL/auth-callback as redirect, for mobile: habitsync:///auth-callback (FROM 0.19.0: habitsync://auth-callback)
+      # set BASE_URL/auth-callback as redirect, for mobile: habitsync://auth-callback (until 0.18.x: habitsync:///auth-callback)
       # more than one issuer can be configured
       # scopes: openid, profile, email
       # issues setting this up? -> create an issue on github
