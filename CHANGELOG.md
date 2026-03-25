@@ -15,7 +15,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-## [0.18.2] - 2025-02-15
+## [0.19.0] - 2026-03-25
+
+### Changed
+
+- BREAKING CHANGE: Use the default redirect URL (without triple slash) for OIDC login.
+
+### Fixed
+
+- Fix timezone issues with notifications with weekday filters
+- Fix issues when changing notifications settings
+- Calendar view: display of dates in the future
+- Some issues with authentication, user approval
+- Issues retrieving user info from oidc provider
+
+### Removed
+
+## [0.18.2] - 2026-02-15
 
 ### Added
 
