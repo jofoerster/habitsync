@@ -176,14 +176,16 @@ const createStyles = createThemedStyles((theme) => StyleSheet.create({
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'center',
+        justifyContent: Platform.OS === 'web' ? 'flex-start' : 'center',
         alignItems: 'center',
         padding: 20,
+        paddingTop: Platform.OS === 'web' ? 40 : 20,
+        overflow: 'scroll',
     },
     modalContainer: {
         width: '100%',
         maxWidth: 400,
-        maxHeight: '80%',
+        ...(Platform.OS === 'web' ? {} : {maxHeight: '80%'}),
     },
     modalContent: {
         backgroundColor: theme.background,
