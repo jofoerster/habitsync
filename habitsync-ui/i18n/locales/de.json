@@ -247,7 +247,8 @@
     "by": "von {{name}}",
     "challenge": "Challenge",
     "customFrequency": "Benutzerdefinierte Häufigkeit",
-    "daily": "Täglich",
+    "dailyGoal": "Tägliches Ziel",
+    "dailyMax": "Tägliches Max",
     "deleteFailed": "Gewohnheit konnte nicht gelöscht werden",
     "detailsNotAvailable": "Gewohnheitsdetails nicht verfügbar",
     "editForAll": "Für alle bearbeiten",
@@ -259,14 +260,16 @@
     "leaveTitle": "Geteilte Gewohnheit verlassen",
     "loadFailed": "Gewohnheit konnte nicht geladen werden",
     "max": "Max",
-    "monthly": "Monatlich",
+    "monthlyGoal": "Monatliches Ziel",
+    "monthlyMax": "Monatliches Max",
     "percentageOfLastDays": "Prozentsatz der letzten {{count}} Tage",
     "progressOverview": "Fortschrittsübersicht",
     "sharedHabits": "Geteilte Gewohnheiten",
     "timesPerMonth": "{{count}} mal pro Monat",
     "timesPerWeek": "{{count}} mal pro Woche",
     "timesPerXDays": "{{count}} mal pro {{days}} Tage",
-    "weekly": "Wöchentlich"
+    "weeklyGoal": "Wöchentliches Ziel",
+    "weeklyMax": "Wöchentliches Max"
   },
   "habitEdit": {
     "loadingHabit": "Gewohnheit wird geladen...",

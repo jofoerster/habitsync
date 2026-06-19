@@ -148,22 +148,30 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
-        return getFrequencyTypeTextType(progressComputation) + (progressComputation.isNegative ? " " + t('habitDetail.max') : " " + t('habitDetail.goal'));
+        // Build the label from a complete per-combination key (e.g. "weeklyGoal")
+        // rather than concatenating words, so each language keeps correct grammar
+        // (German needs the inflected adjective: "Wöchentliches Ziel", not "Wöchentlich Ziel").
+        const period = getFrequencyPeriod(progressComputation);
+        if (!period) {
+            return progressComputation.isNegative ? t('habitDetail.max') : t('habitDetail.goal');
+        }
+        const suffix = progressComputation.isNegative ? 'Max' : 'Goal';
+        return t(`habitDetail.${period}${suffix}`);
     }
 
-    const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
+    const getFrequencyPeriod = (progressComputation: ApiComputationReadWrite): 'daily' | 'weekly' | 'monthly' | null => {
         if (progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
             (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1) ||
             (progressComputation.frequency !== 0 && progressComputation.isNegative)) {
-            return t('habitDetail.daily');
+            return 'daily';
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
-            return t('habitDetail.weekly');
+            return 'weekly';
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
-            return t('habitDetail.monthly');
+            return 'monthly';
         }
-        return "";
+        return null;
     }
 
     const handleDeleteHabit = () => {

@@ -247,7 +247,8 @@
     "by": "by {{name}}",
     "challenge": "Challenge",
     "customFrequency": "Custom frequency",
-    "daily": "Daily",
+    "dailyGoal": "Daily Goal",
+    "dailyMax": "Daily Max",
     "deleteFailed": "Failed to delete habit",
     "detailsNotAvailable": "Habit details not available",
     "editForAll": "Edit for all",
@@ -259,14 +260,16 @@
     "leaveTitle": "Leave Shared Habit",
     "loadFailed": "Failed to load habit details",
     "max": "Max",
-    "monthly": "Monthly",
+    "monthlyGoal": "Monthly Goal",
+    "monthlyMax": "Monthly Max",
     "percentageOfLastDays": "Percentage of last {{count}} days",
     "progressOverview": "Progress Overview",
     "sharedHabits": "Shared Habits",
     "timesPerMonth": "{{count}} times per month",
     "timesPerWeek": "{{count}} times per week",
     "timesPerXDays": "{{count}} times per {{days}} days",
-    "weekly": "Weekly"
+    "weeklyGoal": "Weekly Goal",
+    "weeklyMax": "Weekly Max"
   },
   "habitEdit": {
     "loadingHabit": "Loading habit...",
