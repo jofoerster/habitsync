@@ -3,6 +3,7 @@ import HabitGroup from '@/components/HabitGroup';
 import React, {useMemo, useState} from 'react';
 import {Animated, FlatList, Linking, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Link, useRouter} from 'expo-router';
+import {useTranslation} from 'react-i18next';
 import {LinearGradient} from "expo-linear-gradient";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import alert from "@/services/alert";
@@ -57,6 +58,7 @@ const HabitTrackerScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
     const router = useRouter();
+    const {t} = useTranslation();
 
     const {data: habits = [], isLoading: loading} = useHabitUuids();
 
@@ -168,7 +170,7 @@ const HabitTrackerScreen = () => {
                 after
             });
         } catch (_error) {
-            alert('Error', 'Failed to move habit up');
+            alert(t('common.error'), t('habits.moveHabitUpError'));
         }
     };
 
@@ -200,7 +202,7 @@ const HabitTrackerScreen = () => {
                 after
             });
         } catch (_error) {
-            alert('Error', 'Failed to move habit down');
+            alert(t('common.error'), t('habits.moveHabitDownError'));
         }
     };
 
@@ -232,7 +234,7 @@ const HabitTrackerScreen = () => {
                 after
             });
         } catch (_error) {
-            alert('Error', 'Failed to move group up');
+            alert(t('common.error'), t('habits.moveGroupUpError'));
         }
     };
 
@@ -264,7 +266,7 @@ const HabitTrackerScreen = () => {
                 after
             });
         } catch (_error) {
-            alert('Error', 'Failed to move group down');
+            alert(t('common.error'), t('habits.moveGroupDownError'));
         }
     };
 
@@ -350,13 +352,13 @@ const HabitTrackerScreen = () => {
             <DateHeader/>
             {loading ? (
                 <View style={styles.emptyState}>
-                    <Text style={styles.emptyStateText}>Loading your habits...</Text>
+                    <Text style={styles.emptyStateText}>{t('habits.loading')}</Text>
                 </View>
             ) : habits.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="target" size={64} color="#ccc"/>
-                    <Text style={styles.emptyStateText}>No habits yet</Text>
-                    <Text style={styles.emptyStateSubText}>Start building your first habit!</Text>
+                    <Text style={styles.emptyStateText}>{t('habits.noHabitsYet')}</Text>
+                    <Text style={styles.emptyStateSubText}>{t('habits.startBuilding')}</Text>
                 </View>
             ) : (
                 <FlatList

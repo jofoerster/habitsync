@@ -10,9 +10,11 @@ import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {needsHostnameConfiguration} from "@/public/config";
+import {useTranslation} from 'react-i18next';
 
 
 const LoginScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -63,9 +65,9 @@ const LoginScreen = () => {
         } catch (error) {
             console.error('Failed to fetch login methods:', error);
             alert(
-                'Error',
-                'Failed to load login options. Please try again.',
-                [{text: 'OK'}]
+                t('common.error'),
+                t('login.failedToLoadOptions'),
+                [{text: t('common.ok')}]
             );
         } finally {
             setLoadingMethods(false);
@@ -79,9 +81,9 @@ const LoginScreen = () => {
         } catch (error) {
             console.error('OAuth2 login failed:', error);
             alert(
-                'Login Failed',
-                'Unable to complete login. Please try again.',
-                [{text: 'OK'}]
+                t('login.loginFailedTitle'),
+                t('login.unableToComplete'),
+                [{text: t('common.ok')}]
             );
         }
     };
@@ -93,9 +95,9 @@ const LoginScreen = () => {
         } catch (error) {
             console.error('Username/password login failed:', error);
             alert(
-                'Login Failed',
-                'Invalid username or password. Please try again.',
-                [{text: 'OK'}]
+                t('login.loginFailedTitle'),
+                t('login.invalidCredentials'),
+                [{text: t('common.ok')}]
             );
         }
     };
@@ -136,7 +138,7 @@ const LoginScreen = () => {
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#2196F3"/>
                     <Text style={styles.loadingText}>
-                        {checkingHostname ? 'Checking configuration...' : 'Loading login options...'}
+                        {checkingHostname ? t('login.checkingConfiguration') : t('login.loadingOptions')}
                     </Text>
                 </View>
             </View>
@@ -157,7 +159,7 @@ const LoginScreen = () => {
             </View>
 
             <View style={styles.titleContainer}>
-                <Text style={styles.title}>Track and share your habits</Text>
+                <Text style={styles.title}>{t('login.tagline')}</Text>
             </View>
 
             {loginMethods?.loginScreenText && loginMethods?.loginScreenText !== "" && (
@@ -176,9 +178,9 @@ const LoginScreen = () => {
             {isMaintenanceMode ? (
                 <View style={styles.maintenanceContainer}>
                     <MaterialCommunityIcons name="wrench" size={48} color="#ff9800"/>
-                    <Text style={styles.maintenanceTitle}>Server not available</Text>
+                    <Text style={styles.maintenanceTitle}>{t('login.serverNotAvailable')}</Text>
                     <Text style={styles.maintenanceText}>
-                        Login is currently unavailable. Please try again later.
+                        {t('login.loginUnavailable')}
                     </Text>
                 </View>
             ) : (
@@ -186,7 +188,7 @@ const LoginScreen = () => {
                     {/* OAuth2 Providers */}
                     {hasOAuth2Providers && (
                         <View style={styles.providersContainer}>
-                            <Text style={styles.sectionTitle}>Sign in with:</Text>
+                            <Text style={styles.sectionTitle}>{t('login.signInWith')}</Text>
                             {loginMethods?.supportedIssuers.map((provider) => (
                                 <TouchableOpacity
                                     key={provider.name}
@@ -208,7 +210,7 @@ const LoginScreen = () => {
                                                 color="#fff"
                                             />
                                             <Text style={styles.providerButtonText}>
-                                                Continue with {capitalizeFirstLetter(provider.name)}
+                                                {t('login.continueWith', {provider: capitalizeFirstLetter(provider.name)})}
                                             </Text>
                                         </>
                                     )}
@@ -223,7 +225,7 @@ const LoginScreen = () => {
                             {loginMethods.oauth2Providers && loginMethods.oauth2Providers.length > 0 && (
                                 <View style={styles.divider}>
                                     <View style={styles.dividerLine}/>
-                                    <Text style={styles.dividerText}>or</Text>
+                                    <Text style={styles.dividerText}>{t('login.or')}</Text>
                                     <View style={styles.dividerLine}/>
                                 </View>
                             )}
@@ -237,7 +239,7 @@ const LoginScreen = () => {
                                 ) : (
                                     <>
                                         <MaterialCommunityIcons name="login" size={20} color="#fff"/>
-                                        <Text style={styles.loginButtonText}>Sign In with Username</Text>
+                                        <Text style={styles.loginButtonText}>{t('login.signInWithUsername')}</Text>
                                     </>
                                 )}
                             </TouchableOpacity>
@@ -248,8 +250,7 @@ const LoginScreen = () => {
 
             <View style={styles.infoContainer}>
                 <Text style={styles.infoText}>
-                    If no login options are available,
-                    refresh the page.
+                    {t('login.noOptionsHint')}
                 </Text>
             </View>
 
@@ -257,7 +258,7 @@ const LoginScreen = () => {
                 <View style={styles.hostnameContainer}>
                     <TouchableOpacity onPress={handleChangeHostname} style={styles.hostnameButton}>
                         <MaterialCommunityIcons name="server-network" size={16} color={theme.primary} />
-                        <Text style={styles.hostnameButtonText}>Change Hostname</Text>
+                        <Text style={styles.hostnameButtonText}>{t('login.changeHostname')}</Text>
                     </TouchableOpacity>
                 </View>
             )}

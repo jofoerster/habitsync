@@ -1,4 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from 'react-native';
 import {ApiChallengeRead, ApiChallengeWrite, ApiHabitRead} from '@/services/api';
 import {MaterialCommunityIcons} from "@expo/vector-icons";
@@ -16,6 +17,7 @@ import {
 } from "@/hooks/useChallenges";
 
 const EditChallengeScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -50,11 +52,11 @@ const EditChallengeScreen = () => {
 
     const validateForm = (): boolean => {
         if (!title.trim()) {
-            alert('Validation Error', 'Please enter a challenge title');
+            alert(t('challengeEdit.validation.title'), t('challengeEdit.validation.titleRequired'));
             return false;
         }
         if (!description.trim()) {
-            alert('Validation Error', 'Please enter a challenge description');
+            alert(t('challengeEdit.validation.title'), t('challengeEdit.validation.descriptionRequired'));
             return false;
         }
         return true;
@@ -90,7 +92,7 @@ const EditChallengeScreen = () => {
             }
         } catch (error) {
             console.error('Error saving challenge:', error);
-            alert('Error', isNewChallenge ? 'Failed to create challenge' : 'Failed to update challenge');
+            alert(t('common.error'), isNewChallenge ? t('challengeEdit.errors.createFailed') : t('challengeEdit.errors.updateFailed'));
         } finally {
             setSaving(false);
         }
@@ -102,11 +104,11 @@ const EditChallengeScreen = () => {
         try {
             setSaving(true);
             await proposeChallengeMutation.mutateAsync(challenge.id);
-            alert('Success', 'Challenge proposed successfully!');
+            alert(t('common.success'), t('challengeEdit.proposeSuccess'));
             router.push("/challenges");
         } catch (error) {
             console.error('Error proposing challenge:', error);
-            alert('Error', 'Failed to propose challenge');
+            alert(t('common.error'), t('challengeEdit.errors.proposeFailed'));
         } finally {
             setSaving(false);
         }
@@ -116,25 +118,25 @@ const EditChallengeScreen = () => {
         if (!challenge) return;
 
         alert(
-            'Delete Challenge',
-            'Are you sure you want to delete this challenge? This action cannot be undone.',
+            t('challengeEdit.deleteDialog.title'),
+            t('challengeEdit.deleteDialog.message'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Delete',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
                             setSaving(true);
                             await deleteChallengeMutation.mutateAsync(challenge.id);
-                            alert('Success', 'Challenge deleted successfully!');
+                            alert(t('common.success'), t('challengeEdit.deleteSuccess'));
                             router.push("/challenges");
                         } catch (error) {
                             console.error('Error deleting challenge:', error);
-                            alert('Error', 'Failed to delete challenge');
+                            alert(t('common.error'), t('challengeEdit.errors.deleteFailed'));
                         } finally {
                             setSaving(false);
                         }
@@ -159,7 +161,7 @@ const EditChallengeScreen = () => {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#2196F3"/>
-                <Text style={styles.loadingText}>Loading challenge...</Text>
+                <Text style={styles.loadingText}>{t('challengeEdit.loading')}</Text>
             </View>
         );
     }
@@ -178,10 +180,10 @@ const EditChallengeScreen = () => {
                     </View>
                     <View style={styles.headerText}>
                         <Text style={styles.headerTitle}>
-                            {isNewChallenge ? 'Create Challenge' : 'Edit Challenge'}
+                            {isNewChallenge ? t('challengeEdit.header.createTitle') : t('challengeEdit.header.editTitle')}
                         </Text>
                         <Text style={styles.headerSubtitle}>
-                            {isNewChallenge ? 'Design a new challenge' : 'Modify challenge details'}
+                            {isNewChallenge ? t('challengeEdit.header.createSubtitle') : t('challengeEdit.header.editSubtitle')}
                         </Text>
                     </View>
                 </View>
@@ -189,24 +191,24 @@ const EditChallengeScreen = () => {
 
             {/* Title Section */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Challenge Title</Text>
+                <Text style={styles.sectionTitle}>{t('challengeEdit.titleLabel')}</Text>
                 <TextInput
                     style={styles.titleInput}
                     value={title}
                     onChangeText={setTitle}
-                    placeholder="Enter challenge title..."
+                    placeholder={t('challengeEdit.titlePlaceholder')}
                     placeholderTextColor="#999"
                 />
             </View>
 
             {/* Description Section */}
             <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Description</Text>
+                <Text style={styles.sectionTitle}>{t('challengeEdit.descriptionLabel')}</Text>
                 <TextInput
                     style={styles.descriptionInput}
                     value={description}
                     onChangeText={setDescription}
-                    placeholder="Describe your challenge..."
+                    placeholder={t('challengeEdit.descriptionPlaceholder')}
                     placeholderTextColor="#999"
                     multiline
                     textAlignVertical="top"
@@ -234,7 +236,7 @@ const EditChallengeScreen = () => {
                         color="#FFFFFF"
                     />
                     <Text style={styles.primaryButtonText}>
-                        {saving ? 'Saving...' : 'Save'}
+                        {saving ? t('challengeEdit.saving') : t('common.save')}
                     </Text>
                 </TouchableOpacity>
 
@@ -250,7 +252,7 @@ const EditChallengeScreen = () => {
                             color="#FFFFFF"
                         />
                         <Text style={styles.primaryButtonText}>
-                            {saving ? 'Proposing...' : 'Propose'}
+                            {saving ? t('challengeEdit.proposing') : t('challengeEdit.propose')}
                         </Text>
                     </TouchableOpacity>
                 )}
@@ -267,7 +269,7 @@ const EditChallengeScreen = () => {
                             color="#FFFFFF"
                         />
                         <Text style={styles.primaryButtonText}>
-                            Delete
+                            {t('common.delete')}
                         </Text>
                     </TouchableOpacity>
                 )}

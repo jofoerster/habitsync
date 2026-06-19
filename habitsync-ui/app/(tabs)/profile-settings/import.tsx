@@ -1,4 +1,5 @@
 import React, {useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {
     ActivityIndicator,
     ScrollView,
@@ -15,6 +16,7 @@ import {createThemedStyles} from '@/constants/styles';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 
 const ImportScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -35,7 +37,7 @@ const ImportScreen = () => {
             input.click();
         } else {
             // Mobile - would need expo-document-picker or similar
-            alert('Info', 'File upload is currently only supported on web');
+            alert(t('import.infoTitle'), t('import.webOnly'));
         }
     };
 
@@ -43,10 +45,10 @@ const ImportScreen = () => {
         try {
             setUploading(true);
             await importApi.importLoopHabit(file);
-            alert('Success', 'Habits imported successfully.');
+            alert(t('common.success'), t('import.importSuccess'));
         } catch (error) {
             console.error('Failed to upload file', error);
-            alert('Error', 'Failed to upload file. Please make sure it\'s a valid Loop Habit Tracker backup file.');
+            alert(t('common.error'), t('import.uploadFailed'));
         } finally {
             setUploading(false);
         }
@@ -55,8 +57,8 @@ const ImportScreen = () => {
     return (
         <View style={styles.container}>
             <View>
-                <Text style={styles.header}>Import Data</Text>
-                <Text style={styles.subHeader}>Import your habits from other apps</Text>
+                <Text style={styles.header}>{t('import.title')}</Text>
+                <Text style={styles.subHeader}>{t('import.subtitle')}</Text>
             </View>
 
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
@@ -73,42 +75,42 @@ const ImportScreen = () => {
                     </View>
 
                     <View style={styles.instructionsContainer}>
-                        <Text style={styles.instructionsTitle}>How to export from Loop Habit Tracker:</Text>
+                        <Text style={styles.instructionsTitle}>{t('import.howToExport')}</Text>
                         <View style={styles.instructionStep}>
                             <Text style={styles.stepNumber}>1.</Text>
-                            <Text style={styles.stepText}>Open Loop Habit Tracker on your device</Text>
+                            <Text style={styles.stepText}>{t('import.step1')}</Text>
                         </View>
                         <View style={styles.instructionStep}>
                             <Text style={styles.stepNumber}>2.</Text>
-                            <Text style={styles.stepText}>Go to Settings → Export full backup</Text>
+                            <Text style={styles.stepText}>{t('import.step2')}</Text>
                         </View>
                         <View style={styles.instructionStep}>
                             <Text style={styles.stepNumber}>3.</Text>
-                            <Text style={styles.stepText}>Save the .db file and upload it below</Text>
+                            <Text style={styles.stepText}>{t('import.step3')}</Text>
                         </View>
                     </View>
 
                     <View style={styles.featuresContainer}>
-                        <Text style={styles.featuresTitle}>What will be imported:</Text>
+                        <Text style={styles.featuresTitle}>{t('import.whatImported')}</Text>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="check-circle" size={16} color={theme.success} />
-                            <Text style={styles.featureText}>Habits</Text>
+                            <Text style={styles.featureText}>{t('import.featureHabits')}</Text>
                         </View>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="check-circle" size={16} color={theme.success} />
-                            <Text style={styles.featureText}>Habit completion records</Text>
+                            <Text style={styles.featureText}>{t('import.featureCompletionRecords')}</Text>
                         </View>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={16} color={theme.warning} />
-                            <Text style={styles.featureText}>Frequency settings (as far as compatible)</Text>
+                            <Text style={styles.featureText}>{t('import.featureFrequency')}</Text>
                         </View>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="checkbox-blank-circle-outline" size={16} color={theme.warning} />
-                            <Text style={styles.featureText}>Progress computation: Algorithms do not match entirely</Text>
+                            <Text style={styles.featureText}>{t('import.featureProgress')}</Text>
                         </View>
                         <View style={styles.featureItem}>
                             <MaterialCommunityIcons name="alert-circle" size={16} color={theme.error} />
-                            <Text style={styles.featureText}>Question, description, habit record notes</Text>
+                            <Text style={styles.featureText}>{t('import.featureNotes')}</Text>
                         </View>
                     </View>
 
@@ -120,7 +122,7 @@ const ImportScreen = () => {
                         {uploading ? (
                             <>
                                 <ActivityIndicator color={theme.textInverse} style={{marginRight: 8}} />
-                                <Text style={styles.uploadButtonText}>Uploading...</Text>
+                                <Text style={styles.uploadButtonText}>{t('import.uploading')}</Text>
                             </>
                         ) : (
                             <>
@@ -130,7 +132,7 @@ const ImportScreen = () => {
                                     color={theme.textInverse}
                                     style={{marginRight: 8}}
                                 />
-                                <Text style={styles.uploadButtonText}>Select Backup File (.db)</Text>
+                                <Text style={styles.uploadButtonText}>{t('import.selectBackupFile')}</Text>
                             </>
                         )}
                     </TouchableOpacity>
@@ -145,10 +147,10 @@ const ImportScreen = () => {
                             color={theme.textSecondary}
                             style={{marginRight: 8}}
                         />
-                        <Text style={styles.sectionTitle}>More Import Options</Text>
+                        <Text style={styles.sectionTitle}>{t('import.moreOptions')}</Text>
                     </View>
                     <Text style={styles.placeholderText}>
-                        Additional import options will be available here in the future.
+                        {t('import.moreOptionsPlaceholder')}
                     </Text>
                 </View>
             </ScrollView>

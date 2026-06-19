@@ -5,8 +5,10 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {useRouter} from "expo-router";
+import {useTranslation} from 'react-i18next';
 
 const WaitingApprovalScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -44,14 +46,14 @@ const WaitingApprovalScreen = () => {
             </View>
 
             <View style={styles.contentContainer}>
-                <Text style={styles.title}>Waiting for Approval</Text>
+                <Text style={styles.title}>{t('waitingApproval.title')}</Text>
                 <Text style={styles.subtitle}>
-                    Your account is pending approval. Please wait for an administrator to approve your access.
+                    {t('waitingApproval.subtitle')}
                 </Text>
 
                 {authState.userInfo && (
                     <View style={styles.userInfoContainer}>
-                        <Text style={styles.userInfoLabel}>Logged in as:</Text>
+                        <Text style={styles.userInfoLabel}>{t('waitingApproval.loggedInAs')}</Text>
                         <Text style={styles.userInfoText}>
                             {authState.userInfo.name || authState.userInfo.email}
                         </Text>
@@ -76,7 +78,7 @@ const WaitingApprovalScreen = () => {
                     ) : (
                         <>
                             <MaterialCommunityIcons name="refresh" size={20} color="#FF9800"/>
-                            <Text style={styles.refreshButtonText}>Check Status</Text>
+                            <Text style={styles.refreshButtonText}>{t('waitingApproval.checkStatus')}</Text>
                         </>
                     )}
                 </TouchableOpacity>
@@ -87,7 +89,7 @@ const WaitingApprovalScreen = () => {
                     disabled={authState.isLoading}
                 >
                     <MaterialCommunityIcons name="logout" size={20} color="#666"/>
-                    <Text style={styles.logoutButtonText}>Sign Out</Text>
+                    <Text style={styles.logoutButtonText}>{t('waitingApproval.signOut')}</Text>
                 </TouchableOpacity>
             </View>
         </View>

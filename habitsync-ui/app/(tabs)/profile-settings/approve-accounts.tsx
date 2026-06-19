@@ -1,4 +1,5 @@
 import React, {useCallback, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {ApiAccountRead, userApi} from '@/services/api';
 import {useFocusEffect} from 'expo-router';
@@ -11,6 +12,7 @@ import {useApproveUser, useUnapprovedUsers} from "@/hooks/useUser";
 
 
 const ApproveAccountsScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -19,22 +21,22 @@ const ApproveAccountsScreen = () => {
 
     const handleApproveUser = async (user: ApiAccountRead) => {
         alert(
-            'Approve User',
-            `Are you sure you want to approve ${user.displayName} (${user.email})?`,
+            t('approveAccounts.approveUserTitle'),
+            t('approveAccounts.approveUserMessage', {name: user.displayName, email: user.email}),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel',
                 },
                 {
-                    text: 'Approve',
+                    text: t('approveAccounts.approve'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
                             await approveUserMutation.mutateAsync(user.authenticationId);
-                            alert('Success', `${user.displayName} has been approved`);
+                            alert(t('common.success'), t('approveAccounts.userApproved', {name: user.displayName}));
                         } catch (error) {
-                            alert('Error', 'Failed to approve user');
+                            alert(t('common.error'), t('approveAccounts.approveFailed'));
                         }
                     },
                 },
@@ -53,7 +55,7 @@ const ApproveAccountsScreen = () => {
                 onPress={() => handleApproveUser(item)}
             >
                 <MaterialCommunityIcons name="check" size={20} color="white" />
-                <Text style={styles.approveButtonText}>Approve</Text>
+                <Text style={styles.approveButtonText}>{t('approveAccounts.approve')}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -61,19 +63,19 @@ const ApproveAccountsScreen = () => {
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
-                <Text style={styles.loadingText}>Loading unapproved accounts...</Text>
+                <Text style={styles.loadingText}>{t('approveAccounts.loading')}</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>Approve Accounts</Text>
+            <Text style={styles.header}>{t('approveAccounts.title')}</Text>
             {!unapprovedUsers || unapprovedUsers.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="account-check" size={64} color="#ccc"/>
-                    <Text style={styles.emptyStateText}>No pending approvals</Text>
-                    <Text style={styles.emptyStateSubText}>All users are already approved</Text>
+                    <Text style={styles.emptyStateText}>{t('approveAccounts.noPending')}</Text>
+                    <Text style={styles.emptyStateSubText}>{t('approveAccounts.allApproved')}</Text>
                 </View>
             ) : (
                 <FlatList

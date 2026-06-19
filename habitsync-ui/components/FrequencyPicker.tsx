@@ -5,6 +5,7 @@ import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {FixedTimeNotificationConfigRule, NotificationConfig} from "@/services/api";
 import {convertLocalTimeToUTC, convertUTCToLocalTime, formatTime, parseTime, shiftWeekdays} from "@/services/timezone";
+import {useTranslation} from 'react-i18next';
 
 const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 
@@ -28,6 +29,7 @@ const FrequencyPicker: React.FC<Props> = ({
 
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const {t} = useTranslation();
 
     const toggleWeekday = (day: string) => {
         setWeekdays((prev) =>
@@ -63,12 +65,12 @@ const FrequencyPicker: React.FC<Props> = ({
         <View style={styles.container}>
             {!hideFrequency && (
                 <View style={styles.row}>
-                    <Text style={styles.label}>Daily</Text>
+                    <Text style={styles.label}>{frequency === 'daily' ? t('frequency.daily') : t('frequency.weekly')}</Text>
                     <TouchableOpacity
                         onPress={() => setFrequency(frequency === 'daily' ? 'weekly' : 'daily')}
                     >
                         <Text style={styles.toggleText}>
-                            {frequency === 'daily' ? '→ Weekly' : '→ Daily'}
+                            {frequency === 'daily' ? t('frequency.toWeekly') : t('frequency.toDaily')}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -99,7 +101,7 @@ const FrequencyPicker: React.FC<Props> = ({
             )}
 
             <View style={styles.timeContainer}>
-                <Text style={styles.label}>Time:</Text>
+                <Text style={styles.label}>{t('frequency.time')}</Text>
                 <View style={styles.pickersRow}>
                     <Picker
                         selectedValue={hour}

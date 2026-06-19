@@ -12,6 +12,7 @@ import {
     View
 } from 'react-native';
 import {useNavigation} from "@react-navigation/native";
+import {useTranslation} from 'react-i18next';
 import {
     ApiComputationReadWrite,
     ApiHabitRead,
@@ -34,43 +35,37 @@ export enum ConfigType {
 }
 
 const FREQUENCY_OPTIONS = [
-    {value: FrequencyTypeDTO.DAILY, label: 'Daily'},
-    {value: FrequencyTypeDTO.WEEKLY, label: 'Weekly'},
-    {value: FrequencyTypeDTO.MONTHLY, label: 'Monthly'},
-    {value: FrequencyTypeDTO.X_TIMES_PER_Y_DAYS, label: 'Custom Period'}
+    {value: FrequencyTypeDTO.DAILY, labelKey: 'habitConfig.frequencyDaily'},
+    {value: FrequencyTypeDTO.WEEKLY, labelKey: 'habitConfig.frequencyWeekly'},
+    {value: FrequencyTypeDTO.MONTHLY, labelKey: 'habitConfig.frequencyMonthly'},
+    {value: FrequencyTypeDTO.X_TIMES_PER_Y_DAYS, labelKey: 'habitConfig.frequencyCustomPeriod'}
 ];
 
 const CHALLENGE_COMPUTATION_OPTIONS = [
-    {value: ChallengeComputationType.ABSOLUTE, label: 'Absolute percentage'},
+    {value: ChallengeComputationType.ABSOLUTE, labelKey: 'habitConfig.challengeAbsolutePercentage'},
     {
         value: ChallengeComputationType.RELATIVE,
-        label: 'Percentage relative to best'
+        labelKey: 'habitConfig.challengeRelativePercentage'
     },
-    {value: ChallengeComputationType.MAX_VALUE, label: 'Highest value reached'},
+    {value: ChallengeComputationType.MAX_VALUE, labelKey: 'habitConfig.challengeHighestValue'},
 ];
 
-const TOOLTIP_TEXTS = {
-    habitType: "Choose between a numerical habit (e.g., minutes, pages) or a boolean habit (e.g., done/not done)",
-    dailyGoal: "Value to be used as default entry for single clicks in the habit tracker. Add a + or - to increase or decrease the value by default",
-    maxDailyValue: "The maximum value you can achieve in a single day/week/month. " +
-        "This has to be achieved for a day to count as completed",
-    maxDailyValueNegative: "The maximum value you should reach in a single day/week/month. " +
-        "If this is exceeded the day will count as not completed",
-    unit: "The unit of measurement for your habit (e.g., minutes, pages, reps)",
-    targetDays: "Number of days used for progress calculation (default: 30). When computing the current progress " +
-        "the last X days will be used, where X is the targetDays value",
-    isNegative: "Enable this for habits you want to reduce or avoid (e.g., snacks, coffee). " +
-        "Lower values will count as better progress",
-    challengeComputation: "How the challenge winner will be determined. Absolute percentage means that the 'normal' percentage of completion is beeing used at the end of the month." +
-        " Relative percentage means that the participant with the highest percentage counts as 100%. Highest value means that for each participant only the highest day-value ist counted",
-    frequencySettings: "Configure how often you want to perform this habit.",
-    frequencyType: "Choose the time period for your frequency. Weekly: 'Y times per week'" +
-        " Monthly: 'Y times per month', Custom Period: 'Y times per X days'",
-    frequency: "The Y in 'Y times per X days'.",
-    customDays: "The X in 'Y times per X days'.",
-    asMuchAsPossible: "A challenge where you can log as much as you want each day. The user with the highest total value wins",
-    weekdayFilter: "Select specific weekdays when this habit should be tracked. If at least one day is selected, only those days will count towards habit completion."
-};
+const TOOLTIP_KEYS = {
+    habitType: 'habitConfig.tooltipHabitType',
+    dailyGoal: 'habitConfig.tooltipDailyGoal',
+    maxDailyValue: 'habitConfig.tooltipMaxDailyValue',
+    maxDailyValueNegative: 'habitConfig.tooltipMaxDailyValueNegative',
+    unit: 'habitConfig.tooltipUnit',
+    targetDays: 'habitConfig.tooltipTargetDays',
+    isNegative: 'habitConfig.tooltipIsNegative',
+    challengeComputation: 'habitConfig.tooltipChallengeComputation',
+    frequencySettings: 'habitConfig.tooltipFrequencySettings',
+    frequencyType: 'habitConfig.tooltipFrequencyType',
+    frequency: 'habitConfig.tooltipFrequency',
+    customDays: 'habitConfig.tooltipCustomDays',
+    asMuchAsPossible: 'habitConfig.tooltipAsMuchAsPossible',
+    weekdayFilter: 'habitConfig.tooltipWeekdayFilter'
+} as const;
 
 type HabitConfigProps = {
     habit?: ApiHabitRead;
@@ -86,6 +81,7 @@ export interface HabitConfigRef {
 const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
     ({habit, configType, callbackMethod, showSaveButton = true}, ref) => {
         const {theme} = useTheme();
+        const {t} = useTranslation();
         const styles = createStyles(theme);
 
         const navigation = useNavigation();
@@ -144,15 +140,15 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
         const getFrequencyDisplay = () => {
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS &&
                 frequency === '1' && timesPerXDays === '1') {
-                return 'Daily';
+                return t('habitConfig.frequencyDaily');
             } else if (frequencyType === FrequencyTypeDTO.WEEKLY) {
-                return frequency ? `${frequency} times per week` : 'Daily';
+                return frequency ? t('habitConfig.timesPerWeekCount', {count: frequency}) : t('habitConfig.frequencyDaily');
             } else if (frequencyType === FrequencyTypeDTO.MONTHLY) {
-                return frequency ? `${frequency} times per month` : 'Monthly';
+                return frequency ? t('habitConfig.timesPerMonthCount', {count: frequency}) : t('habitConfig.frequencyMonthly');
             } else if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS) {
-                return frequency && timesPerXDays ? `${frequency} times per ${timesPerXDays} days` : 'Custom';
+                return frequency && timesPerXDays ? t('habitConfig.timesPerXDaysCount', {count: frequency, days: timesPerXDays}) : t('habitConfig.frequencyCustom');
             }
-            return 'Daily';
+            return t('habitConfig.frequencyDaily');
         };
 
         const openFrequencyModal = () => {
@@ -223,11 +219,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             <Text style={styles.lockIcon}>🔒</Text>
         );
 
-        const HelpIcon = ({tooltipKey}: { tooltipKey: keyof typeof TOOLTIP_TEXTS }) => (
+        const HelpIcon = ({tooltipKey}: { tooltipKey: keyof typeof TOOLTIP_KEYS }) => (
             <TouchableOpacity
                 style={styles.helpIcon}
                 onPress={() => {
-                    setModalContent(TOOLTIP_TEXTS[tooltipKey]);
+                    setModalContent(t(TOOLTIP_KEYS[tooltipKey]));
                     setModalVisible(true);
                 }}
             >
@@ -280,7 +276,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     }
                     setLoading(false);
                 } catch (_error) {
-                    alert('Error', 'Failed to fetch habit data');
+                    alert(t('common.error'), t('habitConfig.errorFetchHabit'));
                     navigation.goBack();
                 }
             };
@@ -359,17 +355,17 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
         const handleUpdate = async (): Promise<ApiHabitWrite | undefined> => {
             if (configType === ConfigType.HABIT && !name.trim()) {
-                alert('Error', 'Habit name is required');
+                alert(t('common.error'), t('habitConfig.errorNameRequired'));
                 return;
             }
 
             if (!dailyReachableValue) {
-                alert('Error', 'Please fill in daily goal');
+                alert(t('common.error'), t('habitConfig.errorDailyGoalRequired'));
                 return;
             }
 
             if (!targetDays) {
-                alert('Error', 'Please fill in target days');
+                alert(t('common.error'), t('habitConfig.errorTargetDaysRequired'));
                 return;
             }
 
@@ -380,17 +376,17 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             if (((!frequency && configType !== ConfigType.CHALLENGE) ||
                     (!frequency && configType === ConfigType.CHALLENGE && challengeType !== ChallengeComputationType.MAX_VALUE)) &&
                 frequencyType !== FrequencyTypeDTO.DAILY) {
-                alert('Error', 'Please fill in field frequency');
+                alert(t('common.error'), t('habitConfig.errorFrequencyRequired'));
                 return;
             }
 
             if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS && !timesPerXDays) {
-                alert('Error', 'Times per X days is required for custom period');
+                alert(t('common.error'), t('habitConfig.errorTimesPerXDaysRequired'));
                 return;
             }
 
             if (configType === ConfigType.CHALLENGE && !challengeType) {
-                alert('Error', 'Challenge computation type is required');
+                alert(t('common.error'), t('habitConfig.errorChallengeTypeRequired'));
                 return;
             }
 
@@ -431,7 +427,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 setSaving(false);
                 return habitData;
             } catch (_error) {
-                alert('Error', 'Failed to update/create habit');
+                alert(t('common.error'), t('habitConfig.errorUpdateHabit'));
                 setSaving(false);
             }
         };
@@ -440,7 +436,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
             return (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#4ECDC4"/>
-                    <Text style={styles.loadingText}>Loading habit...</Text>
+                    <Text style={styles.loadingText}>{t('habitConfig.loadingHabit')}</Text>
                 </View>
             );
         }
@@ -460,7 +456,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 style={styles.modalButton}
                                 onPress={() => setModalVisible(false)}
                             >
-                                <Text style={styles.modalButtonText}>Got it</Text>
+                                <Text style={styles.modalButtonText}>{t('habitConfig.gotIt')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -474,11 +470,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 >
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
-                            <Text style={styles.modalText}>Set Frequency</Text>
+                            <Text style={styles.modalText}>{t('habitConfig.setFrequency')}</Text>
 
                             <View style={styles.inputContainer}>
                                 <View style={styles.labelRow}>
-                                    <Text style={styles.label}>Frequency Type</Text>
+                                    <Text style={styles.label}>{t('habitConfig.frequencyType')}</Text>
                                 </View>
                                 <View style={styles.frequencyButtons}>
                                     {FREQUENCY_OPTIONS.filter(o => (configType !== ConfigType.CHALLENGE) ||
@@ -496,7 +492,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                                 styles.frequencyButtonText,
                                                 tempFrequencyType === option.value && styles.selectedFrequencyButtonText
                                             ]}>
-                                                {option.label}
+                                                {t(option.labelKey)}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
@@ -512,14 +508,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                             const numericValue = text.replace(/[^0-9.]/g, '');
                                             setTempFrequency(numericValue);
                                         }}
-                                        placeholder="Enter frequency"
+                                        placeholder={t('habitConfig.enterFrequency')}
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
                                     />
                                     <Text style={[styles.label, {paddingTop: 10, paddingLeft: 10}]}>
-                                        {tempFrequencyType === FrequencyTypeDTO.WEEKLY ? 'times per week' :
-                                            tempFrequencyType === FrequencyTypeDTO.MONTHLY ? 'times per month' :
-                                                'times per'}
+                                        {tempFrequencyType === FrequencyTypeDTO.WEEKLY ? t('habitConfig.timesPerWeek') :
+                                            tempFrequencyType === FrequencyTypeDTO.MONTHLY ? t('habitConfig.timesPerMonth') :
+                                                t('habitConfig.timesPer')}
                                     </Text>
                                 </View>
                             )}
@@ -530,11 +526,11 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                         style={styles.input}
                                         value={tempTimesPerXDays}
                                         onChangeText={setTempTimesPerXDays}
-                                        placeholder="Enter number of days"
+                                        placeholder={t('habitConfig.enterNumberOfDays')}
                                         placeholderTextColor="#999"
                                         keyboardType="numeric"
                                     />
-                                    <Text style={[styles.label, {paddingTop: 10, paddingLeft: 10}]}>days</Text>
+                                    <Text style={[styles.label, {paddingTop: 10, paddingLeft: 10}]}>{t('habitConfig.days')}</Text>
                                 </View>
                             )}
 
@@ -543,7 +539,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 onPress={applyFrequencyChanges}
                                 activeOpacity={0.8}
                             >
-                                <Text style={styles.saveButtonText}>Apply Frequency</Text>
+                                <Text style={styles.saveButtonText}>{t('habitConfig.applyFrequency')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -551,7 +547,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 onPress={() => setFrequencyModalVisible(false)}
                                 activeOpacity={0.8}
                             >
-                                <Text style={styles.saveButtonText}>Cancel</Text>
+                                <Text style={styles.saveButtonText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -561,8 +557,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {isSharedWithOthers && (
                     <View style={styles.syncInfoContainer}>
                         <Text style={styles.syncInfoText}>
-                            🔒 Some fields are locked because this habit is synchronized with others. To edit these
-                            fields, select &quot;edit for all&quot; on the habit detail page (requires permission).
+                            {'🔒 ' + t('habitConfig.syncInfo')}
                         </Text>
                     </View>
                 )}
@@ -570,14 +565,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {configType === ConfigType.HABIT && (
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.sectionTitle}>Habit Name</Text>
+                            <Text style={styles.sectionTitle}>{t('habitConfig.habitName')}</Text>
                             {isFieldLocked() && <LockIcon/>}
                         </View>
                         <TextInput
                             style={[styles.input, isFieldLocked() && styles.lockedInput]}
                             value={name}
                             onChangeText={isFieldLocked() ? undefined : setName}
-                            placeholder="Enter habit name"
+                            placeholder={t('habitConfig.enterHabitName')}
                             placeholderTextColor="#999"
                             editable={!isFieldLocked()}
                         />
@@ -587,7 +582,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {configType === ConfigType.HABIT && (
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.sectionTitle}>Color Theme</Text>
+                            <Text style={styles.sectionTitle}>{t('habitConfig.colorTheme')}</Text>
                         </View>
                         <View style={styles.colorGrid}>
                             {COLOR_OPTIONS.map((colorOption) => (
@@ -616,7 +611,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     configType === ConfigType.CHALLENGE && !isAsMuchAsPossibleChallenge && (
                         <View style={styles.section}>
                             <View style={styles.titleRow}>
-                                <Text style={styles.sectionTitle}>Challenge Computation Type</Text>
+                                <Text style={styles.sectionTitle}>{t('habitConfig.challengeComputationType')}</Text>
                                 <HelpIcon tooltipKey="challengeComputation"/>
                             </View>
                             <View style={styles.inputContainer}>
@@ -635,7 +630,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                                 styles.frequencyButtonText,
                                                 challengeType === option.value && styles.selectedFrequencyButtonText
                                             ]}>
-                                                {option.label}
+                                                {t(option.labelKey)}
                                             </Text>
                                         </TouchableOpacity>
                                     ))}
@@ -649,13 +644,13 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {/* Goal Configuration */}
                 <View style={styles.section}>
                     <View style={styles.titleRow}>
-                        <Text style={styles.sectionTitle}>Goal Configuration</Text>
+                        <Text style={styles.sectionTitle}>{t('habitConfig.goalConfiguration')}</Text>
                     </View>
 
                     {!challengeType || challengeType !== ChallengeComputationType.MAX_VALUE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
-                                <Text style={styles.label}>Habit Type</Text>
+                                <Text style={styles.label}>{t('habitConfig.habitType')}</Text>
                                 <HelpIcon tooltipKey="habitType"/>
                                 {isFieldLocked() && <LockIcon/>}
                             </View>
@@ -670,7 +665,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                     <Text style={[
                                         styles.habitTypeButtonText,
                                         !isNumericalHabit && styles.selectedHabitTypeButtonText
-                                    ]}>Yes/No</Text>
+                                    ]}>{t('habitConfig.yesNo')}</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[
@@ -682,7 +677,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                     <Text style={[
                                         styles.habitTypeButtonText,
                                         isNumericalHabit && styles.selectedHabitTypeButtonText
-                                    ]}>Numerical</Text>
+                                    ]}>{t('habitConfig.numerical')}</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -690,7 +685,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
 
                     <View style={styles.inputContainer}>
                         <View style={styles.labelRow}>
-                            <Text style={styles.label}>Negative Habit (Less is Better)</Text>
+                            <Text style={styles.label}>{t('habitConfig.negativeHabit')}</Text>
                             <HelpIcon tooltipKey="isNegative"/>
                             {isFieldLocked() && <LockIcon/>}
                         </View>
@@ -709,7 +704,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {isNumericalHabit && configType === ConfigType.CHALLENGE && (
                                 <View style={styles.halfInput}>
                                     <View style={styles.labelRow}>
-                                        <Text style={styles.label}>As much as possible</Text>
+                                        <Text style={styles.label}>{t('habitConfig.asMuchAsPossible')}</Text>
                                         <HelpIcon tooltipKey="asMuchAsPossible"/>
                                         {isFieldLocked() && <LockIcon/>}
                                     </View>
@@ -733,9 +728,9 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                                 }}
                                                 activeOpacity={0.7}
                                             >
-                                                <Text style={[styles.label, styles.clickableText]}>{goalType}</Text>
+                                                <Text style={[styles.label, styles.clickableText]}>{t('habitConfig.goalType_' + goalType)}</Text>
                                             </TouchableOpacity>
-                                            <Text style={styles.label}> {isNegative ? "Max" : "Goal"}</Text>
+                                            <Text style={styles.label}> {isNegative ? t('habitConfig.max') : t('habitConfig.goal')}</Text>
                                         </View>
                                         {!isNegative ? (<HelpIcon tooltipKey="maxDailyValue"/>) : (
                                             <HelpIcon tooltipKey="maxDailyValueNegative"/>)}
@@ -759,7 +754,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {configType !== ConfigType.CHALLENGE && isNumericalHabit && (
                                 <View style={styles.halfInput}>
                                     <View style={styles.labelRow}>
-                                        <Text style={styles.label}>One click value</Text>
+                                        <Text style={styles.label}>{t('habitConfig.oneClickValue')}</Text>
                                         <HelpIcon tooltipKey="dailyGoal"/>
                                     </View>
                                     <TextInput
@@ -780,7 +775,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     {(isNumericalHabit || challengeType === ChallengeComputationType.MAX_VALUE) && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
-                                <Text style={styles.label}>Unit (Optional)</Text>
+                                <Text style={styles.label}>{t('habitConfig.unitOptional')}</Text>
                                 <HelpIcon tooltipKey="unit"/>
                                 {isFieldLocked() && <LockIcon/>}
                             </View>
@@ -788,7 +783,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                 style={[styles.input, isFieldLocked() && styles.lockedInput]}
                                 value={unit}
                                 onChangeText={isFieldLocked() ? undefined : setUnit}
-                                placeholder="e.g., minutes, pages, kilometers"
+                                placeholder={t('habitConfig.unitPlaceholder')}
                                 placeholderTextColor="#999"
                                 editable={!isFieldLocked()}
                             />
@@ -799,7 +794,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         && !isAsMuchAsPossibleChallenge && goalType === "Daily" && (
                             <View style={styles.inputContainer}>
                                 <View style={styles.labelRow}>
-                                    <Text style={styles.label}>Frequency</Text>
+                                    <Text style={styles.label}>{t('habitConfig.frequency')}</Text>
                                     <HelpIcon tooltipKey="frequencySettings"/>
                                     {isFieldLocked() && <LockIcon/>}
                                 </View>
@@ -828,7 +823,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                     {configType !== ConfigType.CHALLENGE && (
                         <View style={styles.inputContainer}>
                             <View style={styles.labelRow}>
-                                <Text style={styles.label}>Target Days (Advanced)</Text>
+                                <Text style={styles.label}>{t('habitConfig.targetDaysAdvanced')}</Text>
                                 <HelpIcon tooltipKey="targetDays"/>
                                 {isFieldLocked() && <LockIcon/>}
                             </View>
@@ -847,20 +842,20 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                         </View>
                     )}
                     <View style={styles.labelRow}>
-                        <Text style={styles.label}>Weekday Filter (Optional)</Text>
+                        <Text style={styles.label}>{t('habitConfig.weekdayFilterOptional')}</Text>
                         <HelpIcon tooltipKey="weekdayFilter"/>
                         {isFieldLocked() && <LockIcon/>}
                     </View>
                     <View style={styles.weekdayContainer}>
                         {[
-                            {day: 1, label: 'Mon'},
-                            {day: 2, label: 'Tue'},
-                            {day: 3, label: 'Wed'},
-                            {day: 4, label: 'Thu'},
-                            {day: 5, label: 'Fri'},
-                            {day: 6, label: 'Sat'},
-                            {day: 7, label: 'Sun'}
-                        ].map(({day, label}) => (
+                            {day: 1, labelKey: 'habitConfig.weekdayMon'},
+                            {day: 2, labelKey: 'habitConfig.weekdayTue'},
+                            {day: 3, labelKey: 'habitConfig.weekdayWed'},
+                            {day: 4, labelKey: 'habitConfig.weekdayThu'},
+                            {day: 5, labelKey: 'habitConfig.weekdayFri'},
+                            {day: 6, labelKey: 'habitConfig.weekdaySat'},
+                            {day: 7, labelKey: 'habitConfig.weekdaySun'}
+                        ].map(({day, labelKey}) => (
                             <TouchableOpacity
                                 key={day}
                                 style={[
@@ -876,7 +871,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                     selectedWeekdays.includes(day) && styles.selectedWeekdayButtonText,
                                     isFieldLocked() && styles.lockedButtonText
                                 ]}>
-                                    {label}
+                                    {t(labelKey)}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -886,12 +881,12 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                 {configType === ConfigType.HABIT && (
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
-                            <Text style={styles.sectionTitle}>Habit Group (optional, experimental)</Text>
+                            <Text style={styles.sectionTitle}>{t('habitConfig.habitGroup')}</Text>
                         </View>
                         <View>
                             {groupNames.length > 0 && (
                                 <View style={styles.dropdownContainer}>
-                                    <Text style={[styles.label, {marginBottom: 8}]}>Select from existing groups:</Text>
+                                    <Text style={[styles.label, {marginBottom: 8}]}>{t('habitConfig.selectFromExistingGroups')}</Text>
                                     <View style={styles.groupChipsContainer}>
                                         {groupNames.map((groupName, index) => (
                                             <TouchableOpacity
@@ -912,15 +907,14 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                                             </TouchableOpacity>
                                         ))}
                                     </View>
-                                    <Text style={[styles.label, {marginTop: 16, marginBottom: 8}]}>Or enter a new group
-                                        name:</Text>
+                                    <Text style={[styles.label, {marginTop: 16, marginBottom: 8}]}>{t('habitConfig.orEnterNewGroupName')}</Text>
                                 </View>
                             )}
                             <TextInput
                                 style={styles.input}
                                 value={group}
                                 onChangeText={setGroup}
-                                placeholder="Enter habit group name"
+                                placeholder={t('habitConfig.enterHabitGroupName')}
                                 placeholderTextColor="#999"
                             />
                         </View>
@@ -938,7 +932,7 @@ const HabitConfig = forwardRef<HabitConfigRef, HabitConfigProps>(
                             {saving ? (
                                 <ActivityIndicator size="small" color="#fff"/>
                             ) : (
-                                <Text style={styles.saveButtonText}>Save Habit</Text>
+                                <Text style={styles.saveButtonText}>{t('habitConfig.saveHabit')}</Text>
                             )}
                         </TouchableOpacity>
                     )
