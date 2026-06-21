@@ -10,6 +10,7 @@ import {StatusBar} from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import {Platform} from 'react-native';
 import React from 'react';
+import '@/i18n';
 
 SplashScreen.preventAutoHideAsync();
 

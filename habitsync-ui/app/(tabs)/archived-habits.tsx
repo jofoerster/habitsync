@@ -7,11 +7,13 @@ import {useTheme} from "@/context/ThemeContext";
 import {useArchivedHabits, useUpdateHabit} from "@/hooks/useHabits";
 import {ApiHabitRead, HabitStatusFilter} from "@/services/api";
 import {useRouter} from "expo-router";
+import {useTranslation} from 'react-i18next';
 
 const ArchivedHabitsScreen = () => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
     const router = useRouter();
+    const {t} = useTranslation();
 
     const {data: archivedHabits = [], isLoading: loading} = useArchivedHabits();
     const updateHabitMutation = useUpdateHabit();
@@ -25,23 +27,23 @@ const ArchivedHabitsScreen = () => {
                 progressComputation: habit.progressComputation,
                 status: HabitStatusFilter.ACTIVE,
             });
-            alert('Success', 'Habit restored successfully');
+            alert(t('common.success'), t('archivedHabits.restoreSuccess'));
         } catch {
-            alert('Error', 'Failed to restore habit');
+            alert(t('common.error'), t('archivedHabits.restoreError'));
         }
     };
 
     const handleDelete = async (habit: ApiHabitRead) => {
         alert(
-            'Confirm Deletion',
-            `Are you sure you want to permanently delete "${habit.name}"? This action cannot be undone.`,
+            t('archivedHabits.confirmDeletionTitle'),
+            t('archivedHabits.confirmDeletionMessage', {name: habit.name}),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Delete',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -52,9 +54,9 @@ const ArchivedHabitsScreen = () => {
                                 progressComputation: habit.progressComputation,
                                 status: HabitStatusFilter.DELETED,
                             });
-                            alert('Success', 'Habit permanently deleted');
+                            alert(t('common.success'), t('archivedHabits.deleteSuccess'));
                         } catch {
-                            alert('Error', 'Failed to delete habit');
+                            alert(t('common.error'), t('archivedHabits.deleteError'));
                         }
                     }
                 }
@@ -96,7 +98,7 @@ const ArchivedHabitsScreen = () => {
                 </View>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={theme.primary}/>
-                    <Text style={styles.loadingText}>Loading archived habits...</Text>
+                    <Text style={styles.loadingText}>{t('archivedHabits.loading')}</Text>
                 </View>
             </View>
         );
@@ -106,16 +108,16 @@ const ArchivedHabitsScreen = () => {
         <View style={styles.container}>
             <View style={styles.headerSection}>
                 <View>
-                    <Text style={styles.header}>Archived Habits</Text>
-                    <Text style={styles.subHeader}>Restore or permanently delete habits</Text>
+                    <Text style={styles.header}>{t('archivedHabits.title')}</Text>
+                    <Text style={styles.subHeader}>{t('archivedHabits.subtitle')}</Text>
                 </View>
             </View>
 
             {archivedHabits.length === 0 ? (
                 <View style={styles.emptyState}>
                     <MaterialCommunityIcons name="archive-outline" size={64} color="#ccc"/>
-                    <Text style={styles.emptyStateText}>No archived habits</Text>
-                    <Text style={styles.emptyStateSubText}>Archived habits will appear here</Text>
+                    <Text style={styles.emptyStateText}>{t('archivedHabits.emptyTitle')}</Text>
+                    <Text style={styles.emptyStateSubText}>{t('archivedHabits.emptySubtitle')}</Text>
                 </View>
             ) : (
                 <ScrollView

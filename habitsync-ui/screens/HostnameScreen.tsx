@@ -17,10 +17,12 @@ import { useTheme } from '@/context/ThemeContext';
 import { createThemedStyles } from '@/constants/styles';
 import { secureStorage } from '@/services/storage';
 import alert from '@/services/alert';
+import { useTranslation } from 'react-i18next';
 
 const HOSTNAME_KEY = 'backend_hostname';
 
 const HostnameScreen = () => {
+    const { t } = useTranslation();
     const { theme } = useTheme();
     const styles = createStyles(theme);
     const router = useRouter();
@@ -74,9 +76,9 @@ const HostnameScreen = () => {
     const handleSaveHostname = async () => {
         if (!validateHostname(hostname)) {
             alert(
-                'Invalid Hostname',
-                'Please enter a valid hostname or URL (e.g., example.com/api or https://example.com/api)',
-                [{ text: 'OK' }]
+                t('hostname.invalidHostnameTitle'),
+                t('hostname.invalidHostnameMessage'),
+                [{ text: t('common.ok') }]
             );
             return;
         }
@@ -92,11 +94,11 @@ const HostnameScreen = () => {
             
             if (!connectionTest) {
                 alert(
-                    'Connection Failed',
-                    'Unable to connect to the server. Please check the hostname and server health and try again.',
+                    t('hostname.connectionFailedTitle'),
+                    t('hostname.connectionFailedMessage'),
                     [
-                        { text: 'Save Anyway', onPress: () => saveHostnameAndContinue(normalizedUrl) },
-                        { text: 'Cancel', style: 'cancel' }
+                        { text: t('hostname.saveAnyway'), onPress: () => saveHostnameAndContinue(normalizedUrl) },
+                        { text: t('common.cancel'), style: 'cancel' }
                     ]
                 );
                 return;
@@ -106,9 +108,9 @@ const HostnameScreen = () => {
         } catch (error) {
             console.error('Error saving hostname:', error);
             alert(
-                'Error',
-                'Failed to save hostname. Please try again.',
-                [{ text: 'OK' }]
+                t('common.error'),
+                t('hostname.failedToSave'),
+                [{ text: t('common.ok') }]
             );
         } finally {
             setIsLoading(false);
@@ -129,9 +131,9 @@ const HostnameScreen = () => {
         } catch (error) {
             console.error('Error saving hostname:', error);
             alert(
-                'Error',
-                'Failed to save hostname. Please try again.',
-                [{ text: 'OK' }]
+                t('common.error'),
+                t('hostname.failedToSave'),
+                [{ text: t('common.ok') }]
             );
         }
     };
@@ -149,12 +151,12 @@ const HostnameScreen = () => {
 
                 <View style={styles.titleContainer}>
                     <Text style={styles.subtitle}>
-                        Please enter the hostname or URL of your HabitSync server to continue.
+                        {t('hostname.subtitle')}
                     </Text>
                 </View>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Server Hostname or URL</Text>
+                    <Text style={styles.inputLabel}>{t('hostname.inputLabel')}</Text>
                     <View style={styles.inputWrapper}>
                         <MaterialCommunityIcons
                             name="server-network"
@@ -178,14 +180,14 @@ const HostnameScreen = () => {
                     </View>
 
                     <Text style={styles.helpText}>
-                        Examples: 192.168.1.100:8080/api, https://my-server.com/api
+                        {t('hostname.examples')}
                     </Text>
                 </View>
 
                 {isTestingConnection && (
                     <View style={styles.testingContainer}>
                         <ActivityIndicator size="small" color={theme.primary} />
-                        <Text style={styles.testingText}>Testing connection...</Text>
+                        <Text style={styles.testingText}>{t('hostname.testingConnection')}</Text>
                     </View>
                 )}
 
@@ -199,7 +201,7 @@ const HostnameScreen = () => {
                     ) : (
                         <>
                             <MaterialCommunityIcons name="check" size={20} color="#fff" />
-                            <Text style={styles.saveButtonText}>Save & Continue</Text>
+                            <Text style={styles.saveButtonText}>{t('hostname.saveAndContinue')}</Text>
                         </>
                     )}
                 </TouchableOpacity>

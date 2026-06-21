@@ -5,10 +5,12 @@ import * as WebBrowser from 'expo-web-browser';
 import WebOAuthService from '@/services/oauth-web';
 import {authApi} from '@/services/api';
 import {useAuth} from '@/context/AuthContext';
+import {useTranslation} from 'react-i18next';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export default function AuthCallback() {
+    const {t} = useTranslation();
     const router = useRouter();
     const {setTokens, refreshAuthState} = useAuth();
     const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function AuthCallback() {
                 router.replace('/');
             } else {
                 console.error('[AuthCallback] OAuth failed:', result.error);
-                setError(result.error || 'Authentication failed');
+                setError(result.error || t('login.authenticationFailed'));
 
                 setTimeout(() => {
                     router.replace('/login');
@@ -50,7 +52,7 @@ export default function AuthCallback() {
             }
         } catch (error) {
             console.error('[AuthCallback] Error handling callback:', error);
-            setError(error instanceof Error ? error.message : 'Failed to complete authentication');
+            setError(error instanceof Error ? error.message : t('login.failedToCompleteAuth'));
 
             setTimeout(() => {
                 router.replace('/login');
@@ -63,12 +65,12 @@ export default function AuthCallback() {
             {error ? (
                 <>
                     <Text style={styles.errorText}>❌ {error}</Text>
-                    <Text style={styles.subText}>Redirecting to login...</Text>
+                    <Text style={styles.subText}>{t('login.redirectingToLogin')}</Text>
                 </>
             ) : (
                 <>
                     <ActivityIndicator size="large" color="#2196F3"/>
-                    <Text style={styles.text}>Completing sign in...</Text>
+                    <Text style={styles.text}>{t('login.completingSignIn')}</Text>
                 </>
             )}
         </View>

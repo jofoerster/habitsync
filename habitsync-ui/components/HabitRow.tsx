@@ -1,4 +1,5 @@
 import React, {useState} from "react";
+import {useTranslation} from 'react-i18next';
 import {Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {ApiHabitRead} from "../services/api";
 import NumberModal from "./NumberModal";
@@ -194,6 +195,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                                                onMoveUp,
                                                onMoveDown
                                            }) => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
 
     const updateHabitRecordMutation = useCreateHabitRecord();
@@ -260,7 +262,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             updateHabitValue(habitUuid, epochDay, newRecordValue);
 
         } catch (error) {
-            alert('Error', 'Failed to update record');
+            alert(t('common.error'), t('habitRow.updateRecordFailed'));
         }
     };
 
@@ -270,7 +272,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             setModalConfig(config);
             setModalVisible(true);
         } catch (error) {
-            alert('Error', 'Failed to load modal configuration');
+            alert(t('common.error'), t('habitRow.loadModalFailed'));
         }
     };
 
@@ -280,7 +282,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             updateHabitValue(habitUuid, epochDay, value);
 
         } catch (error) {
-            alert('Error', 'Failed to update record');
+            alert(t('common.error'), t('habitRow.updateRecordFailed'));
         }
     };
 
@@ -324,7 +326,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
                     elevation: 1,
                 }}>
                     <Text style={{fontSize: 16, fontWeight: 'bold', color: theme.text, padding: 10}}>
-                        Loading...
+                        {t('common.loading')}
                     </Text>
                 </View>
             </View>
@@ -458,7 +460,7 @@ const HabitRow: React.FC<HabitRowProps> = ({
             {isExpanded && connectedHabits && connectedHabits.length > 0 && (
                 <View style={{marginTop: 8, marginLeft: 16}}>
                     <Text style={{fontSize: 14, fontWeight: 'bold', color: '#666', marginBottom: 8}}>
-                        Connected Habits
+                        {t('habitRow.connectedHabits')}
                     </Text>
                     {connectedHabits.filter(habit => habit.currentPercentage > 0.01).map(connectedHabit => (
                         <HabitRow

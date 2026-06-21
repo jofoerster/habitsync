@@ -1,5 +1,6 @@
 import {ApiHabitRead, ApiHabitRecordRead} from "@/services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
+import {useTranslation} from 'react-i18next';
 import React, {useMemo, useState} from "react";
 import {Platform, Pressable, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {getIcon} from "@/util/util";
@@ -31,6 +32,7 @@ const ActivityCalendar = ({
     showTitle?: boolean,
     isBooleanHabit?: boolean
 }) => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
     const {data: config} = useConfiguration();
@@ -102,7 +104,7 @@ const ActivityCalendar = ({
         if (chartData.length === 0) {
             return (
                 <View style={{height: 220, alignItems: 'center', justifyContent: 'center'}}>
-                    <Text style={styles.noDataText}>No data available for this month</Text>
+                    <Text style={styles.noDataText}>{t('calendar.noData')}</Text>
                 </View>
             );
         }
@@ -122,7 +124,7 @@ const ActivityCalendar = ({
                     domain={{x: [1, daysInMonth], y: [0, 100]}}
                 >
                     <VictoryAxis
-                        label="Day of Month"
+                        label={t('calendar.dayOfMonth')}
                         style={{
                             axisLabel: {fontSize: 12, padding: 30, fill: theme.textSecondary},
                             tickLabels: {fontSize: 10, fill: theme.textSecondary},
@@ -131,7 +133,7 @@ const ActivityCalendar = ({
                     />
                     <VictoryAxis
                         dependentAxis
-                        label="Percentage (%)"
+                        label={t('calendar.percentage')}
                         style={{
                             axisLabel: {fontSize: 12, padding: 35, fill: theme.textSecondary},
                             tickLabels: {fontSize: 10, fill: theme.textSecondary},
@@ -280,7 +282,7 @@ const ActivityCalendar = ({
         <View style={styles.calendarSection}>
             {showTitle && (
                 <View style={styles.headerRow}>
-                    <Text style={styles.sectionTitle}>Activity Calendar</Text>
+                    <Text style={styles.sectionTitle}>{t('calendar.title')}</Text>
                     {/* Only show toggle button on web */}
                     {Platform.OS === 'web' && false && (
                         <TouchableOpacity
@@ -322,23 +324,23 @@ const ActivityCalendar = ({
 
             {!showCalendarAsGraph && (
                 <View style={styles.legendContainer}>
-                    <Text style={styles.legendTitle}>Legend:</Text>
+                    <Text style={styles.legendTitle}>{t('calendar.legend')}</Text>
                     <View style={styles.legendItems}>
                         <View style={styles.legendItem}>
                             <View style={[styles.legendSquare, {backgroundColor: '#4CAF50'}]}/>
-                            <Text style={styles.legendText}>Completed</Text>
+                            <Text style={styles.legendText}>{t('calendar.completed')}</Text>
                         </View>
                         <View style={styles.legendItem}>
                             <View style={[styles.legendSquare, {backgroundColor: '#addfb5'}]}/>
-                            <Text style={styles.legendText}>Goal reached</Text>
+                            <Text style={styles.legendText}>{t('calendar.goalReached')}</Text>
                         </View>
                         <View style={styles.legendItem}>
                             <View style={[styles.legendSquare, {backgroundColor: '#FF9800'}]}/>
-                            <Text style={styles.legendText}>Partial</Text>
+                            <Text style={styles.legendText}>{t('calendar.partial')}</Text>
                         </View>
                         <View style={styles.legendItem}>
                             <View style={[styles.legendSquare, {backgroundColor: '#F44336'}]}/>
-                            <Text style={styles.legendText}>Missed</Text>
+                            <Text style={styles.legendText}>{t('calendar.missed')}</Text>
                         </View>
                     </View>
                 </View>

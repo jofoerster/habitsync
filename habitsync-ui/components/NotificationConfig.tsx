@@ -16,24 +16,25 @@ import {convertUTCToLocalTime, parseTime} from "@/services/timezone";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useUpdateNotificationForHabit} from "@/hooks/useNotifications";
 import {useHabit} from "@/hooks/useHabits";
+import {useTranslation} from 'react-i18next';
 
 const NOTIFICATION_TYPES = [
     {
         type: 'fixed' as const,
-        name: 'Scheduled Notifications',
-        description: 'Get notified at specific times (daily or weekly) to remind you about your habit.',
+        nameKey: 'notificationConfig.types.fixed.name',
+        descriptionKey: 'notificationConfig.types.fixed.description',
         icon: '⏰'
     },
     {
         type: 'threshold' as const,
-        name: 'Threshold Notifications',
-        description: 'Get notified when your habit progress falls below a certain percentage threshold.',
+        nameKey: 'notificationConfig.types.threshold.name',
+        descriptionKey: 'notificationConfig.types.threshold.description',
         icon: '📊'
     },
     {
         type: 'overtake' as const,
-        name: 'Overtake Notifications',
-        description: 'Get notified when someone overtakes you in shared habits.',
+        nameKey: 'notificationConfig.types.overtake.name',
+        descriptionKey: 'notificationConfig.types.overtake.description',
         icon: '🏃'
     }
 ];
@@ -50,6 +51,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                                                }) => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const {t} = useTranslation();
 
     const {data: habit, isLoading: loading} = useHabit(habitUuid);
 
@@ -189,7 +191,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
             };
             await updateNotificationForHabitMutation.mutateAsync({habitUuid, config})
         } catch {
-            alert('Error', 'Failed to update notification settings');
+            alert(t('common.error'), t('notificationConfig.alerts.updateFailed'));
         }
     };
 
@@ -204,21 +206,24 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
     const getRuleStatusText = (type: 'fixed' | 'threshold' | 'overtake') => {
         const rule = getRuleByType(type);
-        if (!rule || !rule.enabled) return 'Off';
+        if (!rule || !rule.enabled) return t('notificationConfig.status.off');
 
         switch (type) {
             case 'fixed':
                 const fixedRule = rule as FixedTimeNotificationConfigRule;
                 const {hour: utcHour, minute: utcMinute} = parseTime(fixedRule.time);
                 const localTime = convertUTCToLocalTime(utcHour, utcMinute);
-                return `${fixedRule.frequency === 'daily' ? 'Daily' : 'Weekly'} at ${localTime.hour}:${localTime.minute.toString().padStart(2, '0')}`;
+                return t('notificationConfig.status.fixed', {
+                    frequency: fixedRule.frequency === 'daily' ? t('notificationConfig.frequency.daily') : t('notificationConfig.frequency.weekly'),
+                    time: `${localTime.hour}:${localTime.minute.toString().padStart(2, '0')}`
+                });
             case 'threshold':
                 const thresholdRule = rule as ThresholdNotificationConfigRule;
-                return `At ${thresholdRule.thresholdPercentage}% progress`;
+                return t('notificationConfig.status.threshold', {percentage: thresholdRule.thresholdPercentage});
             case 'overtake':
-                return 'Active';
+                return t('notificationConfig.status.active');
             default:
-                return 'Off';
+                return t('notificationConfig.status.off');
         }
     };
 
@@ -226,7 +231,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
         <View style={styles.container}>
             <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
 
-                <Text style={styles.title}>Notification Settings</Text>
+                <Text style={styles.title}>{t('notificationConfig.title')}</Text>
 
                 <TouchableOpacity
                     style={styles.closeButton}
@@ -239,12 +244,12 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
             {/* Apprise URL Field */}
             {showAppriseField && (
                 <View style={styles.appriseContainer}>
-                    <Text style={styles.appriseLabel}>Apprise URL (Optional)</Text>
+                    <Text style={styles.appriseLabel}>{t('notificationConfig.appriseLabel')}</Text>
                     <TextInput
                         style={styles.appriseInput}
                         value={appriseUrl}
                         onChangeText={setAppriseUrl}
-                        placeholder="e.g., service://token/chat_id"
+                        placeholder={t('notificationConfig.apprisePlaceholder')}
                         placeholderTextColor={theme.textTertiary}
                         autoCapitalize="none"
                         autoCorrect={false}
@@ -266,7 +271,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                 <View style={styles.ruleInfo}>
                                     <Text style={styles.ruleIcon}>{notificationType.icon}</Text>
                                     <View style={styles.ruleText}>
-                                        <Text style={styles.ruleName}>{notificationType.name}</Text>
+                                        <Text style={styles.ruleName}>{t(notificationType.nameKey)}</Text>
                                         <Text style={styles.ruleStatus}>
                                             {getRuleStatusText(notificationType.type)}
                                         </Text>
@@ -276,7 +281,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                 <View style={styles.ruleControls}>
                                     <TouchableOpacity
                                         style={styles.helpButton}
-                                        onPress={() => showHelp(notificationType.description)}
+                                        onPress={() => showHelp(t(notificationType.descriptionKey))}
                                     >
                                         <Text style={styles.helpButtonText}>?</Text>
                                     </TouchableOpacity>
@@ -318,7 +323,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                             style={styles.modalButton}
                             onPress={() => setHelpModalVisible(false)}
                         >
-                            <Text style={styles.modalButtonText}>Got it</Text>
+                            <Text style={styles.modalButtonText}>{t('notificationConfig.gotIt')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -334,7 +339,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                 <View style={styles.modalOverlay}>
                     <View style={styles.configModalContent}>
                         <Text style={styles.modalTitle}>
-                            {configType === 'fixed' ? 'Schedule Notification' : 'Progress Threshold'}
+                            {configType === 'fixed' ? t('notificationConfig.scheduleTitle') : t('notificationConfig.thresholdTitle')}
                         </Text>
 
                         {configType === 'fixed' && (
@@ -347,7 +352,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                 />
 
                                 <View style={styles.switchContainer}>
-                                    <Text style={styles.switchLabel}>Notify even if fulfilled</Text>
+                                    <Text style={styles.switchLabel}>{t('notificationConfig.notifyEvenIfFulfilled')}</Text>
                                     <Switch
                                         value={tempFixedConfig.triggerIfFulfilled || false}
                                         onValueChange={(value) => setTempFixedConfig(prev => ({
@@ -360,7 +365,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                     />
                                 </View>
                                 <View style={styles.switchContainer}>
-                                    <Text style={styles.switchLabel}>Notify only when not completed by streak</Text>
+                                    <Text style={styles.switchLabel}>{t('notificationConfig.notifyOnlyWhenStreakLost')}</Text>
                                     <Switch
                                         value={tempFixedConfig.triggerOnlyWhenStreakLost || false}
                                         onValueChange={(value) => setTempFixedConfig(prev => ({
@@ -377,7 +382,7 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
 
                         {configType === 'threshold' && (
                             <View style={styles.configContent}>
-                                <Text style={styles.inputLabel}>Notify when progress falls below:</Text>
+                                <Text style={styles.inputLabel}>{t('notificationConfig.notifyWhenBelow')}</Text>
                                 <View style={styles.thresholdInputContainer}>
                                     <TextInput
                                         style={styles.thresholdInput}
@@ -402,13 +407,13 @@ const NotificationConfig: React.FC<NotificationConfigProps> = ({
                                 style={[styles.modalActionButton, styles.saveButton]}
                                 onPress={saveRuleConfig}
                             >
-                                <Text style={styles.modalButtonText}>Save</Text>
+                                <Text style={styles.modalButtonText}>{t('common.save')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={[styles.modalActionButton, styles.cancelButton]}
                                 onPress={() => setConfigModalVisible(false)}
                             >
-                                <Text style={styles.modalButtonText}>Cancel</Text>
+                                <Text style={styles.modalButtonText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                         </View>
                     </View>

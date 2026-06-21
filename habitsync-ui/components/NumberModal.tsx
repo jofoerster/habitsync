@@ -5,6 +5,7 @@ import {ApiHabitRead, habitNumberModalApi} from "../services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {useTheme} from "@/context/ThemeContext";
 import {useKeepAwake} from "expo-keep-awake";
+import {useTranslation} from 'react-i18next';
 
 interface NumberModalProps {
     visible: boolean;
@@ -24,6 +25,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                                      currentRecordValue = null
                                                  }) => {
     const {theme} = useTheme();
+    const {t} = useTranslation();
 
     const [inputValue, setInputValue] = useState<string>('');
     const [numbers, setNumbers] = useState<string[]>([]);
@@ -175,16 +177,16 @@ const NumberModal: React.FC<NumberModalProps> = ({
                         <View style={styles.headerTitleContainer}>
                             <TouchableOpacity onPress={onShowValueFields}>
                                 <Text style={styles.headerTitleValue}>
-                                    Set Value
+                                    {t('numberModal.setValue')}
                                 </Text>
                             </TouchableOpacity>
 
                             {showStopwatch && (
                                 <View style={styles.headerTitleRow}>
-                                    <Text style={styles.headerTitleOr}> or </Text>
+                                    <Text style={styles.headerTitleOr}> {t('numberModal.or')} </Text>
                                     <TouchableOpacity onPress={onUseTimer}>
                                         <Text style={styles.headerTitleStopwatch}>
-                                            Start Stopwatch <MaterialCommunityIcons style={styles.timerIcon}
+                                            {t('numberModal.startStopwatch')} <MaterialCommunityIcons style={styles.timerIcon}
                                                                                     name={"timer"}/>
                                         </Text>
                                     </TouchableOpacity>
@@ -203,7 +205,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                 borderColor: theme.border || '#e0e0e0'
                             }]}>
                                 <Text style={[styles.sectionTitle, {color: theme.text}]}>
-                                    Quick Values
+                                    {t('numberModal.quickValues')}
                                 </Text>
                                 <View style={styles.quickValuesContainer}>
                                     {numbers.map((num) => (
@@ -223,7 +225,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                 </View>
                                 {numbers.length === 0 && (
                                     <Text style={[styles.emptyText, {color: theme.textSecondary || '#666'}]}>
-                                        No quick values added yet
+                                        {t('numberModal.noQuickValues')}
                                     </Text>
                                 )}
                             </View>
@@ -233,7 +235,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                 borderColor: theme.border || '#e0e0e0'
                             }]}>
                                 <Text style={[styles.sectionTitle, {color: theme.text}]}>
-                                    Custom Value
+                                    {t('numberModal.customValue')}
                                 </Text>
                                 <View style={styles.customValueRow}>
                                     <TextInput
@@ -244,7 +246,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         }]}
                                         value={inputValue}
                                         onChangeText={setInputValue}
-                                        placeholder="Enter value"
+                                        placeholder={t('numberModal.enterValue')}
                                         placeholderTextColor={theme.textSecondary || '#666'}
                                     />
                                     <TouchableOpacity
@@ -266,7 +268,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         {delayedStartCountdown}
                                     </Text>
                                     <Text style={styles.delayedCountdownLabel}>
-                                        Starting in...
+                                        {t('numberModal.startingIn')}
                                     </Text>
                                 </View>
                             ) : (
@@ -292,7 +294,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                             onPress={() => handleSubmit(inputValue)}
                         >
                             <Text style={styles.submitButtonText}>
-                                Submit Value
+                                {t('numberModal.submitValue')}
                             </Text>
                         </TouchableOpacity>
                     ) : (
@@ -305,7 +307,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                     onPress={() => startAndStopTimer()}
                                 >
                                     <Text style={styles.timerButtonText}>
-                                        {isTimerRunning ? 'Stop' : 'Start'}
+                                        {isTimerRunning ? t('numberModal.stop') : t('numberModal.start')}
                                     </Text>
                                 </TouchableOpacity>
 
@@ -317,7 +319,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         onPress={startDelayedTimer}
                                     >
                                         <Text style={styles.timerButtonText}>
-                                            {isDelayedStartActive ? 'Cancel' : 'Delayed Start'}
+                                            {isDelayedStartActive ? t('common.cancel') : t('numberModal.delayedStart')}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -327,7 +329,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         style={[styles.timerButton, styles.timerResetButton]}
                                         onPress={() => resetTimer()}
                                     >
-                                        <Text style={styles.timerButtonText}>Reset</Text>
+                                        <Text style={styles.timerButtonText}>{t('numberModal.reset')}</Text>
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -338,7 +340,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         onPress={() => handleSubmit(Math.floor(timerTime / 1000).toString())}
                                     >
                                         <Text style={styles.timerSubmitButtonText}>
-                                            Submit: {Math.floor(timerTime / 1000)}s
+                                            {t('numberModal.submitSeconds', {value: Math.floor(timerTime / 1000)})}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -348,7 +350,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         onPress={() => handleSubmit(Math.floor(timerTime / 60000).toString())}
                                     >
                                         <Text style={styles.timerSubmitButtonText}>
-                                            Submit: {Math.floor(timerTime / 60000)}m
+                                            {t('numberModal.submitMinutes', {value: Math.floor(timerTime / 60000)})}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -358,7 +360,7 @@ const NumberModal: React.FC<NumberModalProps> = ({
                                         onPress={() => handleSubmit((Math.round((timerTime / 60000) * 100) / 100).toString())}
                                     >
                                         <Text style={styles.timerSubmitButtonText}>
-                                            Submit: {Math.round((timerTime / 60000) * 100) / 100}m
+                                            {t('numberModal.submitMinutes', {value: Math.round((timerTime / 60000) * 100) / 100})}
                                         </Text>
                                     </TouchableOpacity>
                                 )}

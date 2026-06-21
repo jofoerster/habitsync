@@ -24,10 +24,12 @@ import {UI_BASE_URL} from "@/public/config";
 import {AuthService} from "@/services/auth";
 import {useDeleteSharedHabit, useJoinSharedHabit, useSharedHabit, useUpdateSharedHabit} from "@/hooks/useSharedHabits";
 import {useHabits} from "@/hooks/useHabits";
+import {useTranslation} from 'react-i18next';
 
 const {width} = Dimensions.get('window');
 
 const SharedHabitDetailsScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -106,7 +108,7 @@ const SharedHabitDetailsScreen = () => {
             setIsEditing(false);
         } catch (error) {
             console.error('Error updating shared habit:', error);
-            alert('Error', 'Failed to update shared habit');
+            alert(t('common.error'), t('share.errorUpdate'));
         }
     };
 
@@ -114,32 +116,32 @@ const SharedHabitDetailsScreen = () => {
         try {
             await joinSharedHabit.mutateAsync({shareCode})
             setShowJoinModal(false);
-            alert('Success', 'Successfully joined with new habit!');
+            alert(t('common.success'), t('share.joinedNewHabit'));
         } catch (error) {
             console.error('Error joining with new habit:', error);
-            alert('Error', 'Failed to join shared habit');
+            alert(t('common.error'), t('share.errorJoin'));
         }
     };
 
     const handleJoinWithExistingHabit = (habitUuid: string) => {
         alert(
-            'Join with Existing Habit',
-            'Are you sure you want to connect this existing habit to the shared habit?',
+            t('share.joinExistingTitle'),
+            t('share.joinExistingMessage'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Join',
+                    text: t('share.join'),
                     onPress: async () => {
                         try {
                             await joinSharedHabit.mutateAsync({shareCode, habitUuid})
                             setShowJoinModal(false);
-                            alert('Success', 'Successfully joined with existing habit!');
+                            alert(t('common.success'), t('share.joinedExistingHabit'));
                         } catch (error) {
                             console.error('Error joining with existing habit:', error);
-                            alert('Error', 'Failed to join shared habit');
+                            alert(t('common.error'), t('share.errorJoin'));
                         }
                     }
                 }
@@ -151,15 +153,15 @@ const SharedHabitDetailsScreen = () => {
         if (!sharedHabit) return;
 
         alert(
-            'Delete Shared Habit',
-            'Are you sure you want to delete this shared habit? This action cannot be undone.',
+            t('share.deleteTitle'),
+            t('share.deleteMessage'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Delete',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -175,7 +177,7 @@ const SharedHabitDetailsScreen = () => {
                             router.push('/habits');
                         } catch (error) {
                             console.error('Error deleting shared habit:', error);
-                            alert('Error', 'Failed to delete shared habit');
+                            alert(t('common.error'), t('share.errorDelete'));
                         }
                     }
                 }
@@ -187,13 +189,13 @@ const SharedHabitDetailsScreen = () => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
 
         if (frequencyType === FrequencyTypeDTO.WEEKLY) {
-            return `${frequency} times per week`;
+            return t('share.timesPerWeek', {frequency});
         } else if (frequencyType === FrequencyTypeDTO.MONTHLY) {
-            return `${frequency} times per month`;
+            return t('share.timesPerMonth', {frequency});
         } else if (frequencyType === FrequencyTypeDTO.X_TIMES_PER_Y_DAYS) {
-            return `${frequency} times per ${timesPerXDays} days`;
+            return t('share.timesPerXDays', {frequency, days: timesPerXDays});
         }
-        return 'Custom frequency';
+        return t('share.customFrequency');
     };
 
     const renderJoinModal = () => {
@@ -202,9 +204,9 @@ const SharedHabitDetailsScreen = () => {
         return (
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContent}>
-                    <Text style={styles.modalTitle}>Join Shared Habit</Text>
+                    <Text style={styles.modalTitle}>{t('share.joinModalTitle')}</Text>
                     <Text style={styles.modalDescription}>
-                        How would you like to join this shared habit?
+                        {t('share.joinModalDescription')}
                     </Text>
 
                     <TouchableOpacity
@@ -212,12 +214,12 @@ const SharedHabitDetailsScreen = () => {
                         onPress={handleJoinWithNewHabit}
                     >
                         <MaterialCommunityIcons name="plus-circle" size={24} color="#2196F3"/>
-                        <Text style={styles.modalButtonText}>Create New Habit</Text>
+                        <Text style={styles.modalButtonText}>{t('share.createNewHabit')}</Text>
                     </TouchableOpacity>
 
                     {userHabits && userHabits.length > 0 && (
                         <>
-                            <Text style={styles.modalSectionTitle}>Or connect an existing habit:</Text>
+                            <Text style={styles.modalSectionTitle}>{t('share.orConnectExisting')}</Text>
                             {userHabits.map(userHabit => (
                                 <TouchableOpacity
                                     key={userHabit.uuid}
@@ -236,7 +238,7 @@ const SharedHabitDetailsScreen = () => {
                         style={styles.modalCancelButton}
                         onPress={() => setShowJoinModal(false)}
                     >
-                        <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                        <Text style={styles.modalCancelButtonText}>{t('common.cancel')}</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -260,7 +262,7 @@ const SharedHabitDetailsScreen = () => {
     if (!sharedHabit) {
         return (
             <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>Shared habit not found</Text>
+                <Text style={styles.errorText}>{t('share.notFound')}</Text>
             </View>
         );
     }
@@ -283,12 +285,12 @@ const SharedHabitDetailsScreen = () => {
                                 style={styles.titleInput}
                                 value={editedTitle}
                                 onChangeText={setEditedTitle}
-                                placeholder="Habit title"
+                                placeholder={t('share.habitTitlePlaceholder')}
                             />
                         ) : (
                             <Text style={styles.habitName}>{sharedHabit.title}</Text>
                         )}
-                        <Text style={styles.ownerName}>by {sharedHabit.owner.displayName}</Text>
+                        <Text style={styles.ownerName}>{t('share.byOwner', {name: sharedHabit.owner.displayName})}</Text>
                     </View>
                 </View>
             </View>
@@ -301,24 +303,24 @@ const SharedHabitDetailsScreen = () => {
                         onPress={handleCopy}
                     >
                         <MaterialCommunityIcons name="content-copy" size={24} color="#FFFFFF"/>
-                        <Text style={styles.copyLinkButtonText}>Copy Link to Share</Text>
+                        <Text style={styles.copyLinkButtonText}>{t('share.copyLinkToShare')}</Text>
                     </TouchableOpacity>
                 </View>)}
 
             {/* Description */}
             <View style={styles.descriptionSection}>
-                <Text style={styles.sectionTitle}>Description</Text>
+                <Text style={styles.sectionTitle}>{t('share.description')}</Text>
                 {isEditing ? (
                     <TextInput
                         style={styles.descriptionInput}
                         value={editedDescription}
                         onChangeText={setEditedDescription}
-                        placeholder="Add a description..."
+                        placeholder={t('share.descriptionPlaceholder')}
                         multiline
                     />
                 ) : (
                     <Text style={styles.descriptionText}>
-                        {sharedHabit.description || 'No description provided'}
+                        {sharedHabit.description || t('share.noDescription')}
                     </Text>
                 )}
             </View>
@@ -331,7 +333,7 @@ const SharedHabitDetailsScreen = () => {
                         onPress={() => setShowJoinModal(true)}
                     >
                         <MaterialCommunityIcons name="account-plus" size={24} color="#FFFFFF"/>
-                        <Text style={styles.joinButtonText}>Join This Habit</Text>
+                        <Text style={styles.joinButtonText}>{t('share.joinThisHabit')}</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -340,14 +342,14 @@ const SharedHabitDetailsScreen = () => {
             {!isEditing ? (
                     <View style={styles.progressSection}>
                         <View style={styles.progressCard}>
-                            <Text style={styles.sectionTitle}>Progress Details</Text>
+                            <Text style={styles.sectionTitle}>{t('share.progressDetails')}</Text>
 
 
                             <View style={styles.progressDetails}>
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="target" size={20} color="#2196F3"/>
                                     <Text style={styles.progressDetailText}>
-                                        Percentage of last {sharedHabit.progressComputation?.targetDays} days
+                                        {t('share.percentageOfLastDays', {days: sharedHabit.progressComputation?.targetDays})}
                                     </Text>
                                 </View>
 
@@ -362,7 +364,7 @@ const SharedHabitDetailsScreen = () => {
                                     <View style={styles.progressDetailItem}>
                                         <MaterialCommunityIcons name="flag" size={20} color="#4CAF50"/>
                                         <Text style={styles.progressDetailText}>
-                                            {sharedHabit.progressComputation?.dailyDefault} daily default
+                                            {t('share.dailyDefault', {value: sharedHabit.progressComputation?.dailyDefault})}
                                         </Text>
                                     </View>
                                 )}
@@ -389,7 +391,7 @@ const SharedHabitDetailsScreen = () => {
             {/* Allow editing of all */}
             {(!isEditing || currentUser?.authenticationId === sharedHabit.owner.authenticationId) && (
                 <View style={styles.descriptionSection}>
-                    <Text style={styles.sectionTitle}>Allow editing of all participants</Text>
+                    <Text style={styles.sectionTitle}>{t('share.allowEditingOfAll')}</Text>
                     <Switch
                         value={allowEditingOfAllUsers}
                         onValueChange={isEditing ? setAllowEditingOfAllUsers : undefined}
@@ -401,7 +403,7 @@ const SharedHabitDetailsScreen = () => {
 
             {/* Participants Section */}
             <View style={styles.participantsSection}>
-                <Text style={styles.sectionTitle}>Participants ({sharedHabit.habits.length})</Text>
+                <Text style={styles.sectionTitle}>{t('share.participantsCount', {count: sharedHabit.habits.length})}</Text>
                 <SharedHabitParticipants sharedHabit={sharedHabit} currentUser={currentUser}/>
             </View>
 
@@ -412,7 +414,7 @@ const SharedHabitDetailsScreen = () => {
                         <View style={styles.editingActions}>
                             <TouchableOpacity style={styles.saveButton} onPress={handleSaveEdit}>
                                 <MaterialCommunityIcons name="check" size={20} color="#FFFFFF"/>
-                                <Text style={styles.buttonText}>Save</Text>
+                                <Text style={styles.buttonText}>{t('common.save')}</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.cancelButton}
@@ -423,14 +425,14 @@ const SharedHabitDetailsScreen = () => {
                                 }}
                             >
                                 <MaterialCommunityIcons name="close" size={20} color="#666"/>
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                                <Text style={styles.cancelButtonText}>{t('common.cancel')}</Text>
                             </TouchableOpacity>
                         </View>
                     ) : (
                         <View style={styles.secondaryButtons}>
                             <TouchableOpacity style={styles.secondaryButton} onPress={() => setIsEditing(true)}>
                                 <MaterialCommunityIcons name="pencil" size={20} color="#2196F3"/>
-                                <Text style={styles.secondaryButtonText}>Edit</Text>
+                                <Text style={styles.secondaryButtonText}>{t('common.edit')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}

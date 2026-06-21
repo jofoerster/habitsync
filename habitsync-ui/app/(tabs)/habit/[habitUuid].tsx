@@ -25,12 +25,14 @@ import ShareHabitModal from "@/components/ShareHabitModal";
 import {habitKeys, useCreateHabitRecord, useDeleteHabit, useHabit} from "@/hooks/useHabits";
 import {useLeaveSharedHabit, useSharedHabits} from "@/hooks/useSharedHabits";
 import {queryClient} from "@/context/ReactQueryContext";
+import {useTranslation} from 'react-i18next';
 
 const UI_BASE_URL = process.env.EXPO_PUBLIC_UI_BASE_URL || 'http://localhost:8081';
 
 const {width} = Dimensions.get('window');
 
 const HabitDetailsScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -115,7 +117,7 @@ const HabitDetailsScreen = () => {
             await refetch();
         } catch (error) {
             console.error('Error fetching habit details:', error);
-            alert('Error', 'Failed to load habit details');
+            alert(t('common.error'), t('habitDetail.loadFailed'));
         }
     }, [habitUuid, refetch]);
 
@@ -129,13 +131,13 @@ const HabitDetailsScreen = () => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
 
         if (frequencyType === 'WEEKLY') {
-            return `${frequency} times per week`;
+            return t('habitDetail.timesPerWeek', {count: frequency});
         } else if (frequencyType === 'MONTHLY') {
-            return `${frequency} times per month`;
+            return t('habitDetail.timesPerMonth', {count: frequency});
         } else if (frequencyType === 'X_TIMES_PER_Y_DAYS') {
-            return `${frequency} times per ${timesPerXDays} days`;
+            return t('habitDetail.timesPerXDays', {count: frequency, days: timesPerXDays});
         }
-        return 'Custom frequency';
+        return t('habitDetail.customFrequency');
     };
 
     const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
@@ -146,40 +148,48 @@ const HabitDetailsScreen = () => {
     }
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
-        return getFrequencyTypeTextType(progressComputation) + (progressComputation.isNegative ? " Max" : " Goal");
+        // Build the label from a complete per-combination key (e.g. "weeklyGoal")
+        // rather than concatenating words, so each language keeps correct grammar
+        // (German needs the inflected adjective: "Wöchentliches Ziel", not "Wöchentlich Ziel").
+        const period = getFrequencyPeriod(progressComputation);
+        if (!period) {
+            return progressComputation.isNegative ? t('habitDetail.max') : t('habitDetail.goal');
+        }
+        const suffix = progressComputation.isNegative ? 'Max' : 'Goal';
+        return t(`habitDetail.${period}${suffix}`);
     }
 
-    const getFrequencyTypeTextType = (progressComputation: ApiComputationReadWrite) => {
+    const getFrequencyPeriod = (progressComputation: ApiComputationReadWrite): 'daily' | 'weekly' | 'monthly' | null => {
         if (progressComputation.frequencyType === FrequencyTypeDTO.DAILY ||
             (progressComputation.frequency === 1 && progressComputation.timesPerXDays === 1) ||
             (progressComputation.frequency !== 0 && progressComputation.isNegative)) {
-            return "Daily";
+            return 'daily';
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
-            return "Weekly";
+            return 'weekly';
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
-            return "Monthly";
+            return 'monthly';
         }
-        return "";
+        return null;
     }
 
     const handleDeleteHabit = () => {
         if (!habitDetail?.uuid) {
-            alert('Error', 'Habit details not available');
+            alert(t('common.error'), t('habitDetail.detailsNotAvailable'));
             return;
         }
 
         alert(
-            'Archive Habit',
-            'Are you sure you want to archive this habit?',
+            t('habitDetail.archiveTitle'),
+            t('habitDetail.archiveMessage'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Archive',
+                    text: t('habitDetail.archive'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -187,7 +197,7 @@ const HabitDetailsScreen = () => {
                             router.push(`/(tabs)/habits` as any);
                         } catch (error) {
                             console.error('Error deleting habit:', error);
-                            alert('Error', 'Failed to delete habit');
+                            alert(t('common.error'), t('habitDetail.deleteFailed'));
                         }
                     }
                 }
@@ -197,15 +207,15 @@ const HabitDetailsScreen = () => {
 
     const handleLeaveSharedHabit = () => {
         alert(
-            'Leave Shared Habit',
-            'Are you sure you want to unlink your habit from the shared habit? You will no longer share progress with other participants.',
+            t('habitDetail.leaveTitle'),
+            t('habitDetail.leaveMessage'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel'
                 },
                 {
-                    text: 'Leave',
+                    text: t('habitDetail.leave'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -213,7 +223,7 @@ const HabitDetailsScreen = () => {
                             await fetchData();
                         } catch (error) {
                             console.error('Error leaving shared habit:', error);
-                            alert('Error', 'Failed to leave shared habit');
+                            alert(t('common.error'), t('habitDetail.leaveFailed'));
                         }
                     }
                 }
@@ -302,11 +312,11 @@ const HabitDetailsScreen = () => {
                 <View style={styles.headerContent}>
                     <View style={styles.headerText}>
                         <Text style={styles.habitName}>{habitDetail?.name}</Text>
-                        <Text style={styles.ownerName}>by {habitDetail?.account?.displayName}</Text>
+                        <Text style={styles.ownerName}>{t('habitDetail.by', {name: habitDetail?.account?.displayName})}</Text>
                         {isChallenge && (
                             <View style={styles.challengeBadge}>
                                 <MaterialCommunityIcons name="trophy" size={16} color="#FFD700"/>
-                                <Text style={styles.challengeText}>Challenge</Text>
+                                <Text style={styles.challengeText}>{t('habitDetail.challenge')}</Text>
                             </View>
                         )}
                     </View>
@@ -350,7 +360,7 @@ const HabitDetailsScreen = () => {
             {!isChallenge && (
                 <View style={styles.progressSection}>
                     <View style={styles.progressCard}>
-                        <Text style={styles.sectionTitle}>Progress Overview</Text>
+                        <Text style={styles.sectionTitle}>{t('habitDetail.progressOverview')}</Text>
 
                         <View style={styles.progressContent}>
                             <View style={styles.progressRingContainer}>
@@ -385,7 +395,7 @@ const HabitDetailsScreen = () => {
                                 <View style={styles.progressDetailItem}>
                                     <MaterialCommunityIcons name="percent" size={20} color="#2196F3"/>
                                     <Text style={styles.progressDetailText}>
-                                        Percentage of last {habitDetail?.progressComputation?.targetDays} days
+                                        {t('habitDetail.percentageOfLastDays', {count: habitDetail?.progressComputation?.targetDays})}
                                     </Text>
                                 </View>
                             </View>
@@ -414,7 +424,7 @@ const HabitDetailsScreen = () => {
             {(!isChallenge && sharedHabits.length > 0) && (
                 <View style={styles.progressSection}>
                     <View style={styles.progressCard}>
-                        <Text style={styles.sectionTitle}>Shared Habits</Text>
+                        <Text style={styles.sectionTitle}>{t('habitDetail.sharedHabits')}</Text>
                         {sharedHabits.map(sharedHabit => (
                             <React.Fragment key={sharedHabit.shareCode}>
                                 <Text style={{fontSize: 16, color: theme.textSecondary}}>{sharedHabit.title}</Text>
@@ -435,14 +445,14 @@ const HabitDetailsScreen = () => {
                     <View style={styles.secondaryButtons}>
                         <TouchableOpacity style={styles.secondaryButton} onPress={handleEditHabit}>
                             <MaterialCommunityIcons name="pencil" size={20} color="#2196F3"/>
-                            <Text style={styles.secondaryButtonText}>Edit</Text>
+                            <Text style={styles.secondaryButtonText}>{t('common.edit')}</Text>
                         </TouchableOpacity>
                         {sharedHabits.length > 0 && (sharedHabits[0].allowEditingOfAllUsers || (currentUser &&
                             (sharedHabits.map(sh => sh.owner.authenticationId)
                                 .includes(currentUser.authenticationId)))) && (
                             <TouchableOpacity style={[styles.secondaryButton]} onPress={handleEditSharedHabit}>
                                 <MaterialCommunityIcons name="pencil" size={20} color="#FF9800"/>
-                                <Text style={[styles.secondaryButtonText, {color: "#FF9800"}]}>Edit for all</Text>
+                                <Text style={[styles.secondaryButtonText, {color: "#FF9800"}]}>{t('habitDetail.editForAll')}</Text>
                             </TouchableOpacity>
                         )}
                     </View>
@@ -451,14 +461,14 @@ const HabitDetailsScreen = () => {
                         <TouchableOpacity style={[styles.secondaryButton, styles.leaveSharedButton]}
                                           onPress={handleLeaveSharedHabit}>
                             <MaterialCommunityIcons name="exit-to-app" size={20} color="#FF9800"/>
-                            <Text style={[styles.secondaryButtonText, {color: '#FF9800'}]}>Leave Shared Habit</Text>
+                            <Text style={[styles.secondaryButtonText, {color: '#FF9800'}]}>{t('habitDetail.leaveSharedHabit')}</Text>
                         </TouchableOpacity>
                     )}
 
                     <TouchableOpacity style={[styles.secondaryButton, styles.deleteButton]}
                                       onPress={handleDeleteHabit}>
                         <MaterialCommunityIcons name="delete" size={20} color="#F44336"/>
-                        <Text style={[styles.secondaryButtonText, {color: '#F44336'}]}>Archive</Text>
+                        <Text style={[styles.secondaryButtonText, {color: '#F44336'}]}>{t('habitDetail.archive')}</Text>
                     </TouchableOpacity>
                 </View>
             )}

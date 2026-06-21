@@ -7,8 +7,10 @@ import HabitConfig, {ConfigType} from "@/components/HabitConfig";
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import {useCreateHabit, useHabit, useUpdateHabit} from "@/hooks/useHabits";
+import {useTranslation} from 'react-i18next';
 
 const HabitEditScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -32,7 +34,7 @@ const HabitEditScreen = () => {
             }
             router.push(`/habit/${newUuid}?isOwnHabit=true`);
         } catch (error) {
-            alert('Error', 'Failed to update habit');
+            alert(t('common.error'), t('habitEdit.updateFailed'));
         }
     };
 
@@ -40,7 +42,7 @@ const HabitEditScreen = () => {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color="#4ECDC4"/>
-                <Text style={styles.loadingText}>Loading habit...</Text>
+                <Text style={styles.loadingText}>{t('habitEdit.loadingHabit')}</Text>
             </View>
         );
     }
@@ -48,8 +50,8 @@ const HabitEditScreen = () => {
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
-                <Text style={styles.title}>Edit Habit</Text>
-                <Text style={styles.subtitle}>Customize your habit settings</Text>
+                <Text style={styles.title}>{t('habitEdit.title')}</Text>
+                <Text style={styles.subtitle}>{t('habitEdit.subtitle')}</Text>
             </View>
 
             <HabitConfig habit={habit ?? undefined} configType={ConfigType.HABIT} callbackMethod={handleUpdate}/>

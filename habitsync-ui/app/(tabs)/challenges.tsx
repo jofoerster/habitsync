@@ -10,6 +10,7 @@ import {
 } from "@/services/api";
 import {MaterialCommunityIcons} from "@expo/vector-icons";
 import React, {useCallback, useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import {Link, useFocusEffect, useRouter} from "expo-router";
 import ProgressBar from "@/components/ProgressBar";
@@ -30,6 +31,7 @@ import {
 type IconName = React.ComponentProps<typeof MaterialCommunityIcons>['name'];
 
 const ChallengesScreen = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -78,13 +80,13 @@ const ChallengesScreen = () => {
         const {frequencyType, frequency, timesPerXDays} = progressComputation;
 
         if (frequencyType === 'WEEKLY') {
-            return `${frequency} times per week`;
+            return t('challenges.frequency.perWeek', {frequency});
         } else if (frequencyType === 'MONTHLY') {
-            return `${frequency} times per month`;
+            return t('challenges.frequency.perMonth', {frequency});
         } else if (frequencyType === 'X_TIMES_PER_Y_DAYS') {
-            return `${frequency} times per ${timesPerXDays} days`;
+            return t('challenges.frequency.perXDays', {frequency, days: timesPerXDays});
         }
-        return 'Custom frequency';
+        return t('challenges.frequency.custom');
     };
 
     const isCustomFrequency = (progressComputation: ApiComputationReadWrite) => {
@@ -93,13 +95,13 @@ const ChallengesScreen = () => {
 
     const getFrequencyTypeText = (progressComputation: ApiComputationReadWrite) => {
         if (progressComputation.frequency !== 1 || progressComputation.frequencyType === FrequencyTypeDTO.DAILY) {
-            return "Daily";
+            return t('challenges.frequencyType.daily');
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.WEEKLY) {
-            return "Weekly";
+            return t('challenges.frequencyType.weekly');
         }
         if (progressComputation.frequencyType === FrequencyTypeDTO.MONTHLY) {
-            return "Monthly";
+            return t('challenges.frequencyType.monthly');
         }
     }
 
@@ -109,7 +111,7 @@ const ChallengesScreen = () => {
             await voteOnChallengeMutation.mutateAsync({id: item.id, vote});
         } catch (error) {
             console.error('Error voting on challenge:', error);
-            alert('Error', 'Failed to vote on challenge');
+            alert(t('common.error'), t('challenges.errors.voteFailed'));
         }
     };
 
@@ -118,28 +120,28 @@ const ChallengesScreen = () => {
             await proposeChallengeMutation.mutateAsync(id);
         } catch (error) {
             console.error('Error proposing challenge:', error);
-            alert('Error', 'Failed to propose challenge');
+            alert(t('common.error'), t('challenges.errors.proposeFailed'));
         }
     };
 
     const handleDeleteChallenge = async (id: number) => {
         alert(
-            'Delete Challenge',
-            'Are you sure you want to delete this challenge?',
+            t('challenges.deleteDialog.title'),
+            t('challenges.deleteDialog.message'),
             [
                 {
-                    text: 'Cancel',
+                    text: t('common.cancel'),
                     style: 'cancel',
                 },
                 {
-                    text: 'Delete',
+                    text: t('common.delete'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
                             await deleteChallengeMutation.mutateAsync(id);
                         } catch (error) {
                             console.error('Error deleting challenge:', error);
-                            alert('Error', 'Failed to delete challenge');
+                            alert(t('common.error'), t('challenges.errors.deleteFailed'));
                         }
                     },
                 },
@@ -162,17 +164,17 @@ const ChallengesScreen = () => {
         const diffTime = endDate.getTime() - currentTime.getTime();
 
         if (diffTime <= 0) {
-            return {text: "Challenge ended", isExpired: true};
+            return {text: t('challenges.time.ended'), isExpired: true};
         }
 
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffDays === 1) {
-            return {text: "Ends today", isExpired: false, isUrgent: true};
+            return {text: t('challenges.time.endsToday'), isExpired: false, isUrgent: true};
         } else if (diffDays <= 7) {
-            return {text: `${diffDays} days left`, isExpired: false, isUrgent: true};
+            return {text: t('challenges.time.daysLeft', {count: diffDays}), isExpired: false, isUrgent: true};
         } else {
-            return {text: `${diffDays} days left`, isExpired: false, isUrgent: false};
+            return {text: t('challenges.time.daysLeft', {count: diffDays}), isExpired: false, isUrgent: false};
         }
     };
 
@@ -249,7 +251,7 @@ const ChallengesScreen = () => {
 
                 <View style={styles.goalSection}>
                     <View style={styles.goalHeader}>
-                        <Text style={styles.goalTitle}>Progress Computation</Text>
+                        <Text style={styles.goalTitle}>{t('challenges.card.progressComputation')}</Text>
                     </View>
 
                     <View style={styles.goalDetails}>
@@ -264,7 +266,7 @@ const ChallengesScreen = () => {
                             <View style={styles.goalItem}>
                                 <MaterialCommunityIcons name="ruler" size={16} color="#666"/>
                                 <Text style={styles.goalItemText}>
-                                    As many {item.computation.unit} as possible
+                                    {t('challenges.card.asManyAsPossible', {unit: item.computation.unit})}
                                 </Text>
                             </View>
                         )}
@@ -325,21 +327,21 @@ const ChallengesScreen = () => {
                                 style={[styles.actionButton, styles.proposeButton]}
                                 onPress={() => handleProposeChallenge(item.id)}
                             >
-                                <Text style={styles.actionButtonText}>Propose</Text>
+                                <Text style={styles.actionButtonText}>{t('challenges.actions.propose')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.editButton]}
                                 onPress={() => router.push(`/challenge/edit/${item.id}`)}
                             >
-                                <Text style={styles.actionButtonText}>Edit</Text>
+                                <Text style={styles.actionButtonText}>{t('common.edit')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.actionButton, styles.deleteButton]}
                                 onPress={() => handleDeleteChallenge(item.id)}
                             >
-                                <Text style={styles.actionButtonText}>Delete</Text>
+                                <Text style={styles.actionButtonText}>{t('common.delete')}</Text>
                             </TouchableOpacity>
                         </View>
                     )}
@@ -349,7 +351,7 @@ const ChallengesScreen = () => {
                             style={[styles.actionButton, styles.deleteButton]}
                             onPress={() => handleDeleteChallenge(item.id)}
                         >
-                            <Text style={styles.actionButtonText}>Delete</Text>
+                            <Text style={styles.actionButtonText}>{t('common.delete')}</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -374,8 +376,7 @@ const ChallengesScreen = () => {
                         hideProgressRing={true}
                     />
                     <View style={styles.participantsSection}>
-                        <Text style={styles.sectionTitle}>Challenge Progress
-                            ({challengeOverview.progressCurrentChallengeUsers.length})</Text>
+                        <Text style={styles.sectionTitle}>{t('challenges.progress.title', {count: challengeOverview.progressCurrentChallengeUsers.length})}</Text>
                         {challengeOverview.progressCurrentChallengeUsers.map(challengeProgress => (
 
                             <View key={challengeProgress.account.authenticationId} style={styles.participantCard}>
@@ -409,7 +410,7 @@ const ChallengesScreen = () => {
 
                     {challengeOverview.leaderboard && challengeOverview.leaderboard.length > 0 && (
                         <View style={styles.leaderboardSection}>
-                            <Text style={styles.sectionTitle}>🏆 Leaderboard</Text>
+                            <Text style={styles.sectionTitle}>🏆 {t('challenges.leaderboard.title')}</Text>
                             {challengeOverview.leaderboard.map((entry, index) => (
                                 <View key={entry.account.authenticationId} style={styles.leaderboardCard}>
                                     <View style={styles.leaderboardRank}>
@@ -423,7 +424,7 @@ const ChallengesScreen = () => {
                                     </View>
                                     <View style={styles.leaderboardInfo}>
                                         <Text style={styles.leaderboardName}>{entry.account.displayName}</Text>
-                                        <Text style={styles.leaderboardPoints}>{entry.points} points</Text>
+                                        <Text style={styles.leaderboardPoints}>{t('challenges.leaderboard.points', {count: entry.points})}</Text>
                                     </View>
                                 </View>
                             ))}
@@ -450,7 +451,7 @@ const ChallengesScreen = () => {
                         color={activeTab === 'active' ? '#FFFFFF' : theme.textSecondary}
                     />
                     <Text style={[styles.segmentText, activeTab === 'active' && styles.activeSegmentText]}>
-                        Active
+                        {t('challenges.tabs.active')}
                     </Text>
                     {counts.active > 0 && (
                         <View style={styles.segmentBadge}>
@@ -469,7 +470,7 @@ const ChallengesScreen = () => {
                         color={activeTab === 'proposed' ? '#FFFFFF' : theme.textSecondary}
                     />
                     <Text style={[styles.segmentText, activeTab === 'proposed' && styles.activeSegmentText]}>
-                        Proposed
+                        {t('challenges.tabs.proposed')}
                     </Text>
                     {counts.proposed > 0 && (
                         <View style={styles.segmentBadge}>
@@ -488,7 +489,7 @@ const ChallengesScreen = () => {
                         color={activeTab === 'created' ? '#FFFFFF' : theme.textSecondary}
                     />
                     <Text style={[styles.segmentText, activeTab === 'created' && styles.activeSegmentText]}>
-                        Created
+                        {t('challenges.tabs.created')}
                     </Text>
                     {counts.created > 0 && (
                         <View style={styles.segmentBadge}>
@@ -506,15 +507,15 @@ const ChallengesScreen = () => {
                 case 'active':
                     return {
                         icon: 'trophy-outline' as IconName,
-                        title: 'No Active Challenge',
-                        description: 'A new challenge will start at the beginning of each month.',
+                        title: t('challenges.empty.active.title'),
+                        description: t('challenges.empty.active.description'),
                         primaryAction: {
-                            text: 'Vote on Proposals',
+                            text: t('challenges.actions.voteOnProposals'),
                             icon: 'vote' as IconName,
                             onPress: () => setActiveTab('proposed')
                         },
                         secondaryAction: {
-                            text: 'Create Challenge',
+                            text: t('challenges.actions.createChallenge'),
                             icon: 'plus' as IconName,
                             onPress: () => router.push('/challenge/edit/new')
                         }
@@ -522,15 +523,15 @@ const ChallengesScreen = () => {
                 case 'proposed':
                     return {
                         icon: 'vote-outline' as IconName,
-                        title: 'No Proposed Challenges',
-                        description: 'Propose one of your created challenges or create a new one!',
+                        title: t('challenges.empty.proposed.title'),
+                        description: t('challenges.empty.proposed.description'),
                         primaryAction: {
-                            text: 'Create Challenge',
+                            text: t('challenges.actions.createChallenge'),
                             icon: 'plus' as IconName,
                             onPress: () => router.push('/challenge/edit/new')
                         },
                         secondaryAction: {
-                            text: 'View Created',
+                            text: t('challenges.actions.viewCreated'),
                             icon: 'pencil' as IconName,
                             onPress: () => setActiveTab('created')
                         }
@@ -538,15 +539,15 @@ const ChallengesScreen = () => {
                 case 'created':
                     return {
                         icon: 'pencil-outline' as IconName,
-                        title: 'No Created Challenges',
-                        description: 'Create a challenge and propose it to others',
+                        title: t('challenges.empty.created.title'),
+                        description: t('challenges.empty.created.description'),
                         primaryAction: {
-                            text: 'Create Challenge',
+                            text: t('challenges.actions.createChallenge'),
                             icon: 'plus' as IconName,
                             onPress: () => router.push('/challenge/edit/new')
                         },
                         secondaryAction: {
-                            text: 'Vote on Proposals',
+                            text: t('challenges.actions.voteOnProposals'),
                             icon: 'vote' as IconName,
                             onPress: () => setActiveTab('proposed')
                         }
@@ -625,7 +626,7 @@ const ChallengesScreen = () => {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.primary}/>
-                <Text style={styles.loadingText}>Loading challenges...</Text>
+                <Text style={styles.loadingText}>{t('challenges.loading')}</Text>
             </View>
         );
     }
@@ -636,16 +637,14 @@ const ChallengesScreen = () => {
                 <View style={styles.resultsBanner}>
                     <MaterialCommunityIcons name="information" size={20} color="#2196F3"/>
                     <Text style={styles.bannerText}>
-                        If last month&apos;s challenge was active, results will be published tomorrow! (UTC). Last
-                        chance to
-                        log challenge progress today!
+                        {t('challenges.resultsBanner')}
                     </Text>
                 </View>
             )}
 
             <View>
-                <Text style={styles.header}>Challenge</Text>
-                <Text style={styles.subHeader}>Challenge your friends</Text>
+                <Text style={styles.header}>{t('challenges.header.title')}</Text>
+                <Text style={styles.subHeader}>{t('challenges.header.subtitle')}</Text>
             </View>
 
             {renderSegmentedControl()}

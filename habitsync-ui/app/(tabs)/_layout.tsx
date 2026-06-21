@@ -4,9 +4,11 @@ import {Tabs} from 'expo-router';
 import {useTheme} from "@/context/ThemeContext";
 import AuthGuard from '@/components/AuthGuard';
 import {useConfiguration} from "@/hooks/useConfiguration";
+import {useTranslation} from 'react-i18next';
 
 export default function TabLayout() {
     const {theme} = useTheme();
+    const {t} = useTranslation();
 
     const {data: config} = useConfiguration();
     const showChallengesTab = !config || !config?.hideChallenges
@@ -75,7 +77,7 @@ export default function TabLayout() {
                 <Tabs.Screen
                     name="habits"
                     options={{
-                        title: 'Habits',
+                        title: t('tabs.habits'),
                         tabBarIcon: ({focused, color, size}) => (
                             <MaterialCommunityIcons
                                 size={size}
@@ -88,7 +90,7 @@ export default function TabLayout() {
                 <Tabs.Screen
                     name="challenges"
                     options={{
-                        title: 'Challenges',
+                        title: t('tabs.challenges'),
                         href: showChallengesTab ? undefined : null,
                         tabBarIcon: ({focused, color, size}) => (
                             <MaterialCommunityIcons
@@ -102,7 +104,7 @@ export default function TabLayout() {
                 <Tabs.Screen
                     name="profile"
                     options={{
-                        title: 'Profile',
+                        title: t('tabs.profile'),
                         tabBarIcon: ({focused, color, size}) => (
                             <MaterialCommunityIcons
                                 size={size}

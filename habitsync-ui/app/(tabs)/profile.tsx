@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import {useTranslation} from 'react-i18next';
 import {
     ActivityIndicator,
     ScrollView,
@@ -17,12 +18,14 @@ import {Link} from 'expo-router';
 import {useTheme} from '@/context/ThemeContext';
 import {createThemedStyles} from '@/constants/styles';
 import ThemeToggle from '@/components/ThemeToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {useApiKey, useEvictApiKeys, useHabitInvitations, useUpdateUserSettings, useUserSettings, useClearAllCache} from "@/hooks/useUser";
 import {useAcceptHabitInvitation, useDeclineHabitInvitation} from "@/hooks/useHabits";
 
 
 const UserSettingsComponent = () => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -61,9 +64,9 @@ const UserSettingsComponent = () => {
         if (!updatedSettings) return;
         try {
             await updateUserProfile.mutateAsync(updatedSettings);
-            alert('Success', 'Settings updated successfully');
+            alert(t('common.success'), t('profile.settingsUpdated'));
         } catch (error) {
-            alert('Error', 'Failed to update settings');
+            alert(t('common.error'), t('profile.settingsUpdateFailed'));
         } finally {
             setSaving(false);
         }
@@ -73,9 +76,9 @@ const UserSettingsComponent = () => {
         try {
             setProcessingInvitation(habitUuid);
             await acceptInvitation.mutateAsync(habitUuid);
-            alert('Success', 'Invitation accepted');
+            alert(t('common.success'), t('profile.invitationAccepted'));
         } catch (error) {
-            alert('Error', 'Failed to accept invitation');
+            alert(t('common.error'), t('profile.invitationAcceptFailed'));
         } finally {
             setProcessingInvitation(null);
         }
@@ -85,9 +88,9 @@ const UserSettingsComponent = () => {
         try {
             setProcessingInvitation(habitUuid);
             await declineInvitation.mutateAsync(habitUuid);
-            alert('Success', 'Invitation declined');
+            alert(t('common.success'), t('profile.invitationDeclined'));
         } catch (error) {
-            alert('Error', 'Failed to decline invitation');
+            alert(t('common.error'), t('profile.invitationDeclineFailed'));
         } finally {
             setProcessingInvitation(null);
         }
@@ -101,29 +104,29 @@ const UserSettingsComponent = () => {
     const handleCreateApiKey = async () => {
         try {
             const apiKey = await userApi.getApiKey();
-            alert('API Key Created', `Your API Key: ${apiKey}\n\nPlease save this key securely. You won't be able to see it again.`, [
+            alert(t('profile.apiKeyCreatedTitle'), t('profile.apiKeyCreatedMessage', {apiKey}), [
                 {
-                    text: 'Copy',
+                    text: t('profile.copy'),
                     onPress: async () => {
                         await Clipboard.setStringAsync(apiKey);
                     },
                 },
                 {
-                    text: 'OK',
+                    text: t('common.ok'),
                     style: 'cancel',
                 },
             ]);
         } catch (error) {
-            alert('Error', 'Failed to create API key');
+            alert(t('common.error'), t('profile.apiKeyCreateFailed'));
         }
     };
 
     const handleEvictAllApiKeys = async () => {
         try {
             await userApi.evictAllApiKeys();
-            alert('Success', 'All API keys have been deleted');
+            alert(t('common.success'), t('profile.apiKeysDeleted'));
         } catch (error) {
-            alert('Error', 'Failed to delete API keys');
+            alert(t('common.error'), t('profile.apiKeysDeleteFailed'));
         }
     };
 
@@ -131,7 +134,7 @@ const UserSettingsComponent = () => {
         return (
             <View style={styles.loadingContainer}>
                 <ActivityIndicator size="large" color={theme.primary}/>
-                <Text style={styles.loadingText}>Loading settings...</Text>
+                <Text style={styles.loadingText}>{t('profile.loadingSettings')}</Text>
             </View>
         );
     }
@@ -139,18 +142,21 @@ const UserSettingsComponent = () => {
     return (
         <View style={styles.container}>
             <View>
-                <Text style={styles.header}>Profile & Settings</Text>
-                <Text style={styles.subHeader}>Manage your account preferences</Text>
+                <Text style={styles.header}>{t('profile.title')}</Text>
+                <Text style={styles.subHeader}>{t('profile.subtitle')}</Text>
             </View>
 
             <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
                 {/* Theme Settings Section */}
                 <ThemeToggle/>
 
+                {/* Language Settings Section */}
+                <LanguageToggle/>
+
                 {/* Habit Invitations Section */}
                 {habitInvitations && habitInvitations.length > 0 && (
                     <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>Habit Invitations</Text>
+                        <Text style={styles.sectionTitle}>{t('profile.habitInvitations')}</Text>
                         {habitInvitations.map((habit) => (
                             <View key={habit.uuid} style={styles.invitationItem}>
                                 <View style={styles.invitationHeader}>
@@ -158,7 +164,7 @@ const UserSettingsComponent = () => {
                                     <Text style={styles.invitationHabitName}>{habit.name}</Text>
                                 </View>
                                 <Text style={styles.invitationFrom}>
-                                    From: {habit.account.displayName}
+                                    {t('profile.invitationFrom', {name: habit.account.displayName})}
                                 </Text>
                                 <View style={styles.invitationActions}>
                                     <TouchableOpacity
@@ -171,7 +177,7 @@ const UserSettingsComponent = () => {
                                         ) : (
                                             <>
                                                 <MaterialCommunityIcons name="check" size={18} color={theme.textInverse} />
-                                                <Text style={styles.invitationButtonText}>Accept</Text>
+                                                <Text style={styles.invitationButtonText}>{t('profile.accept')}</Text>
                                             </>
                                         )}
                                     </TouchableOpacity>
@@ -185,7 +191,7 @@ const UserSettingsComponent = () => {
                                         ) : (
                                             <>
                                                 <MaterialCommunityIcons name="close" size={18} color={theme.textInverse} />
-                                                <Text style={styles.invitationButtonText}>Decline</Text>
+                                                <Text style={styles.invitationButtonText}>{t('profile.decline')}</Text>
                                             </>
                                         )}
                                     </TouchableOpacity>
@@ -196,10 +202,10 @@ const UserSettingsComponent = () => {
                 )}
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Account Information</Text>
+                    <Text style={styles.sectionTitle}>{t('profile.accountInformation')}</Text>
 
                     <View style={styles.field}>
-                        <Text style={styles.label}>Display Name</Text>
+                        <Text style={styles.label}>{t('profile.displayName')}</Text>
                         <TextInput
                             style={styles.input}
                             value={updatedSettings?.displayName}
@@ -207,13 +213,13 @@ const UserSettingsComponent = () => {
                                 ...updatedSettings,
                                 displayName: text,
                             })}
-                            placeholder="Enter display name"
+                            placeholder={t('profile.displayNamePlaceholder')}
                             placeholderTextColor={theme.textTertiary}
                         />
                     </View>
 
                     <View style={styles.field}>
-                        <Text style={styles.label}>Email</Text>
+                        <Text style={styles.label}>{t('profile.email')}</Text>
                         <TextInput
                             style={styles.input}
                             value={updatedSettings?.email}
@@ -221,7 +227,7 @@ const UserSettingsComponent = () => {
                                 ...updatedSettings,
                                 email: mail,
                             })}
-                            placeholder="Enter email"
+                            placeholder={t('profile.emailPlaceholder')}
                             placeholderTextColor={theme.textTertiary}
                             keyboardType="email-address"
                             autoCapitalize="none"
@@ -229,16 +235,16 @@ const UserSettingsComponent = () => {
                     </View>
 
                     <View style={styles.field}>
-                        <Text style={styles.label}>Authentication ID</Text>
+                        <Text style={styles.label}>{t('profile.authenticationId')}</Text>
                         <Text style={styles.readOnlyText}>{settings?.authenticationId}</Text>
                     </View>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Notifications</Text>
+                    <Text style={styles.sectionTitle}>{t('profile.notifications')}</Text>
 
                     <View style={styles.switchField}>
-                        <Text style={styles.label}>Email Notifications</Text>
+                        <Text style={styles.label}>{t('profile.emailNotifications')}</Text>
                         <Switch
                             value={updatedSettings?.isEmailNotificationsEnabled}
                             onValueChange={(bool) => setUpdatedSettings({
@@ -252,7 +258,7 @@ const UserSettingsComponent = () => {
 
                     {useApprise && (
                         <View style={styles.field}>
-                            <Text style={styles.label}>Apprise Target URL</Text>
+                            <Text style={styles.label}>{t('profile.appriseTargetUrl')}</Text>
                             <TextInput
                                 style={styles.input}
                                 value={updatedSettings?.appriseTarget}
@@ -260,7 +266,7 @@ const UserSettingsComponent = () => {
                                     ...updatedSettings,
                                     appriseTarget: apprise,
                                 })}
-                                placeholder="Enter Apprise target URL (optional)"
+                                placeholder={t('profile.appriseTargetPlaceholder')}
                                 placeholderTextColor={theme.textTertiary}
                                 autoCapitalize="none"
                                 multiline={true}
@@ -278,7 +284,7 @@ const UserSettingsComponent = () => {
                     {saving ? (
                         <ActivityIndicator color={theme.textInverse}/>
                     ) : (
-                        <Text style={styles.saveButtonText}>Save Settings</Text>
+                        <Text style={styles.saveButtonText}>{t('profile.saveSettings')}</Text>
                     )}
                 </TouchableOpacity>
 
@@ -290,7 +296,7 @@ const UserSettingsComponent = () => {
                             color={theme.textInverse}
                             style={{marginRight: 8}}
                         />
-                        <Text style={styles.importButtonText}>Import Data</Text>
+                        <Text style={styles.importButtonText}>{t('profile.importData')}</Text>
                     </TouchableOpacity>
                 </Link>
 
@@ -302,7 +308,7 @@ const UserSettingsComponent = () => {
                             color={theme.textInverse}
                             style={{marginRight: 8}}
                         />
-                        <Text style={styles.approveAccountsButtonText}>Approve Accounts</Text>
+                        <Text style={styles.approveAccountsButtonText}>{t('profile.approveAccounts')}</Text>
                     </TouchableOpacity>
                 </Link>
 
@@ -316,11 +322,11 @@ const UserSettingsComponent = () => {
                         color={theme.textInverse}
                         style={{marginRight: 8}}
                     />
-                    <Text style={styles.logoutButtonText}>Logout</Text>
+                    <Text style={styles.logoutButtonText}>{t('profile.logout')}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.apiKeySection}>
-                    <Text style={styles.sectionTitle}>API Key Management</Text>
+                    <Text style={styles.sectionTitle}>{t('profile.apiKeyManagement')}</Text>
 
                     <TouchableOpacity
                         style={[styles.apiKeyButton, styles.createApiKeyButton]}
@@ -332,7 +338,7 @@ const UserSettingsComponent = () => {
                             color={theme.textInverse}
                             style={{marginRight: 8}}
                         />
-                        <Text style={styles.apiKeyButtonText}>Create API Key</Text>
+                        <Text style={styles.apiKeyButtonText}>{t('profile.createApiKey')}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -345,7 +351,7 @@ const UserSettingsComponent = () => {
                             color={theme.textInverse}
                             style={{marginRight: 8}}
                         />
-                        <Text style={styles.apiKeyButtonText}>Delete All API Keys</Text>
+                        <Text style={styles.apiKeyButtonText}>{t('profile.deleteAllApiKeys')}</Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>

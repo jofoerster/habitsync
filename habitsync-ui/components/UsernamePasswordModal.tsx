@@ -16,6 +16,7 @@ import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {useTheme} from "@/context/ThemeContext";
 import {createThemedStyles} from "@/constants/styles";
 import alert from "@/services/alert";
+import {useTranslation} from 'react-i18next';
 
 interface UsernamePasswordModalProps {
     visible: boolean;
@@ -32,6 +33,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                                                      }) => {
     const {theme} = useTheme();
     const styles = createStyles(theme);
+    const {t} = useTranslation();
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -40,7 +42,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
 
     const handleSubmit = async () => {
         if (!username.trim() || !password.trim()) {
-            alert('Error', 'Please enter both username and password');
+            alert(t('common.error'), t('usernamePassword.enterBoth'));
             return;
         }
 
@@ -92,7 +94,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                 >
                                     <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                                 </TouchableOpacity>
-                                <Text style={styles.title}>Sign In</Text>
+                                <Text style={styles.title}>{t('usernamePassword.signIn')}</Text>
                                 <View style={styles.placeholder}/>
                             </View>
 
@@ -104,12 +106,12 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
 
                                 <View style={styles.formContainer}>
                                     <View style={styles.inputContainer}>
-                                        <Text style={styles.inputLabel}>Username</Text>
+                                        <Text style={styles.inputLabel}>{t('usernamePassword.username')}</Text>
                                         <TextInput
                                             style={styles.input}
                                             value={username}
                                             onChangeText={setUsername}
-                                            placeholder="Enter your username"
+                                            placeholder={t('usernamePassword.enterUsername')}
                                             autoCapitalize="none"
                                             autoCorrect={false}
                                             autoComplete="username"
@@ -118,13 +120,13 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                     </View>
 
                                     <View style={styles.inputContainer}>
-                                        <Text style={styles.inputLabel}>Password</Text>
+                                        <Text style={styles.inputLabel}>{t('usernamePassword.password')}</Text>
                                         <View style={styles.passwordContainer}>
                                             <TextInput
                                                 style={styles.passwordInput}
                                                 value={password}
                                                 onChangeText={setPassword}
-                                                placeholder="Enter your password"
+                                                placeholder={t('usernamePassword.enterPassword')}
                                                 secureTextEntry={!showPassword}
                                                 autoCapitalize="none"
                                                 autoCorrect={false}
@@ -158,7 +160,7 @@ const UsernamePasswordModal: React.FC<UsernamePasswordModalProps> = ({
                                         ) : (
                                             <>
                                                 <MaterialCommunityIcons name="login" size={20} color="#fff"/>
-                                                <Text style={styles.loginButtonText}>Sign In</Text>
+                                                <Text style={styles.loginButtonText}>{t('usernamePassword.signIn')}</Text>
                                             </>
                                         )}
                                     </TouchableOpacity>

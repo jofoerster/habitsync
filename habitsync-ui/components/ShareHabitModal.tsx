@@ -9,6 +9,7 @@ import {getUiBaseUrl} from '@/public/config';
 import alert from '@/services/alert';
 import {useHabitParticipants, useInviteParticipant, useRemoveParticipant} from "@/hooks/useHabits";
 import {useCreateSharedHabit} from "@/hooks/useSharedHabits";
+import {useTranslation} from 'react-i18next';
 
 interface ShareHabitModalProps {
     visible: boolean;
@@ -27,6 +28,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                                              isOwnHabit,
                                                              onUpdate,
                                                          }) => {
+    const {t} = useTranslation();
     const {theme} = useTheme();
     const styles = createStyles(theme);
 
@@ -62,32 +64,32 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                 progressComputation: habitDetail.progressComputation,
             })
             onUpdate();
-            alert('Success', 'Shared habit created successfully!');
+            alert(t('common.success'), t('shareModal.createdSuccess'));
         } catch (error) {
             console.error('Error creating shared habit:', error);
-            alert('Error', 'Failed to create shared habit');
+            alert(t('common.error'), t('shareModal.errorCreate'));
         }
     };
 
     const handleCopyShareCode = async () => {
         if (!shareUrl) return;
         await Clipboard.setStringAsync(shareUrl);
-        alert('Copied', 'Share link copied to clipboard!');
+        alert(t('shareModal.copiedTitle'), t('shareModal.copiedMessage'));
     };
 
     const handleInviteParticipant = async () => {
         if (!inviteAuthId.trim()) {
-            alert('Error', 'Please enter an authentication ID');
+            alert(t('common.error'), t('shareModal.enterAuthId'));
             return;
         }
         setInviting(true);
         try {
             await inviteParticipantMutation.mutateAsync({uuid: habitDetail.uuid, authId: inviteAuthId.trim()});
             setInviteAuthId('');
-            alert('Success', 'Invitation sent successfully!');
+            alert(t('common.success'), t('shareModal.invitationSent'));
         } catch (error) {
             console.error('Error inviting participant:', error);
-            alert('Error', 'Failed to send invitation. Make sure the authentication ID is correct.');
+            alert(t('common.error'), t('shareModal.errorInvite'));
         } finally {
             setInviting(false);
         }
@@ -95,12 +97,12 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
     const handleRemoveParticipant = async (authId: string) => {
         alert(
-            'Remove Participant',
-            'Are you sure you want to remove this participant?',
+            t('shareModal.removeTitle'),
+            t('shareModal.removeMessage'),
             [
-                {text: 'Cancel', style: 'cancel'},
+                {text: t('common.cancel'), style: 'cancel'},
                 {
-                    text: 'Remove',
+                    text: t('shareModal.remove'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
@@ -108,10 +110,10 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                 uuid: habitDetail.uuid,
                                 authId: authId,
                             })
-                            alert('Success', 'Participant removed successfully!');
+                            alert(t('common.success'), t('shareModal.removedSuccess'));
                         } catch (error) {
                             console.error('Error removing participant:', error);
-                            alert('Error', 'Failed to remove participant');
+                            alert(t('common.error'), t('shareModal.errorRemove'));
                         }
                     },
                 },
@@ -129,7 +131,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
             <View style={styles.modalOverlay}>
                 <View style={styles.modalContainer}>
                     <View style={styles.header}>
-                        <Text style={styles.headerTitle}>Share & Collaborate</Text>
+                        <Text style={styles.headerTitle}>{t('shareModal.headerTitle')}</Text>
                         <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                             <MaterialCommunityIcons name="close" size={24} color={theme.text}/>
                         </TouchableOpacity>
@@ -146,7 +148,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                 color={activeTab === 'share' ? theme.primary : theme.textSecondary}
                             />
                             <Text style={[styles.tabText, activeTab === 'share' && styles.activeTabText]}>
-                                Share
+                                {t('shareModal.tabShare')}
                             </Text>
                         </TouchableOpacity>
 
@@ -161,7 +163,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                     color={activeTab === 'participants' ? theme.primary : theme.textSecondary}
                                 />
                                 <Text style={[styles.tabText, activeTab === 'participants' && styles.activeTabText]}>
-                                    Participants
+                                    {t('shareModal.tabParticipants')}
                                 </Text>
                             </TouchableOpacity>
                         )}
@@ -172,10 +174,9 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                             <View style={styles.shareContent}>
                                 {sharedHabit ? (
                                     <View>
-                                        <Text style={styles.sectionTitle}>Share Link</Text>
+                                        <Text style={styles.sectionTitle}>{t('shareModal.shareLink')}</Text>
                                         <Text style={styles.description}>
-                                            Share this link with others to let them CONNECT their own habit and track
-                                            this habit together.
+                                            {t('shareModal.shareLinkDescription')}
                                         </Text>
 
                                         <View style={styles.shareLinkContainer}>
@@ -186,33 +187,32 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
 
                                         <TouchableOpacity style={styles.primaryButton} onPress={handleCopyShareCode}>
                                             <MaterialCommunityIcons name="content-copy" size={20} color="#FFFFFF"/>
-                                            <Text style={styles.primaryButtonText}>Copy Share Link</Text>
+                                            <Text style={styles.primaryButtonText}>{t('shareModal.copyShareLink')}</Text>
                                         </TouchableOpacity>
 
                                         <View style={styles.infoBox}>
                                             <MaterialCommunityIcons name="information" size={20} color={theme.primary}/>
                                             <Text style={styles.infoText}>
-                                                Anyone with this link can join and sync their progress with yours.
+                                                {t('shareModal.infoAnyoneCanJoin')}
                                             </Text>
                                         </View>
                                     </View>
                                 ) : (
                                     <View>
-                                        <Text style={styles.sectionTitle}>Create Shared Habit</Text>
+                                        <Text style={styles.sectionTitle}>{t('shareModal.createSharedHabit')}</Text>
                                         <Text style={styles.description}>
-                                            Create a shareable version of this habit to track progress with friends,
-                                            family, or colleagues.
+                                            {t('shareModal.createSharedHabitDescription')}
                                         </Text>
 
                                         <TouchableOpacity style={styles.primaryButton} onPress={handleCreateShare}>
                                             <MaterialCommunityIcons name="share-variant" size={20} color="#FFFFFF"/>
-                                            <Text style={styles.primaryButtonText}>Create Share Link</Text>
+                                            <Text style={styles.primaryButtonText}>{t('shareModal.createShareLink')}</Text>
                                         </TouchableOpacity>
 
                                         <View style={styles.infoBox}>
                                             <MaterialCommunityIcons name="information" size={20} color={theme.primary}/>
                                             <Text style={styles.infoText}>
-                                                Once created, you will get a link to share with others.
+                                                {t('shareModal.infoOnceCreated')}
                                             </Text>
                                         </View>
                                     </View>
@@ -220,17 +220,15 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                             </View>
                         ) : (
                             <View style={styles.participantsContent}>
-                                <Text style={styles.sectionTitle}>Invite Participants</Text>
+                                <Text style={styles.sectionTitle}>{t('shareModal.inviteParticipants')}</Text>
                                 <Text style={styles.description}>
-                                    Invite others directly by their authentication ID to participate in THIS habit. The
-                                    other person will be able to track progress on the SAME habit. Use this for things
-                                    you do together, or need to be only be done by one person at a time.
+                                    {t('shareModal.inviteParticipantsDescription')}
                                 </Text>
 
                                 <View style={styles.inviteContainer}>
                                     <TextInput
                                         style={styles.input}
-                                        placeholder="Enter authentication ID"
+                                        placeholder={t('shareModal.authIdPlaceholder')}
                                         placeholderTextColor={theme.textSecondary}
                                         value={inviteAuthId}
                                         onChangeText={setInviteAuthId}
@@ -250,7 +248,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                     </TouchableOpacity>
                                 </View>
 
-                                <Text style={[styles.sectionTitle, {marginTop: 24}]}>Current Participants</Text>
+                                <Text style={[styles.sectionTitle, {marginTop: 24}]}>{t('shareModal.currentParticipants')}</Text>
 
                                 {loadingParticipants ? (
                                     <View style={styles.loadingContainer}>
@@ -291,7 +289,7 @@ const ShareHabitModal: React.FC<ShareHabitModalProps> = ({
                                     <View style={styles.emptyState}>
                                         <MaterialCommunityIcons name="account-off" size={48}
                                                                 color={theme.textSecondary}/>
-                                        <Text style={styles.emptyStateText}>No participants yet</Text>
+                                        <Text style={styles.emptyStateText}>{t('shareModal.noParticipants')}</Text>
                                     </View>
                                 )}
                             </View>
