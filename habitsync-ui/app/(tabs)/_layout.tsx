@@ -33,6 +33,12 @@ export default function TabLayout() {
                     }}
                 />
                 <Tabs.Screen
+                    name="habit"
+                    options={{
+                        href: null,
+                    }}
+                />
+                <Tabs.Screen
                     name="challenge/edit/[challengeId]"
                     options={{
                         href: null,
