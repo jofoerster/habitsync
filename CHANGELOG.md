@@ -15,6 +15,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.19.2] - 2026-07-16
+
+### Added
+- Translations to German
+
+### Fixed
+- Back navigation issues in browser
+- Fix issues when pasting password on mobile devices
+- Fixed email notifications
+
 ## [0.19.1] - 2026-07-15
 
 ### Added
