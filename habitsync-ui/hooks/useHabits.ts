@@ -346,11 +346,10 @@ export const useCreateHabitRecord = () => {
                 }
             );
 
-            if (variables.isDetailView) {
-                queryClient.invalidateQueries({
-                    queryKey: habitKeys.detail(habitUuid),
-                })
-            }
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+            })
+
             if (variables.isChallenge) {
                 queryClient.invalidateQueries({
                     queryKey: challengeKeys.overview(),
