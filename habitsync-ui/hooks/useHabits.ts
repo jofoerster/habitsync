@@ -302,24 +302,54 @@ export const useCreateHabitRecord = () => {
             record: ApiHabitRecordWrite,
             isChallenge: boolean,
             isDetailView: boolean,
+            isNegative: boolean,
         }) =>
             habitRecordApi.createRecord(habitUuid, record),
-        onSuccess: ({habitUuid}, variables) => {
+        onMutate: async (variables) => {
+            const queryKey = [...habitKeys.records(variables.habitUuid), 'current'];
+
+            await queryClient.cancelQueries({ queryKey });
+            const previousRecords = queryClient.getQueryData(queryKey);
+            queryClient.setQueryData(queryKey, (old: any) => {
+                if (!old) return [variables.record];
+                const filtered = old.filter((r: any) => r.epochDay !== variables.record.epochDay);
+
+                return [...filtered, {
+                    completion: (variables.record.recordValue == 0) != variables.isNegative ? "MISSED" : "COMPLETED",
+                    habitUuid: variables.habitUuid,
+                    epochDay: variables.record.epochDay,
+                    recordValue: variables.record.recordValue,
+                    uuid: null
+                }];
+            });
+            return { previousRecords, queryKey };
+        },
+        onError: (err, variables, context) => {
+            if (context?.previousRecords) {
+                queryClient.setQueryData(context.queryKey, context.previousRecords);
+            }
+        },
+        onSuccess: ({habitUuid, epochDay, recordValue, completion, uuid}, variables) => {
             console.log(`Updating cache for habit ${habitUuid} with new record`, variables.record);
             queryClient.setQueryData(
                 [...habitKeys.records(habitUuid), 'current'],
                 (old: any) => {
                     if (!old) return [variables.record];
                     const filtered = old.filter((r: any) => r.epochDay !== variables.record.epochDay);
-                    return [...filtered, variables.record];
+                    return [...filtered, {
+                        completion,
+                        habitUuid,
+                        epochDay,
+                        recordValue,
+                        uuid
+                    }];
                 }
             );
 
-            if (variables.isDetailView) {
-                queryClient.invalidateQueries({
-                    queryKey: habitKeys.detail(habitUuid),
-                })
-            }
+            queryClient.invalidateQueries({
+                queryKey: habitKeys.detail(habitUuid),
+            })
+
             if (variables.isChallenge) {
                 queryClient.invalidateQueries({
                     queryKey: challengeKeys.overview(),
