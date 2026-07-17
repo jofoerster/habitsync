@@ -238,7 +238,8 @@ const HabitDetailsScreen = () => {
                 habitUuid,
                 record: {epochDay: selectedEpochDay, recordValue: value},
                 isChallenge: habitDetail?.isChallengeHabit || false,
-                isDetailView: true
+                isDetailView: true,
+                isNegative: habitDetail?.progressComputation.isNegative || false
             });
         }
     }
@@ -250,7 +251,8 @@ const HabitDetailsScreen = () => {
                 habitUuid,
                 record: {epochDay: record!.epochDay, recordValue: value},
                 isChallenge: habitDetail?.isChallengeHabit || false,
-                isDetailView: true
+                isDetailView: true,
+                isNegative: habitDetail?.progressComputation.isNegative || false
             });
         } else {
             setModalVisible(true);

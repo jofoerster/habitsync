@@ -9,9 +9,7 @@ import {MaterialCommunityIcons} from "@expo/vector-icons";
 import {getEpochDay, getIcon} from "@/util/util";
 import alert from "@/services/alert";
 import {useTheme} from "@/context/ThemeContext";
-import {habitKeys, useConnectedHabits, useCreateHabitRecord, useCurrentHabitRecords, useHabit} from "@/hooks/useHabits";
-import {challengeKeys} from "@/hooks/useChallenges";
-import {queryClient} from "@/context/ReactQueryContext";
+import {useConnectedHabits, useCreateHabitRecord, useCurrentHabitRecords, useHabit} from "@/hooks/useHabits";
 
 
 interface DayButtonProps {
@@ -253,13 +251,13 @@ const HabitRow: React.FC<HabitRowProps> = ({
             }
             const oldRecord = getRecordForDay(epochDay);
             const prefixDefault = habit.progressComputation.dailyDefault.charAt(0);
-            let newRecordValue = 0;
+            let newRecordValue;
             if (prefixDefault === '+' || prefixDefault === '-') {
                 newRecordValue = oldRecord.recordValue + parseFloat(habit.progressComputation.dailyDefault);
             } else {
                 newRecordValue = oldRecord.recordValue == 0 ? Math.abs(parseFloat(habit.progressComputation.dailyDefault)) : 0;
             }
-            updateHabitValue(habitUuid, epochDay, newRecordValue);
+            updateHabitValue(habitUuid, epochDay, newRecordValue, habit?.progressComputation.isNegative || false);
 
         } catch (error) {
             alert(t('common.error'), t('habitRow.updateRecordFailed'));
@@ -279,37 +277,22 @@ const HabitRow: React.FC<HabitRowProps> = ({
     const handleModalSubmit = async (value: string) => {
         try {
             const epochDay = modalConfig.epochDay;
-            updateHabitValue(habitUuid, epochDay, value);
+            updateHabitValue(habitUuid, epochDay, value, habit?.progressComputation.isNegative || false);
 
         } catch (error) {
             alert(t('common.error'), t('habitRow.updateRecordFailed'));
         }
     };
 
-    const updateHabitValue = (habitUuid: string, epochDay: number, recordValue: string) => {
+    const updateHabitValue = (habitUuid: string, epochDay: number, recordValue: string, isNegative: boolean) => {
         updateHabitRecordMutation.mutate({
             habitUuid: habitUuid, record: {
                 epochDay: epochDay,
                 recordValue: parseFloat(recordValue) || 0
             },
             isChallenge: isChallengeHabit || false,
-            isDetailView: false
-        }, {
-            onSuccess: () => {
-                if (isChallengeHabit) {
-                    queryClient.invalidateQueries({
-                        queryKey: challengeKeys.overview(),
-                        refetchType: 'active'
-                    });
-                }
-
-                queryClient.invalidateQueries({
-                    queryKey: habitKeys.records(habitUuid),
-                    refetchType: "none"
-                })
-
-                refetchHabit();
-            }
+            isDetailView: false,
+            isNegative: isNegative
         })
     }
 
