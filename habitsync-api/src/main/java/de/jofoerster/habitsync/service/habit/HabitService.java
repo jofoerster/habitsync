@@ -163,9 +163,11 @@ public class HabitService {
         return result;
     }
 
-    public List<HabitReadDTO> getAllUserHabits(Account currentAccount, HabitStatus statusFilter) {
+    public List<HabitReadDTO> getAllUserHabits(Account currentAccount, HabitStatus statusFilter,
+                                               Optional<Integer> epochDayFrom, Optional<Integer> epochDayTo) {
         return this.getAllUserHabitsByType(currentAccount, HabitType.INTERNAL, statusFilter).stream()
-                .filter(h -> !h.isChallengeHabit()).map(this::getApiHabitReadFromHabit).toList();
+                .filter(h -> !h.isChallengeHabit()).map(h -> this.getApiHabitReadFromHabit(h, epochDayFrom,
+                        epochDayTo)).toList();
     }
 
     public List<HabitReadUuidDTO> getAllUserHabitUuids(Account currentAccount) {
@@ -193,8 +195,16 @@ public class HabitService {
     }
 
     public HabitReadDTO getApiHabitReadFromHabit(Habit habit) {
+        return getApiHabitReadFromHabit(habit, Optional.empty(), Optional.empty());
+    }
+
+    public HabitReadDTO getApiHabitReadFromHabit(Habit habit,
+                                                 Optional<Integer> epochDayFrom, Optional<Integer> epochDayTo) {
         Double currentPercentage = cachingHabitProgressService.getCompletionPercentageAtDate(habit, LocalDate.now());
         String currentMedal = getLastMonthMedalString(habit);
+        boolean useRecordsOfCurrentDays = epochDayFrom.isEmpty() && epochDayTo.isEmpty();
+        int queryEpochDayTo = epochDayTo.orElse((int) LocalDate.now().toEpochDay()+1);
+        int queryEpochDayFrom = epochDayFrom.orElse(queryEpochDayTo - 4);
         return HabitReadDTO.builder().color(habit.getColor()).uuid(habit.getUuid()).name(habit.getName())
                 .account(habit.getAccount().getApiAccountRead()).progressComputation(habit.getApiComputationReadWrite())
                 .currentPercentage(currentPercentage).currentMedal(currentMedal).sortPosition(habit.getSortPosition())
@@ -202,10 +212,11 @@ public class HabitService {
                 .synchronizedSharedHabitId(habit.getConnectedSharedHabitId())
                 .notificationFrequency(this.getNotificationConfig(habit)).numberModalConfig(
                         habitNumberModalConfigService.getHabitNumberModalConfig(habit.getUuid())
-                                .getApiHabitNumberModalConfig()).records(getRecordsOfCurrentDays(habit))
+                                .getApiHabitNumberModalConfig())
+                .records(useRecordsOfCurrentDays ? getRecordsOfCurrentDays(habit) : getRecordsOfHabit(habit,
+                        queryEpochDayFrom, queryEpochDayTo))
                 .hasConnectedHabits(cachingNumberOfConnectedHabitsService.getNumberOfConnectedHabits(habit.getUuid(),
                         habit.getHabitType()) > 0).build();
-
     }
 
     private List<HabitRecordReadDTO> getRecordsOfCurrentDays(Habit habit) {
