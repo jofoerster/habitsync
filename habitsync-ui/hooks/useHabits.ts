@@ -30,7 +30,7 @@ export const habitKeys = {
     connectedHabits: (uuid: string) => [...habitKeys.detail(uuid), 'connected'] as const,
     connectedHabitsCount: (uuid: string) => [...habitKeys.detail(uuid), 'connected-count'] as const,
     participants: (uuid: string) => [...habitKeys.detail(uuid), 'participants'] as const,
-    records: (uuid: string) => [...habitKeys.detail(uuid), 'records'] as const,
+    records: (uuid: string) => [...habitKeys.all, uuid, 'records'] as const,
 };
 
 export const useHabitUuids = () => {
@@ -345,6 +345,12 @@ export const useCreateHabitRecord = () => {
                     }];
                 }
             );
+
+            if (variables.isDetailView) {
+                queryClient.invalidateQueries({
+                    queryKey: habitKeys.records(habitUuid),
+                })
+            }
 
             queryClient.invalidateQueries({
                 queryKey: habitKeys.detail(habitUuid),
