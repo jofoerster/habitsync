@@ -77,8 +77,13 @@ public class HabitController {
     })
     @GetMapping("/list")
     public ResponseEntity<List<HabitReadDTO>> getUserHabits(
-            @Parameter(description = "Filter habits by status") @RequestParam(required = false) HabitStatus statusFilter) {
-        return ResponseEntity.ok(habitService.getAllUserHabits(accountService.getCurrentAccount(), statusFilter));
+            @Parameter(description = "Filter habits by status") @RequestParam(required = false) HabitStatus statusFilter,
+            @Parameter(description = "Query records from epoch day. Defaults to epochDayTo minus 4")
+            @RequestParam(required = false) Optional<Integer> epochDayFrom,
+            @Parameter(description = "Query records to epoch day. Defaults to tomorrow")
+            @RequestParam(required = false) Optional<Integer> epochDayTo) {
+        return ResponseEntity.ok(habitService.getAllUserHabits(accountService.getCurrentAccount(), statusFilter,
+                epochDayFrom, epochDayTo));
     }
 
     /**
@@ -303,7 +308,7 @@ public class HabitController {
     public ResponseEntity sortHabits(@RequestBody HabitSortBody habitSortBody) {
         Account account = accountService.getCurrentAccount();
         List<Habit> habits = habitSortBody.getHabitUuids().stream().map(uuid -> {
-            Habit habit  = habitService.getHabitByUuid(uuid).orElse(null);
+            Habit habit = habitService.getHabitByUuid(uuid).orElse(null);
             permissionChecker.checkIfisAllowedToEdit(habit, account);
             return habit;
         }).toList();
