@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+## [0.19.3] - 2026-08-20
+
+### Added
+- Metrics endpoint for Prometheus integrations
+
+### Changed
+- Deployment: deploy beta releases on pushes to develop instead of main
+
 ## [0.19.2] - 2026-07-16
 
 ### Added

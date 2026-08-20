@@ -3,7 +3,7 @@ name: Beta Release
 on:
   push:
     branches:
-      - main
+      - develop
 
 env:
   REGISTRY: ghcr.io
@@ -31,7 +31,7 @@ jobs:
           
           BRANCH=${GITHUB_REF#refs/heads/}
           
-          if [ "$BRANCH" = "main" ]; then
+          if [ "$BRANCH" = "develop" ]; then
             BETA_VERSION="${BASE_VERSION}-beta.${DATE}.${SHORT_SHA}"
             DOCKER_TAG="beta"
           else
@@ -123,7 +123,7 @@ jobs:
     name: Build Android APK
     needs: [generate-version, test]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/develop'
     
     steps:
       - uses: actions/checkout@v4
@@ -183,7 +183,7 @@ jobs:
     name: Create GitHub Pre-release
     needs: [generate-version, test, build-docker, build-android]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && !failure()
+    if: github.ref == 'refs/heads/develop' && !failure()
     permissions:
       contents: write
     
@@ -227,7 +227,7 @@ jobs:
           body: |
             ## 🚀 Beta Release
             
-            This is an automated beta release from the `main` branch.
+            This is an automated beta release from the `develop` branch.
             **Not intended for production use.**
             
             ### Changes since last release
