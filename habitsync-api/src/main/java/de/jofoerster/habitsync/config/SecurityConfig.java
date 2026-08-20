@@ -108,7 +108,7 @@ public class SecurityConfig {
         );
     }
 
-    private AuthorizationDecision checkUserAccess(java.util.function.Supplier<Authentication> authSupplier,
+    private AuthorizationDecision checkUserAccess(java.util.function.Supplier<? extends Authentication> authSupplier,
                                                   RequestAuthorizationContext context) {
         Authentication auth = authSupplier.get();
         boolean granted = accountService.isUserAllowed(auth);
