@@ -525,7 +525,7 @@
     "checkStatus": "Check Status",
     "loggedInAs": "Logged in as:",
     "signOut": "Sign Out",
-    "subtitle": "Your account is pending approval. Please wait for an administrator to approve your access.",
+    "subtitle": "Your account is pending approval. Please wait for an approved user to approve your access.",
     "title": "Waiting for Approval"
   }
 }

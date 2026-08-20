@@ -90,12 +90,12 @@ public class AccountController {
 
     @Operation(
             summary = "Get unapproved accounts",
-            description = "Returns a list of user accounts that are pending approval. Only available to admin users."
+            description = "Returns a list of user accounts that are pending approval. Only available to approved users."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved unapproved accounts"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - admin privileges required")
+            @ApiResponse(responseCode = "403", description = "Forbidden - approved user privileges required")
     })
     @GetMapping("/unapproved-accounts")
     public ResponseEntity<List<AccountReadDTO>> getUnapprovedAccounts() {
@@ -105,12 +105,12 @@ public class AccountController {
 
     @Operation(
             summary = "Approve user account",
-            description = "Approves a pending user account by UUID. Only available to admin users."
+            description = "Approves a pending user account by UUID. Only available to approved users."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully approved account"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - authentication required"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - admin privileges required"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - approved user privileges required"),
             @ApiResponse(responseCode = "404", description = "Account not found")
     })
     @PutMapping("/approve-account/{accountUuid}")
