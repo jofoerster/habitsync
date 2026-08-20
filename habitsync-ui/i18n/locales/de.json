@@ -525,7 +525,7 @@
     "checkStatus": "Status prüfen",
     "loggedInAs": "Angemeldet als:",
     "signOut": "Abmelden",
-    "subtitle": "Dein Konto wartet auf Freigabe. Bitte warte, bis ein Administrator deinen Zugang freigibt.",
+    "subtitle": "Dein Konto wartet auf Freigabe. Bitte warte, bis ein genehmigter Benutzer deinen Zugang freigibt.",
     "title": "Warten auf Freigabe"
   }
 }
