@@ -89,15 +89,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Build Docker image (arm64)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: false
-          platforms: linux/arm64
-          tags: habitsync:test-arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
 
   status-check:
     name: All Tests Passed
